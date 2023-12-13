@@ -1,0 +1,4 @@
+#Mon Dec 11 22:21:29 EST 2023
+base.0=/Users/admin/Documents/Projects/TunersToolkit/composeApp/build/intermediates/dex/debugAndroidTest/mergeProjectDexDebugAndroidTest/0/classes.dex
+path.0=0/classes.dex
+renamed.0=classes.dex

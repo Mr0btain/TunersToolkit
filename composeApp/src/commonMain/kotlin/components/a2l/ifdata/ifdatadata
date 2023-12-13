@@ -1,0 +1,516 @@
+/begin IF_DATA ASAP1B_CCP
+      /begin SOURCE
+       "time synchronous event channel - 10 ms"
+    4
+    1
+    /begin QP_BLOB
+        0
+     LENGTH 2
+     CAN_ID_FIXED 0x7C5
+     RASTER 0
+    /end QP_BLOB
+   /end SOURCE
+      /begin SOURCE
+       "time synchronous event channel - 100 ms"
+    5
+    1
+    /begin QP_BLOB
+        1
+     LENGTH 5
+     CAN_ID_FIXED 0x7C6
+     RASTER 1
+    /end QP_BLOB
+   /end SOURCE
+      /begin SOURCE
+       "segment synchronous event channel"
+    103
+    1
+    /begin QP_BLOB
+        2
+     LENGTH 1
+     CAN_ID_FIXED 0x7C7
+     RASTER 2
+    /end QP_BLOB
+   /end SOURCE
+      /begin RASTER
+       "time synchronous event channel - 10 ms"
+       "10_ms"
+    0
+    4
+    1
+   /end RASTER
+      /begin RASTER
+       "time synchronous event channel - 100 ms"
+       "100_ms"
+    1
+    5
+    1
+   /end RASTER
+      /begin RASTER
+       "segment synchronous event channel"
+       "seg_sync"
+    2
+    103
+    1
+   /end RASTER
+   /begin SEED_KEY
+       /* seed&key dll for CAL privilege */ ""
+       /* seed&key dll for DAQ privilege */ ""
+       /* seed&key dll for PGM privilege */ ""
+   /end SEED_KEY
+   /begin TP_BLOB
+       /* CCP version       */ 0x201
+    /* Blob version      */ 0x202
+    /* CAN msg ID - send */ 0x7C3
+    /* CAN msg ID - recv */ 0x7C4
+    /* station address   */ 0x12ED
+    /* byte order        */ 1
+    /begin CAN_PARAM
+        /* crystal frequency */ 0x1F4
+     /* timing register 0 */ 0x41
+     /* timing register 1 */ 0x25
+    /end CAN_PARAM
+    DAQ_MODE    BURST
+    CONSISTENCY ODT
+    ADDRESS_EXTENSION ODT
+       /begin CHECKSUM_PARAM
+       /* algorithm */ 0xC001
+        /* limit     */ 0xFFFFFFFF
+        CHECKSUM_CALCULATION ACTIVE_PAGE
+    /end CHECKSUM_PARAM
+    /begin DEFINED_PAGES
+        1
+     "reference page"
+     /* address ext. */ 0x1
+     /* base address */ 0x5C2000
+     /* page length  */ 0x2DFFF
+     ROM
+    /end DEFINED_PAGES
+    OPTIONAL_CMD 0xC  /* SELECT_CAL_PAGE */
+    OPTIONAL_CMD 0xD  /* BUILD_CHKSUM */
+    OPTIONAL_CMD 0xE  /* MOVE */
+    OPTIONAL_CMD 0x11  /* GET_ACTIVE_CAL_PAGE */
+    OPTIONAL_CMD 0x19  /* SET_S_STATUS */
+    OPTIONAL_CMD 0xD  /* GET_S_STATUS */
+    OPTIONAL_CMD 0x12  /* GET_SEED */
+    OPTIONAL_CMD 0x13  /* UNLOCK */
+   /end TP_BLOB
+  /end IF_DATA
+
+
+
+
+
+
+
+
+
+block "IF_DATA" taggedunion if_data {
+      /* --> file ccp_aml_v2_5.aml by ETAS */
+/****************************************************************************/
+/*   ASAP2 Meta Language for CCP CAN Calibration Protocol V2.1              */
+/*   Assumes ASAP2 V1.3 or later                                            */
+/*                                                                          */
+/*   AML Version V2.5, 01.12.1999                                           */
+/*                                                                          */
+/*   Vector Informatik, Zaiser                                              */
+/*   Hewlett Packard, Krueger                                               */
+/*   ETAS, Schuermans                                                       */
+/*   SIEMENS Automotive, Stuhler         */
+/*                                                    */
+/*   ETAS-Sms 01.12.1999: New keyword 'ADDRESS_MAPPING' in IF_DATA         */
+/*        'MEMORY_SEGMENT' (optional)                    */
+/*   Datatypes:                                                             */
+/*                                                                          */
+/*   A2ML       ASAP2          Windows  Erlaeuuterung                       */
+/*   ----------------------------------------------------------------       */
+/*   uchar      UBYTE          BYTE     unsigned 8 Bit                      */
+/*   char       SBYTE          char     signed 8 Bit                        */
+/*   uint       UWORD          WORD     unsigned integer 16 Bit             */
+/*   int        SWORD          int      signed integer 16 Bit               */
+/*   ulong      ULONG          DWORD    unsigned integer 32 Bit             */
+/*   long       SLONG          LONG     signed integer 32 Bit               */
+/*   float      FLOAT32_IEEE            float 32 Bit                        */
+/*                                                                          */
+/****************************************************************************/
+
+/begin IF_DATA ASAP1B_CCP DP_BLOB 0x00 0x5CA7D0 14 /end IF_DATA
+
+
+      /* <-- file ccp_aml_v2_5.aml by ETAS */
+/* --> file etk_v_1.1.3b.aml (29-AUG-2005) by ETAS + Be                             */
+/************************************************************************************/
+/*                                                                                  */
+/*   ASAP2 Meta description for ETK                                                 */
+/*   - only applicable with ASAP2 V1.3 -                                            */
+/*                                                                                  */
+/*   Used data types:                                                               */
+/*                                                                                  */
+/*   A2ML       ASAP2          Windows  Explanation                                 */
+/*   ---------------------------------------------------------                      */
+/*   uchar      UBYTE          BYTE     unsigned 8 Bit                              */
+/*   char       SBYTE          char     signed 8 Bit                                */
+/*   uint       UWORD          WORD     unsigned integer 16 Bit                     */
+/*   int        SWORD          int      signed integer 16 Bit                       */
+/*   ulong      ULONG          DWORD    unsigned integer 32 Bit                     */
+/*   long       SLONG          LONG     signed integer 32 Bit                       */
+/*   float      FLOAT32_IEEE            float 32 Bit                                */
+/*                                                                                  */
+/*  Changes:                                                                        */
+/*  26.04.99 Hn  closing bracket at 'ADDRESS_MAPPING' added,                        */
+/*               Keyword 'RESERVED' changed to 'RESERVED_DISTAB_MEMORY'             */
+/*                                                                                  */
+/*  06.07.99 Hn (V1.0.1) closing bracket at 'ADDRESS_MAPPING' changed to '}'        */
+/*                                                                                  */
+/*  03.07.00 Hn (V1.1.0) New element 'ETK_PRESENCE_CHECK' added to TP-Blob          */
+/*                                                                                  */
+/*  11.05.01 Og (V1.1.1) TP_Blob version 0x01000100.                                */
+/*           Hn            Added INTERFACE_SPEED parameters                         */
+/*                         Added COLDSTART_HANDSHAKE block                          */
+/*                         Deleted parameter 'project base address'                 */
+/*                                                                                  */
+/*  02.10.02 Wnl(V1.1.2) KP_Blob extension                                          */
+/*                       - enum for address location                                */
+/*                       - default RASTER                                           */
+/*                                                                                  */
+/*  15.07.03 Wnl(V1.1.3) Values for INTERFACE_SPEED corrected (1, 2 instead 0, 1)   */
+/*  02.12.04 Be (V1.1.3b) GS-EC/EMT3-H.Bauer                                        */
+/*                        RESERVED_DISTAB_MEMORY ulong -> long                      */
+/*                        deleted: block in line block "DISTAB_CFG" struct          */
+/************************************************************************************/
+/************************************************************************************/
+/*                                                                                  */
+/* For a correct working of the ETK, the following MEMORY_SEGMENTs have to          */
+/* be specified in the section 'MOD_PAR' of the ASAP2 file:                         */
+/*                                                                                  */
+/*  /begin MEMORY_SEGMENT                                                           */
+/*     Dataxxxx ""  DATA FLASH <mem. location> <address> <size> <mirrors>           */
+/*  /end MEMORY_SEGMENT                                                             */
+/*                                                                                  */
+/*  /begin MEMORY_SEGMENT                                                           */
+/*     Codexxxx ""  CODE FLASH <mem. location> <address> <size> <mirrors>           */
+/*  /end MEMORY_SEGMENT                                                             */
+/*                                                                                  */
+/*  /begin MEMORY_SEGMENT                                                           */
+/*     ExRAM "ExRAM for DISTAB" VARIABLES RAM EXTERN <address> <size> <mirrors>     */
+/*  /end MEMORY_SEGMENT                                                             */
+/*                                                                                  */
+/* Remark: All data included in a hex file, but not specified by a memory           */
+/*          segment will be ignored inside the application program and lost         */
+/*          when generating hex file export                                         */
+/*                                                                                  */
+/************************************************************************************/
+"ETK" taggedstruct
+{
+  /* Description of an address mapping between addresses in the view of the EPROM of*/
+  /* the ECU  (and ASAP2) and the addresses in the scope of the ETK IF_DATA section */
+  /* used with MEMORY_SEGMENT (can be missing if no differences between the 2 views)*/
+  ("ADDRESS_MAPPING" struct {
+    ulong;   /* Start address of MEMORY_SEGMENT                                     */
+    ulong;   /* mapped start address for ETK                                        */
+    ulong;   /* Length of mapped address range                                      */
+  })*;       /* multiple use of ADDRESS_MAPPING is possible                         */
+             /* (even each MEMORY_SEGMENT)                                          */
+  /* Description of the acquisition (trigger) levels supplied by the ECU, 3 is max. */
+  /* no. for ETK                                                                    */
+  /* Description of the acquisition (trigger) levels supplied by the ECU, 3 is max. */
+  /* no. for ETK                                                                    */
+  (block "SOURCE" struct
+  {
+    struct
+    {
+      char [100]; /* Source name */
+      int;    /* CSE unit according to Asap1b (minimal period duration) of the  */
+              /* acqisition raster*/
+      long;   /* Minimal period number measured in the CSE unit */
+    };
+    taggedstruct
+    {
+      /* Description of additional information needed by the ETK device driver  */
+      /* to collect the measurement data from a certain acquisition raster      */
+      "QP_BLOB" struct
+      {
+        uint; /* Acquisition raster 1=A (typ. angle synchronous)                */
+              /*                    2=B (typ. time synchronous 10 msec)         */
+              /*                    3=C (typ. time synchronous 100 msec)        */
+              /*                    4=S/T angle synchronous (bypass only)       */
+              /*                    5=X/Y time synchronous  (bypass only)       */
+              /* Description                            keyword from DAMOS      */
+        uint; /* Max. length of display table in bytes  MAXNUM_A/B/C/BPMAX_S/X  */
+        ulong;/* Start address of display table         DISTAB_A/B/C/BYPASS_S/X */
+        ulong;/* Output address of display table        CHNL_A/B/C/S/X          */
+        ulong;/* Address of trigger id                  TRGID_A/B/C/S/X         */
+        uint; /* Repetition rate of trigger             3rd value from DISTAB_A/B/C/S/X */
+        uint; /* Max. size of bypass receive table      -/-/-/BPMAX_T/Y         */
+        ulong;/* Output address of the bypass table     -/-/-/CHNL_T/Y          */
+      };
+    };
+  })*;   /* SOURCE can be used several times */
+  block "TP_BLOB" struct {
+    ulong;  /* Version number of the TP-Blob; uppermost byte is always != 0, so     */
+            /* that informations cannot be mixed up with older blob versions        */
+            /* (trigger address was previously at the first position and had        */
+            /* max. 24 Bit)                                                         */
+            /* current value: 0x01000100                                            */
+    /* parameter 'project base address' is deleted                                  */
+    ulong;  /* INTERFACE_SPEED_8MBIT   = 1                                          */
+            /* INTERFACE_SPEED_100MBIT = 2                                          */
+    ulong;  /* ETKP: RESET_CFG parameter only for PPC family CPU                    */
+    taggedstruct {
+      block "DISTAB_CFG" struct
+      {
+        uint;    /* Type of display table (13 recommended,           DSPTAB         */
+                 /* 12, 11, 20 only for old projects)                               */
+        uint;    /* Data type of display table: 1=byte 2=word        DAT_MOD        */
+                 /* additional code table for distab 13 depending                   */
+                 /* on bus width / bus access                                       */
+                 /* (see distab 13 spec. for more information)                      */
+        uint;    /* Byte order 1 = high first, 2 = low first         RFG            */
+        ulong;   /* Trigger segment address                          TRGSEGAD       */
+        ulong;   /* Trigger configuration  (special code)            TRG_CFG        */
+        taggedstruct {
+          "TRG_MOD" ( uchar )*;  /* Dyn. length for TRG_MOD  */
+                                 /* (special code)           */
+        };
+      };
+      block "ETK_PRESENCE_CHECK" struct {
+        ulong; /* address of ETK recognition pattern   */
+        taggedstruct {
+          "ETK_PATTERN" ( uchar )*;  /* Dyn. length for pattern                     */
+        };
+      };
+      /* A check, whether program and data are matching can be performed, if the    */
+      /* ECU copies a certain 'program identifier' (e.g. the code checksum) into the*/
+      /* external RAM and the same identifier is stored in the data range. The ETK  */
+      /* driver can read and compare both identifier and issue an error message, if */
+      /* the both identifiers do not match.                                         */
+      "CODE_CHK" struct {
+        ulong; /* ETK: address of program identifier in the data range PRG_DATA     */
+        uint;  /* ETK: length of program identifier in the data range (max. 4 bytes)*/
+        ulong; /* ETK: address of program identifier in the external RAM PRG_ERAM   */
+        uint;  /* ETK: length of program identifier in the external RAM             */
+               /* (max. 4 bytes)                                                    */
+               /* If all parameters contain 0x0 values, no check is performed       */
+      };
+      /* Description of ETK configuration parameters, as configured with the ETK    */
+      /* configuration tool                                                         */
+      "ETK_CFG" ( uchar )*; /* ETK_CFG parameters (dyn. length)                     */
+      /* Additional description of data ranges overwriting the MEMORY_SEGMENT       */
+      /* description                                                                */
+      ( "EMU_DATA" struct {
+        ulong;  /* Start address      */
+        ulong;  /* Length in bytes    */
+        enum {  /* Memory attribute   */
+          "INTERN"  = 0,
+          "EXTERN"  = 1
+        };
+        /* Description of offsets to additional data ranges where the contents of   */
+        /* this data range are mirrored                                             */
+        ulong;  /* Mirror offset 1    */
+        ulong;  /* Mirror offset 2    */
+        ulong;  /* Mirror offset 3    */
+        ulong;  /* Mirror offset 4    */
+        ulong;  /* Mirror offset 5    */
+        /* Mirror offsets of -1 indicate that there is no mirror offset             */
+      })*;
+      /* Additional description of code ranges overwriting the MEMORY_SEGMENT       */
+      /* description                                                                */
+      ( "EMU_CODE" struct {
+        ulong;  /* Start address      */
+        ulong;  /* Length in bytes    */
+        enum {  /* Memory attribute   */
+          "INTERN"  = 0,
+          "EXTERN"  = 1
+        };
+        ulong;  /* Mirror offset 1    */
+        ulong;  /* Mirror offset 2    */
+        ulong;  /* Mirror offset 3    */
+        ulong;  /* Mirror offset 4    */
+        ulong;  /* Mirror offset 5    */
+      })*;
+      /* Additional description of external RAM ranges overwriting the              */
+      /* MEMORY_SEGMENT                                                             */
+      /* description */
+      ( "EMU_RAM" struct {
+        ulong;  /* Start address      */
+        ulong;  /* Length in bytes    */
+        enum {  /* Memory attribute   */
+          "INTERN"  = 0,
+          "EXTERN"  = 1
+        };
+        ulong;  /* Mirror offset 1    */
+        ulong;  /* Mirror offset 2    */
+        ulong;  /* Mirror offset 3    */
+        ulong;  /* Mirror offset 4    */
+        ulong;  /* Mirror offset 5    */
+      })*;
+      /* Description of 'reserved ranges' (especially in the data or code ranges;   */
+      /* e.g.location of the display tables) that are excluded from checksum        */
+      /* verification                                                               */
+      /* If the 3 display tables stand close together, the size of the reserved     */
+      /* memory is calculated by the following formula:                             */
+      /*                                                                            */
+      /*  size = (highest start address of the 3 distabs)                           */
+      /*       + ((size of this distab) + 2) * 4                                    */
+      /*       - (lowest start address of the 3 distabs)                            */
+      /*                                                                            */
+      ( "RESERVED_DISTAB_MEMORY" struct {
+        ulong;  /* Start address            */
+        ulong;  /* Length in bytes    */
+        enum {  /* Memory attribute   */
+          "INTERN"  = 0,
+          "EXTERN"  = 1
+        };
+        long; /* Mirror offset 1    */
+        long; /* Mirror offset 2    */
+        long; /* Mirror offset 3    */
+        long; /* Mirror offset 4    */
+        long; /* Mirror offset 5    */
+      })*;
+      /* Description of the ETK mailbox that is used for communication between the  */
+      /* ECU and the application program (e.g. for programming data into the ECU    */
+      /* flash)                                                                     */
+      "ETK_MAILBOX" struct {
+        ulong;      /* Test pattern for the ECU to detect a valid mailbox           */
+        enum {      /* Memory page (code, data, external RAM) used for              */
+                    /* communication from application program to ECU                */
+          "CODE"  = 1,
+          "DATA"  = 2,
+          "EXRAM" = 3
+        };
+        ulong;    /* Base address of buffer for communication appl. program -> ECU  */
+        ulong;    /* Length of buffer for comunication appl. program -> ECU         */
+        enum {    /* Memory page (code, data, external RAM) used for communication  */
+                  /* from ECU to application program                                */
+          "CODE"  = 1,
+          "DATA"  = 2,
+          "EXRAM" = 3
+        };
+        ulong;    /* Base address of buffer for communication ECU -> appl. program  */
+        ulong;    /* Length of buffer for comunication ECU -> appl. program         */
+      };
+      block "COLDSTART_HANDSHAKE" struct {
+        ulong;                 /* address of ETKS cold start pattern                */
+        taggedstruct {
+          "WAIT" ( uchar )*;  /* Dyn. length for 'wait' pattern                    */
+        };
+        taggedstruct {
+          "READY" ( uchar )*; /* Dyn. length for 'ready' pattern                   */
+        };
+      };
+    };
+  };
+  /* for CHARACTERISTIC and AXIS_PTS and MEMORY_LAYOUT                                */
+  "DP_BLOB" struct
+  {
+    ulong;      /* start address for example of a map                                 */
+    ulong;      /* length of the map                                                  */
+  };
+  /* for MEASUREMENT */
+  "KP_BLOB" struct
+  {
+    ulong;                        /* Start address of measurement variable            */
+    enum {                        /* Address location                                 */
+       "INTERN"  = 0,
+       "EXTERN"  = 1
+    };
+    uint;                         /* Size of measurement in bytes                     */
+    taggedstruct {
+       ("RASTER" uchar )*;        /* Array of event channel initialization values     */
+    };
+  };
+};
+/* --> file etk_v_1.1.3b.aml (29-AUG-2005) by ETAS + Be                               */
+/* --> file kwp2000.aml V02.02b2 (15.10.2003) by ETAS + Be                */
+/**************************************************************************/
+/*                                                                        */
+/*   ASAP2-Meta-Description for KWP2000 protokoll                         */
+/*   ASAP-Version:              V1.4                                      */
+/*   ETAS KWP2000-AML-Version:  V02.02 (this file "KWP2000_V0201.AML")    */
+/*   TP-BLOB Version:           V02.00                                    */
+/*                                                                        */
+/*------------------------------------------------------------------------*/
+/*   ETAS-Hs 2.3.01                                                       */
+/*   - definition of version 2.0                                          */
+/*   - Integration of parameters for  KWP on CAN                          */
+/*------------------------------------------------------------------------*/
+/*   Ruo 20.08.2002:                                                      */
+/*    -  deleted retundant information in QP BLOB                         */
+/*       "uint;              sampling period [ms]"                        */
+/*------------------------------------------------------------------------*/
+/*   RB-Aberfeld 13.02.03                                                 */
+/*   - Add Header information                                             */
+/*   - wrap definition of "block "ADDRESS" struct {}" into a              */
+/*     taggedstruct {}                                                    */
+/*------------------------------------------------------------------------*/
+/*   ETAS-Ruo 06.03.2003                                                  */
+/*   - added version information                                          */
+/*   - replaced german explanation                                        */
+/*------------------------------------------------------------------------*/
+/*   ETAS-Ruo 13.10.2003                                                  */
+/*   - exchanged 5Baud by Stimulation_5Baud                               */
+/*   - exchanged KLINE+CAN by KLINE_AND_CAN                               */
+/*   - supported with INCA V4.0.4                                         */
+/*------------------------------------------------------------------------*/
+/*   GS-EC/EMT3-H.Bauer 15.08.2005                                        */
+/*    - changes for ASAP Syntax: block added to QP_BLOB and K_LINE        */
+/*------------------------------------------------------------------------*/
+/*   Used datatypes:                                                      */
+/*                                                                        */
+/*   A2ML       ASAP2          Windows  Explaination                      */
+/*   ---------------------------------------------------------            */
+/*   uchar      UBYTE          BYTE     unsigned 8 Bit                    */
+/*   char       SBYTE          char     signed 8 Bit                      */
+/*   uint       UWORD          WORD     unsigned integer 16 Bit           */
+/*   int        SWORD          int      signed integer 16 Bit             */
+/*   ulong      ULONG          DWORD    unsigned integer 32 Bit           */
+/*   long       SLONG          LONG     signed integer 32 Bit             */
+/*   float      FLOAT32_IEEE            float 32 Bit                      */
+/*                                                                        */
+/**************************************************************************/
+"ASAP1B_KWP2000"  taggedstruct {
+   /* bei MEMORY_SEGMENT (optional)              */
+   /* ADDRESS_MAPPING can be multiple and partly */
+   ("ADDRESS_MAPPING" struct
+      {
+      ulong;        /* Starting address acc.. MEMORY_SEGMENT                */
+      ulong;        /* mapped starting address                              */
+      ulong;        /* length of range to be mapped                         */
+      }
+   )*;
+   ("SEED_KEY"      /* Description of the Seed & Key process                */
+   char[256]        /* name of Seed&Key DLL for application, incl. path and extension */
+   )*;
+   (block "SOURCE" struct {
+      struct {
+         char [100];       /* Name              */
+         int;              /* CSE-units         */
+         long;             /* min periode       */
+      };
+      taggedstruct {
+         block "QP_BLOB" struct {
+             enum {            /* Physical layer Information  */
+               "KLINE"      = 1,
+               "CAN"        = 2,
+               "KLINE_AND_CAN"  = 3
+             };
+             enum {        /* Measurement mode of ECU: Block with         */
+                           /* local Id or single by address or freerunning*/
+                "ADDRESSMODE"           = 1,
+                "BLOCKMODE"             = 2,
+                "FREERUNNINGMODE"       = 3
+             };
+             uint;           /* Block mode: local identifier     */
+             uint;           /* max. no of signals               */
+             uint;           /* max. no of bytes                 */
+             ulong;         /* CAN-ID for EUDTP                  */
+             uint;           /* Raster ID for EUDTP              */
+         };
+      };
+   }
+   )*;
+
+
+};
+      /* --> file kwp2000.aml V02.02b2 (15.10.2003) by ETAS + Be */
+    };

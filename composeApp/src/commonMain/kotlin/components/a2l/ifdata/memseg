@@ -1,0 +1,30 @@
+/* bei MEMORY_SEGMENT (optional) */
+
+    /* Beschreibung der DAQ-Listen */
+        (block "SOURCE" struct {
+      taggedstruct {
+        "DISPLAY_IDENTIFIER" char[32];
+
+      };
+    } )*;
+
+    /* Group several event channels to form one combined event */
+    /* e.g. group all cylinder synchronous events to one combined element */
+    (block "EVENT_GROUP" struct {
+       char [101];   /* Event group name */
+       char [9];     /* Short name for the event group */
+       taggedstruct {
+         ("RASTER" uchar )*;
+       };
+                     /* all event channels beloging to group
+                        (CCP Event Channel Numbers for START_STOP)               */
+    } )*;
+    /* Description of the authentification process */
+    block "SEED_KEY" struct {
+       char[256];    /* Name of the Seed&Key DLL for CAL Priviledge,
+                        including file-Extension without path */
+       char[256];    /* Name of the Seed&Key DLL for DAQ Priviledge,
+                        including file-Extension without path */
+       char[256];    /* Name of the Seed&Key DLL for PGM Priviledge,
+                        including file-Extension without path */
+    };
