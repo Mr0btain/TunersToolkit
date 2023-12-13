@@ -1,4 +1,0 @@
-org.mr0btain.tunerstoolkit.test.composeApp-androidTest-0 /Users/admin/Documents/Projects/TunersToolkit/composeApp/build/generated/res/resValues/androidTest/debug
-org.mr0btain.tunerstoolkit.test.composeApp-mergeDebugAndroidTestResources-1 /Users/admin/Documents/Projects/TunersToolkit/composeApp/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/merged.dir
-org.mr0btain.tunerstoolkit.test.composeApp-mergeDebugAndroidTestResources-2 /Users/admin/Documents/Projects/TunersToolkit/composeApp/build/intermediates/incremental/debugAndroidTest/mergeDebugAndroidTestResources/stripped.dir
-org.mr0btain.tunerstoolkit.test.composeApp-merged_res-3 /Users/admin/Documents/Projects/TunersToolkit/composeApp/build/intermediates/merged_res/debugAndroidTest
