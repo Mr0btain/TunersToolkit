@@ -49,9 +49,6 @@ import components.custom.persistedLazyScrollState
 import components.formulaparser.FormulaParseDialog
 import components.helpers.ScreenSize
 import components.mappopup.GridWindow
-import components.maptextoverlay.classes.DimensionMapper
-import components.maptextoverlay.components.calcMapOutlines
-import components.maptextoverlay.components.toPath
 import components.utilitytab.UtilityView
 import screens.editor.components.EditorView
 import screens.editor.components.FloatingMapButton

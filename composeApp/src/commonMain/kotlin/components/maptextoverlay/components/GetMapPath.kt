@@ -3,9 +3,6 @@ package components.maptextoverlay.components
 import androidx.compose.ui.graphics.Path
 import components.calibrationdata.classes.MapDataValues
 import components.maptextoverlay.classes.DimensionMapper
-import components.maptextoverlay.classes.PathData
-import components.maptextoverlay.classes.PathLine
-import components.maptextoverlay.classes.PathStart
 
 
 fun MapDataValues.getMapPath(

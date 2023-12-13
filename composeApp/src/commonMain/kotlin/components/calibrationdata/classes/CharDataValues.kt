@@ -1,7 +1,7 @@
 package components.calibrationdata.classes
 
+import androidx.compose.ui.graphics.Path
 import components.a2l.classes.enums.DataType
-import components.maptextoverlay.classes.PathData
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -13,7 +13,7 @@ data class CharDataValues(
     val actualEndPosition: Int = Int.MIN_VALUE,
     val dataType: DataType = DataType.NOT_SET,
     val format: String = "",
-    val overlayPath: PathData = PathData()
+    val overlayPath: Path = Path()
 ) {
     private fun getAxisXLength(): Int {
         var mResult = 0

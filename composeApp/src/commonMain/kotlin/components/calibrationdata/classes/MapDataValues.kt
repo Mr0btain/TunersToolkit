@@ -1,8 +1,8 @@
 package components.calibrationdata.classes
 
+import androidx.compose.ui.graphics.Path
 import components.a2l.classes.enums.CharacteristicType
 import components.a2l.classes.enums.DataType
-import components.maptextoverlay.classes.PathData
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -23,7 +23,7 @@ data class DataValues(
     val dataType: DataType = DataType.NOT_SET,
     val format: String = "",
     val formula: String = "",
-    val overlayPath: PathData = PathData()
+    val overlayPath: Path = Path()
 )
 
 @Serializable
