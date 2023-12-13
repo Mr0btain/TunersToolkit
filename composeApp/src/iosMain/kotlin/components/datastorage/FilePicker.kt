@@ -1,11 +1,11 @@
-package components.functions.filetools
+package components.datastorage
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.focus.FocusRequester
 import com.mohamedrejeb.calf.io.readByteArray
+import components.datastorage.components.FileType
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import platform.Foundation.NSURL
 import platform.UIKit.UIAdaptivePresentationControllerDelegateProtocol
 import platform.UIKit.UIApplication

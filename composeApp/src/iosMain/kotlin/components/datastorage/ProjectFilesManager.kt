@@ -1,5 +1,8 @@
 package components.datastorage
 
+import components.datastorage.components.ProjectChanges
+import components.datastorage.components.ProjectFileType
+import components.datastorage.components.getFileType
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.allocArrayOf

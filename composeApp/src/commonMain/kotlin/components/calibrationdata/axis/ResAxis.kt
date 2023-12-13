@@ -136,7 +136,7 @@ fun readResAxisValues(
 
     if (mCompuMethod.conversionType != ConversionType.TAB_VERB) {
         mAxisHexData.formattedValues.forEachIndexed { index, result ->
-            val mPhysUnit = mCompuMethod.compute(result, a2lData, mFormat)
+            val mPhysUnit = mCompuMethod.compute(result, a2lData)
 
             mResult.add(
                 mIndexIncr.sortAxisPosition(

@@ -214,7 +214,7 @@ fun HexDataResult.formatMapValues(
 
     if (compuMethod.conversionType != ConversionType.TAB_VERB) {
         this.formattedValues.forEach {
-            mResult.add(compuMethod.compute(it, a2lData, format))
+            mResult.add(compuMethod.compute(it, a2lData))
         }
     } else if (characteristic.getBitMask() != ULong.MIN_VALUE) {
         // Else if bitmask is not empty apply bitmask if its not blank
@@ -246,16 +246,6 @@ fun List<Any>.formatColumnOrRowDir(itemsPer: Int, isRowDir: Boolean): List<List<
             this.slice(index * itemsPer until minOf((index + 1) * itemsPer, this.size))
         }
     }
-}
-
-/**
- * Formats a Number to a Double, doesn't always keep trailing zeros, formatToString is much more reliable
- */
-
-fun Number.formatValue(format: String): Double {
-    val formatString = "${format.replace("\"", "")}f"
-    val formattedString = this.toString().formatLength(format)
-    return formattedString.toDouble()
 }
 
 /**

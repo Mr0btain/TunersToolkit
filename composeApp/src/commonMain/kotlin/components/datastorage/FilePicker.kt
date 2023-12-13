@@ -1,8 +1,9 @@
-package components.functions.filetools
+package components.datastorage
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.focus.FocusRequester
+import components.datastorage.components.FileType
 import kotlinx.coroutines.CoroutineScope
 
 @Composable

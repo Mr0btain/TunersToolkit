@@ -1,4 +1,4 @@
-package components.functions.filetools
+package components.datastorage.components
 
 import components.datastorage.ProjectFilesManager
 import screens.settings.classes.SettingsData

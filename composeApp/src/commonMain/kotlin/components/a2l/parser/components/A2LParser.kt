@@ -423,9 +423,6 @@ class A2LParser {
                 val mCharResult = mutableListOf<MapDataValues>()
                 var mBaseOffset = ULong.MIN_VALUE
 
-                // Update our map list view with our groups
-                val mMapList = mutableListOf<MapDataContainer>()
-
                 parsed.functions.forEach { (_, function) ->
                     val mResultChildren = mutableListOf<String>()
                     mResultChildren.addAll(function.getDefCharacteristics())

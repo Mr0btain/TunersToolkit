@@ -23,9 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import components.a2l.parseAndComputeA2lData
-import components.a2l.parser.parseA2lFile
-import components.functions.filetools.FilePicker
-import components.functions.filetools.FileType
+import components.datastorage.FilePicker
+import components.datastorage.components.FileType
 import components.hex.processHexFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

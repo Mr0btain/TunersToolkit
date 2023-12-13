@@ -8,8 +8,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.sp
 import components.a2l.classes.data.A2lData
-import components.functions.filetools.getSettings
-import components.functions.filetools.saveSettings
+import components.datastorage.components.getSettings
+import components.datastorage.components.saveSettings
 import components.hex.HexSegmentData
 import components.maptextoverlay.classes.MapValuesSorted
 import components.utilitytab.maplisttab.classes.MapDataContainer

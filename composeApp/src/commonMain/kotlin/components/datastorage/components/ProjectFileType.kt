@@ -1,4 +1,4 @@
-package components.datastorage
+package components.datastorage.components
 
 import components.a2l.classes.data.A2lData
 import components.hex.HexSegmentMap

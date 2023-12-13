@@ -46,7 +46,7 @@ fun readComAxisValues(
     var mPosition = ULong.MIN_VALUE
     val mRecordLayout = mAxisPtsRef.getRecordLayout(a2lData)
     var mReserved = mRecordLayout.getReserved()
-    var mSrcAddress = SrcAddress()
+    // var mSrcAddress = SrcAddress()
 
     // Check Axis point reference
     if (mAxisPtsRef != AxisPts()) {
@@ -64,7 +64,7 @@ fun readComAxisValues(
             mReserved = mRecordLayout.getReserved()
 
             // Get SrcAddress
-            mSrcAddress = mRecordLayout.getSrcAddrX()
+            // mSrcAddress = mRecordLayout.getSrcAddrX()
 
             val mRecordLayoutAxisPts = mRecordLayout.getAxisPtsX()
 
@@ -161,7 +161,7 @@ fun readComAxisValues(
     // Convert values and add to array
     if (mCompuMethod.conversionType != ConversionType.TAB_VERB) {
         mAxisHexData.formattedValues.forEachIndexed { index, result ->
-            val mPhysUnit = mCompuMethod.compute(result, a2lData, mFormat)
+            val mPhysUnit = mCompuMethod.compute(result, a2lData)
 
             mResult.add(
                 mIndexIncr.sortAxisPosition(

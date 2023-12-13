@@ -26,8 +26,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import components.functions.Keyboard
-import components.functions.keyboardAsState
+import components.datastorage.components.Keyboard
+import components.datastorage.components.keyboardAsState
 import components.utilitytab.buttonbartab.components.UtilityButtonBar1
 import components.utilitytab.buttonbartab.components.UtilityButtonBar2
 import components.utilitytab.components.UtilityActionAnimated

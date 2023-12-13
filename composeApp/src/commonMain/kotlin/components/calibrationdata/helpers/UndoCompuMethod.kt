@@ -7,9 +7,8 @@ import components.a2l.classes.data.Coeffs
  */
 fun Number.reverseRatFunc(coeffs: Coeffs): Double {
     val mInputNumber = this.toDouble()
-    var mResult = 0.0
 
-    mResult = try {
+    val mResult: Double = try {
         if (coeffs.isNotBlank()) {
             if ((coeffs.a + coeffs.c + coeffs.d + coeffs.e).toInt() == 0) {
                 (mInputNumber * coeffs.b ) / coeffs.f

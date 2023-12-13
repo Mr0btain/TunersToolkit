@@ -44,8 +44,7 @@ data class CompuMethod(
      */
     fun compute(
         input: Number,
-        a2lData: A2lData,
-        format: String
+        a2lData: A2lData
     ): Double {
         val mValue = input.toLong()
 

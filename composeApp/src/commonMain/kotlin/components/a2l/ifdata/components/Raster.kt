@@ -29,7 +29,7 @@ fun parseAndFormatRasters(input: String): Raster {
         //rast.channelNumber = cleaned[2].toIntOrNull()
         //rast.basicScaleUnit = cleaned[3].toIntOrNull()
         //rast.ecuSampleRate = cleaned[4].toLongOrNull()
-        cleaned.subList(5, cleaned.size).forEachIndexed { index, lowerItem ->
+        cleaned.subList(5, cleaned.size).forEach { lowerItem ->
             when (lowerItem.trim()) {
                 "EXCLUSIVE" -> {
                     //rast.exclusive = cleaned[index + 1].toIntOrNull()

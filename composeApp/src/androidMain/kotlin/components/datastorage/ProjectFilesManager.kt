@@ -2,6 +2,9 @@ package components.datastorage
 
 import android.content.Context
 import appContext
+import components.datastorage.components.ProjectChanges
+import components.datastorage.components.ProjectFileType
+import components.datastorage.components.getFileType
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import screens.settings.classes.SettingsData

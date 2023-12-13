@@ -43,7 +43,7 @@ fun readValueCharacteristicData(
         } else mCharHexData.formattedValues.first()
 
         // Compute final value
-        mConverted = mCompuMethod.compute(mValue, a2lData, mFormat)
+        mConverted = mCompuMethod.compute(mValue, a2lData)
     } else {
         // If bitmask exists, apply it
         val mValue = if (mBitMask != ULong.MIN_VALUE && mBitMask != 0UL) {

@@ -1,7 +1,7 @@
 package screens.editor.components
 
 import components.calibrationdata.classes.MapDataValues
-import components.functions.chunkByteArray
+import components.datastorage.components.chunkByteArray
 import components.hex.ByteSegmentData
 
 data class ChunkedDataValues(

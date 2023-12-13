@@ -1,4 +1,4 @@
-package components.functions.filetools
+package components.datastorage.components
 
 enum class FileType {
     ALL,

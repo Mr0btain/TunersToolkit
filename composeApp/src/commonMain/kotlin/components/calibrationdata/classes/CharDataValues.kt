@@ -34,8 +34,4 @@ data class CharDataValues(
 
         return mResult + 1
     }
-
-    fun changeValue(input: Any, column: Int, row: Int) {
-        // TODO
-    }
 }

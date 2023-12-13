@@ -28,9 +28,9 @@ import androidx.compose.ui.window.Dialog
 import components.a2l.classes.data.A2lData
 import components.a2l.parseAndComputeA2lData
 import components.datastorage.ProjectFilesManager
-import components.functions.filetools.FilePicker
-import components.functions.filetools.FileType
-import components.functions.filetools.saveNewProject
+import components.datastorage.FilePicker
+import components.datastorage.components.FileType
+import components.datastorage.components.saveNewProject
 import components.hex.processHexFile
 import components.maptextoverlay.classes.MapValuesSorted
 import components.utilitytab.projecttab.classes.ProjectInfo

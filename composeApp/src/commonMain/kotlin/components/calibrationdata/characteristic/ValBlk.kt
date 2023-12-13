@@ -46,7 +46,7 @@ fun readValBlkCharacteristicData(
             if (mCompuMethod != CompuMethod()) {
                 // Check conversion type
                 if (mCompuMethod.conversionType != ConversionType.TAB_VERB) {
-                    val mPhysUnit = mCompuMethod.compute(it, a2lData, mFormat)
+                    val mPhysUnit = mCompuMethod.compute(it, a2lData)
 
                     mCharDataFormatted.add(
                         FormattedValue(

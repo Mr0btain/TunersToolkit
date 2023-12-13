@@ -119,7 +119,7 @@ fun List<Number>.positionValuesInMap(
 
                 col = index % axisYDim
 
-                val mPhysValue = mCompuMethod.compute(value, a2lData, mFormat)
+                val mPhysValue = mCompuMethod.compute(value, a2lData)
 
                 mResult.add(
                     FormattedValue(
@@ -137,7 +137,7 @@ fun List<Number>.positionValuesInMap(
 
                 col = index % axisXDim
 
-                val mPhysValue = mCompuMethod.compute(value, a2lData, mFormat)
+                val mPhysValue = mCompuMethod.compute(value, a2lData)
 
                 mResult.add(
                     FormattedValue(

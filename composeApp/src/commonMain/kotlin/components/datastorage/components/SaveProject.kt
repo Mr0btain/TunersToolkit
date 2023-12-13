@@ -1,6 +1,5 @@
-package components.functions.filetools
+package components.datastorage.components
 
-import components.datastorage.ProjectFileType
 import components.datastorage.ProjectFilesManager
 import components.hex.HexSegmentMap
 import kotlinx.coroutines.CoroutineScope

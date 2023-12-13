@@ -1,4 +1,4 @@
-package components.datastorage
+package components.datastorage.components
 
 import kotlinx.serialization.Serializable
 

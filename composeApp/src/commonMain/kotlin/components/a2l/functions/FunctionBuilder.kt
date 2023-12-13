@@ -66,7 +66,6 @@ class FunctionBuilder {
 
                         line.startsWith("/begin REF_CHARACTERISTIC") -> {
                             val linesFound = mutableListOf<String>()
-                            val refChar = mutableListOf<String>()
 
                             for (l in input.subList(index + 1, input.size)) {
                                 when {

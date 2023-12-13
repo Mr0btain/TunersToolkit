@@ -89,7 +89,7 @@ fun readStdAxisValues(
 
         if (mCompuMethod.conversionType != ConversionType.TAB_VERB) {
             mAxisHexData.formattedValues.forEachIndexed { index, result ->
-                val mPhysUnit = mCompuMethod.compute(result, a2lData, mFormat)
+                val mPhysUnit = mCompuMethod.compute(result, a2lData)
 
                 mResult.add(
                     mIndexIncr.sortAxisPosition(
@@ -167,18 +167,18 @@ fun readStdAxisValues(
 
             mAxisHexData.formattedValues.forEachIndexed { index, result ->
                 if (mDeposit != Deposit.DIFFERENCE) {
-                    mPhysValue = mCompuMethod.compute(result, a2lData, mFormat)
+                    mPhysValue = mCompuMethod.compute(result, a2lData)
                 } else {
                     if (index == 0) {
-                        mPhysValue = mCompuMethod.compute(result, a2lData, mFormat)
+                        mPhysValue = mCompuMethod.compute(result, a2lData)
                         mPredValue = mPhysValue
                     }
                     if (index > 0 && index < mNumOfAxisPts - 1) {
-                        mPhysValue = mCompuMethod.compute(result, a2lData, mFormat) + mPredValue
+                        mPhysValue = mCompuMethod.compute(result, a2lData) + mPredValue
                         mPredValue = mPhysValue
                     }
                     if (index == mNumOfAxisPts - 1) {
-                        mPhysValue = mCompuMethod.compute(result, a2lData, mFormat) + mPredValue
+                        mPhysValue = mCompuMethod.compute(result, a2lData) + mPredValue
                         mPredValue = mPhysValue
                     }
                 }

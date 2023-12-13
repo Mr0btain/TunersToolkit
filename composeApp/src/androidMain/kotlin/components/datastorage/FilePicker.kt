@@ -1,15 +1,14 @@
-package components.functions.filetools
+package components.datastorage
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.platform.LocalContext
+import components.datastorage.components.FileType
 import kotlinx.coroutines.CoroutineScope
-import org.koin.core.KoinApplication.Companion.init
 
 @Composable
 actual fun FilePicker(

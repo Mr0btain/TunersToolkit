@@ -1,5 +1,7 @@
 package components.datastorage
 
+import components.datastorage.components.ProjectChanges
+import components.datastorage.components.ProjectFileType
 import screens.settings.classes.SettingsData
 
 

@@ -36,13 +36,11 @@ fun getDataFromHexSegment(
     val mLength = dataType.size * 2
     val mAddress = (position - mHexData.baseOffset).toInt() * 2
     var mResult = ""
-    var mChunkMapKey = 0
 
     mHexData.data.entries.forEach { (start, data) ->
         val mEndPosition = (start + data.length)
 
         if (mAddress in start..mEndPosition) {
-            mChunkMapKey = start
             mResult = if (mEndPosition > (mAddress + mLength)) {
                 data.substring(mAddress - start, (mAddress + mLength) - start)
             } else {
