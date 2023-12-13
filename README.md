@@ -1,3 +1,8 @@
+#Tuners Toolkit
+
+Simple Ecu tuning program that is multiplatform and "should" run anywhere 
+on pretty much anything.
+
 This is a Kotlin Multiplatform project targeting Android, iOS, Desktop.
 
 * `/composeApp` is for code that will be shared across your Compose Multiplatform applications.
