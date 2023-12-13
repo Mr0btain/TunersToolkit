@@ -3,8 +3,6 @@ package screens.editor.components
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -15,15 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.boundsInParent
-import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.IntSize
 import components.calibrationdata.classes.MapDataValues
-import components.hex.hexToAscii
+import components.parsers.hex.hexToAscii
 import kotlinx.coroutines.CoroutineScope
 import screens.editor.components.ascii.AsciiTextView
 import screens.editor.components.hexview.EditorTextField

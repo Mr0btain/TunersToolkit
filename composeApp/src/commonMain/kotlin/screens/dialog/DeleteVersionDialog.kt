@@ -1,16 +1,14 @@
 package screens.dialog
 
 import androidx.compose.runtime.Composable
-import components.a2l.classes.data.A2lData
+import components.parsers.a2l.classes.data.A2lData
 import components.custom.AlertDialogView
 import components.datastorage.ProjectFilesManager
 import components.maptextoverlay.classes.MapValuesSorted
 import components.utilitytab.projecttab.classes.ProjectInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
-import moe.tlaster.precompose.viewmodel.viewModelScope
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import screens.editor.components.MainViewModel

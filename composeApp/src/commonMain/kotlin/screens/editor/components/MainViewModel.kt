@@ -7,10 +7,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.sp
-import components.a2l.classes.data.A2lData
+import components.parsers.a2l.classes.data.A2lData
 import components.datastorage.components.getSettings
 import components.datastorage.components.saveSettings
-import components.hex.HexSegmentData
+import components.parsers.hex.HexSegmentData
 import components.maptextoverlay.classes.MapValuesSorted
 import components.utilitytab.maplisttab.classes.MapDataContainer
 import components.utilitytab.projecttab.classes.ProjectInfo

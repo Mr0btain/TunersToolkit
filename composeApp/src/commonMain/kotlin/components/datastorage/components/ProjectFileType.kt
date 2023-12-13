@@ -1,7 +1,7 @@
 package components.datastorage.components
 
-import components.a2l.classes.data.A2lData
-import components.hex.HexSegmentMap
+import components.parsers.a2l.classes.data.A2lData
+import components.parsers.hex.HexSegmentMap
 import components.maptextoverlay.classes.MapValuesSorted
 import components.utilitytab.maplisttab.classes.MapDataContainer
 import components.utilitytab.projecttab.classes.ProjectInfo

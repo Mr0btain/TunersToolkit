@@ -22,10 +22,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import components.a2l.parseAndComputeA2lData
+import components.parsers.a2l.parseAndComputeA2lData
 import components.datastorage.FilePicker
 import components.datastorage.components.FileType
-import components.hex.processHexFile
+import components.parsers.hex.processHexFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO

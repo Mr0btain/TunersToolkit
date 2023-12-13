@@ -1,7 +1,7 @@
 package components.helpers
 
 import components.calibrationdata.classes.MapDataValues
-import components.hex.HexSegmentData
+import components.parsers.hex.HexSegmentData
 
 fun alignChunksWithMaps(
     hexSegmentData: HexSegmentData,

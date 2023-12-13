@@ -2,7 +2,7 @@ package screens.editor.components
 
 import components.calibrationdata.classes.MapDataValues
 import components.datastorage.components.chunkByteArray
-import components.hex.ByteSegmentData
+import components.parsers.hex.ByteSegmentData
 
 data class ChunkedDataValues(
     val data: List<ByteChunk> = listOf()

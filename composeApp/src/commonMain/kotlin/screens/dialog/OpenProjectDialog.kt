@@ -23,7 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import components.a2l.classes.data.A2lData
+import components.parsers.a2l.classes.data.A2lData
 import components.datastorage.ProjectFilesManager
 import components.datastorage.components.processFileData
 import components.maptextoverlay.classes.MapValuesSorted

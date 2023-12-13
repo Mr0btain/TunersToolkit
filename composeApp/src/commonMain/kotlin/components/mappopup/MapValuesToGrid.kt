@@ -18,7 +18,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import components.calibrationdata.classes.MapDataValues
-import components.calibrationdata.helpers.formatLength
 
 @Composable
 fun MapValuesToGrid(

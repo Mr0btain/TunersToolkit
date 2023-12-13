@@ -1,8 +1,8 @@
 package components.calibrationdata.classes
 
 import androidx.compose.ui.graphics.Path
-import components.a2l.classes.enums.CharacteristicType
-import components.a2l.classes.enums.DataType
+import components.parsers.a2l.classes.enums.CharacteristicType
+import components.parsers.a2l.classes.enums.DataType
 import kotlinx.serialization.Serializable
 
 @Serializable

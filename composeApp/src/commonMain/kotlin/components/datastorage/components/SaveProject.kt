@@ -1,7 +1,7 @@
 package components.datastorage.components
 
 import components.datastorage.ProjectFilesManager
-import components.hex.HexSegmentMap
+import components.parsers.hex.HexSegmentMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO

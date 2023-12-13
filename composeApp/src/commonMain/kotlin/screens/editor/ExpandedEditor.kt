@@ -43,10 +43,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import components.a2l.classes.enums.CharacteristicType
 import components.calibrationdata.classes.MapDataValues
 import components.custom.persistedLazyScrollState
-import components.formulaparser.FormulaParseDialog
+import components.parsers.formula.FormulaParseDialog
 import components.helpers.ScreenSize
 import components.mappopup.GridWindow
 import components.utilitytab.UtilityView

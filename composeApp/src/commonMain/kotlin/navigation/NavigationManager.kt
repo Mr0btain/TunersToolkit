@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import moe.tlaster.precompose.navigation.NavHost
 import moe.tlaster.precompose.navigation.Navigator
 import moe.tlaster.precompose.navigation.transition.NavTransition
-import screenconfig.AdaptiveScreen
+import components.screenconfig.AdaptiveScreen
 import screens.editor.CompactEditor
 import screens.editor.ExpandedEditor
 import screens.editor.components.MainViewModel
