@@ -5,6 +5,7 @@
 .DS_Store
 build/
 composeApp/build/
+composeApp/.gradle
 /captures
 .externalNativeBuild
 .cxx
