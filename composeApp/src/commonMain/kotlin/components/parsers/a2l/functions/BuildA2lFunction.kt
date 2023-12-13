@@ -1,7 +1,6 @@
 package components.parsers.a2l.functions
 
 import components.parsers.a2l.classes.data.AnnotList
-import components.a2l.ifdata.components.parseIfDataSection
 import components.parsers.a2l.classes.data.Annotation
 import components.parsers.a2l.classes.data.DefCharacs
 import components.parsers.a2l.classes.data.FunctionVersion
@@ -12,6 +11,7 @@ import components.parsers.a2l.classes.data.OutMeasurements
 import components.parsers.a2l.classes.data.RefCharacs
 import components.parsers.a2l.classes.data.SubFunction
 import components.parsers.a2l.classes.data.parseAnnotation
+import components.parsers.a2l.ifdata.components.parseIfDataSection
 import components.parsers.a2l.objects.A2lOptional
 
 /**

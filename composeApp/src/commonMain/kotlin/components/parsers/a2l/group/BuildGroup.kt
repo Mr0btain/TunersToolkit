@@ -1,7 +1,6 @@
 package components.parsers.a2l.group
 
 import components.parsers.a2l.classes.data.AnnotList
-import components.a2l.ifdata.components.parseIfDataSection
 import components.parsers.a2l.classes.data.Annotation
 import components.parsers.a2l.classes.data.FunctionList
 import components.parsers.a2l.classes.data.IfDataList
@@ -10,6 +9,7 @@ import components.parsers.a2l.classes.data.RefMeasurements
 import components.parsers.a2l.classes.data.SubGroup
 import components.parsers.a2l.classes.data.parseAnnotation
 import components.parsers.a2l.classes.enums.Root
+import components.parsers.a2l.ifdata.components.parseIfDataSection
 import components.parsers.a2l.objects.A2lOptional
 
 /**

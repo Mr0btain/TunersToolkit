@@ -2,7 +2,6 @@ package components.parsers.a2l.characteristic
 
 import components.parsers.a2l.axis.buildAxisDescription
 import components.parsers.a2l.classes.data.AnnotList
-import components.a2l.ifdata.components.parseIfDataSection
 import components.parsers.a2l.classes.data.Annotation
 import components.parsers.a2l.classes.data.BitMask
 import components.parsers.a2l.classes.data.CharNum
@@ -30,6 +29,7 @@ import components.parsers.a2l.classes.enums.parseByteOrder
 import components.parsers.a2l.classes.enums.parseCalibrationAccess
 import components.parsers.a2l.classes.enums.parseCharacteristicType
 import components.parsers.a2l.classes.enums.parseDeposit
+import components.parsers.a2l.ifdata.components.parseIfDataSection
 import components.parsers.a2l.objects.A2lOptional
 
 /**

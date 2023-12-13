@@ -2,7 +2,7 @@ package components.parsers.a2l.memorysegment
 
 import components.parsers.a2l.classes.data.MemoryLayoutProgramType
 import components.parsers.a2l.classes.data.parseMemLayoutPrgType
-import components.a2l.ifdata.components.parseIfDataSection
+import components.parsers.a2l.ifdata.components.parseIfDataSection
 import kotlinx.serialization.Serializable
 
 

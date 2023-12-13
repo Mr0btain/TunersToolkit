@@ -1,10 +1,10 @@
 package components.parsers.a2l.ifdata
 
-import components.a2l.ifdata.components.enums.InternalLocation
-import components.a2l.ifdata.components.Raster
-import components.a2l.ifdata.components.enums.BlobTypes
-import components.a2l.ifdata.components.enums.IfDataTypes
-import components.a2l.ifdata.components.parseAndFormatRasters
+import components.parsers.a2l.ifdata.components.Raster
+import components.parsers.a2l.ifdata.components.enums.BlobTypes
+import components.parsers.a2l.ifdata.components.enums.IfDataTypes
+import components.parsers.a2l.ifdata.components.enums.InternalLocation
+import components.parsers.a2l.ifdata.components.parseAndFormatRasters
 
 fun buildIfData(input: String): components.parsers.a2l.ifdata.IfData {
     // Multiple checks in line with functions to check size to make sure

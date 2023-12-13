@@ -9,7 +9,6 @@ import components.parsers.a2l.classes.data.MemorySegmentReference
 import components.parsers.a2l.classes.data.PhysUnit
 import components.parsers.a2l.classes.data.StepSize
 import components.parsers.a2l.classes.data.SymbolLink
-import components.a2l.ifdata.components.parseIfDataSection
 import components.parsers.a2l.classes.data.parseExtendedLimits
 import components.parsers.a2l.classes.enums.GuardRails
 import components.parsers.a2l.classes.enums.ReadOnly
@@ -18,6 +17,7 @@ import components.parsers.a2l.classes.enums.parseCalibrationAccess
 import components.parsers.a2l.classes.enums.parseConversionType
 import components.parsers.a2l.classes.enums.parseDeposit
 import components.parsers.a2l.classes.enums.parseMonotony
+import components.parsers.a2l.ifdata.components.parseIfDataSection
 import components.parsers.a2l.objects.A2lOptional
 
 /**

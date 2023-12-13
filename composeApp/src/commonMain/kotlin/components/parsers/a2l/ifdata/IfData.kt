@@ -1,9 +1,9 @@
 package components.parsers.a2l.ifdata
 
-import components.a2l.ifdata.components.enums.InternalLocation
-import components.a2l.ifdata.components.Raster
-import components.a2l.ifdata.components.enums.BlobTypes
-import components.a2l.ifdata.components.enums.IfDataTypes
+import components.parsers.a2l.ifdata.components.Raster
+import components.parsers.a2l.ifdata.components.enums.BlobTypes
+import components.parsers.a2l.ifdata.components.enums.IfDataTypes
+import components.parsers.a2l.ifdata.components.enums.InternalLocation
 import kotlinx.serialization.Serializable
 
 @Serializable

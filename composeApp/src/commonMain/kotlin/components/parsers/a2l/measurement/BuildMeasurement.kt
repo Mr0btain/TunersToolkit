@@ -1,7 +1,6 @@
 package components.parsers.a2l.measurement
 
 import components.parsers.a2l.classes.data.AnnotList
-import components.a2l.ifdata.components.parseIfDataSection
 import components.parsers.a2l.classes.data.Annotation
 import components.parsers.a2l.classes.data.ArraySize
 import components.parsers.a2l.classes.data.BitMask
@@ -24,6 +23,7 @@ import components.parsers.a2l.classes.enums.Discrete
 import components.parsers.a2l.classes.enums.ReadOnly
 import components.parsers.a2l.classes.enums.parseByteOrder
 import components.parsers.a2l.classes.enums.parseDataTypeEnum
+import components.parsers.a2l.ifdata.components.parseIfDataSection
 import components.parsers.a2l.objects.A2lOptional
 
 /**

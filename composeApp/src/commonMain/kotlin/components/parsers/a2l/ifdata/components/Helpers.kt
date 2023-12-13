@@ -1,7 +1,6 @@
 package components.parsers.a2l.ifdata.components
 
-import components.parsers.a2l.ifdata.IfData
-import components.a2l.ifdata.buildIfData
+import components.parsers.a2l.ifdata.buildIfData
 
 fun List<String>.parseIfDataSection(): components.parsers.a2l.ifdata.IfData {
     var found = false

@@ -3,7 +3,7 @@ package components.parsers.a2l.memorysegment
 import components.parsers.a2l.classes.enums.parseAttribute
 import components.parsers.a2l.classes.enums.parseMemorySegmentProgramType
 import components.parsers.a2l.classes.enums.parseMemoryType
-import components.a2l.ifdata.components.parseIfDataSection
+import components.parsers.a2l.ifdata.components.parseIfDataSection
 
 fun buildMemorySegment(input: List<String>): MemorySegment {
     // Trim up first item in case name lies on first line

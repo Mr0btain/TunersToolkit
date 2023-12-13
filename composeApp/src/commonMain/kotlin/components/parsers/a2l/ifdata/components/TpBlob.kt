@@ -1,12 +1,12 @@
 package components.parsers.a2l.ifdata.components
 
-import components.a2l.ifdata.components.tpblob.TPBBlobVersion
-import components.a2l.ifdata.components.tpblob.TPBByteOrder
-import components.a2l.ifdata.components.tpblob.TPBCANMsgIdReceive
-import components.a2l.ifdata.components.tpblob.TPBCANMsgIdSend
-import components.a2l.ifdata.components.tpblob.TPBCCPVersion
-import components.a2l.ifdata.components.tpblob.TPBStationAddress
-import components.a2l.ifdata.components.tpblob.TpBlobItems
+import components.parsers.a2l.ifdata.components.tpblob.TPBBlobVersion
+import components.parsers.a2l.ifdata.components.tpblob.TPBByteOrder
+import components.parsers.a2l.ifdata.components.tpblob.TPBCANMsgIdReceive
+import components.parsers.a2l.ifdata.components.tpblob.TPBCANMsgIdSend
+import components.parsers.a2l.ifdata.components.tpblob.TPBCCPVersion
+import components.parsers.a2l.ifdata.components.tpblob.TPBStationAddress
+import components.parsers.a2l.ifdata.components.tpblob.TpBlobItems
 
 data class TpBlob(
     val items: Map<String, TpBlobItems>
