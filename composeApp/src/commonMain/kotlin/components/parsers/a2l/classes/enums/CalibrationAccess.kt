@@ -18,6 +18,6 @@ fun String.parseCalibrationAccess(): CalibrationAccess {
         "NO_CALIBRATION" -> CalibrationAccess.NO_CALIBRATION
         "NOT_IN_MCD_SYSTEM" -> CalibrationAccess.NOT_IN_MCD_SYSTEM
         "OFFLINE_CALIBRATION" -> CalibrationAccess.OFFLINE_CALIBRATION
-        else -> CalibrationAccess.CALIBRATION
+        else -> CalibrationAccess.NOT_SET
     }
 }

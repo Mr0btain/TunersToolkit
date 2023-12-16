@@ -13,7 +13,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import screens.editor.components.MainViewModel
+import MainViewModel
 import screens.settings.classes.SettingsData
 import screens.settings.components.SettingItem
 import screens.settings.components.SettingType

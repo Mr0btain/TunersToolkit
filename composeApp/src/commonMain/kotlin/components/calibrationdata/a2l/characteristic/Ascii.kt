@@ -18,47 +18,47 @@ fun readAsciiCharacteristicData(
     segmentData: Map<String, HexSegmentData>,
     characteristic: Characteristic
 ): MapDataValues {
-    val mByteOrder = characteristic.getByteOrder()
-    val mNumber = characteristic.getNumber()
-    val mRecordLayout = characteristic.getRecordLayout(a2lData)
-    val mDataType = mRecordLayout.getFncValues().dataType
-    val mAsciiResult = mutableListOf<FormattedValue>()
+    val byteOrder = characteristic.getByteOrder()
+    val number = characteristic.getNumber()
+    val recordLayout = characteristic.getRecordLayout(a2lData)
+    val dataType = recordLayout.getFncValues().dataType
+    val asciiResult = mutableListOf<FormattedValue>()
 
-    val mResult = getValueData(
+    val hexDataResult = getValueData(
         a2lData = a2lData,
         segmentList = segmentData,
         position = characteristic.address,
-        dataType = mDataType,
-        byteOrder = mByteOrder,
-        numberOfValues = mNumber,
-        recordLayout = mRecordLayout
+        dataType = dataType,
+        byteOrder = byteOrder,
+        numberOfValues = number,
+        recordLayout = recordLayout
     )
 
-    mResult.formattedValues.forEachIndexed { index, result ->
-        mAsciiResult.add(
+    hexDataResult.formattedValues.forEachIndexed { index, formattedValue ->
+        asciiResult.add(
             FormattedValue(
-                originalValue = result.toChar().toString(),
-                formattedValue = result.toChar().toString(),
+                originalValue = formattedValue.toChar().toString(),
+                formattedValue = formattedValue.toChar().toString(),
                 column = index,
                 row = 0,
-                hexData = mResult.hexData.joinToString("")
+                hexData = hexDataResult.hexData.joinToString("")
             )
         )
     }
 
-    val mCharResult = CharDataValues(
-        byteSegmentId = mResult.segmentId,
-        actualStartPosition = mResult.startPosition,
-        actualEndPosition = mResult.endPosition,
-        dataType = mDataType,
-        values = mAsciiResult,
+    val result = CharDataValues(
+        byteSegmentId = hexDataResult.segmentId,
+        actualStartPosition = hexDataResult.startPosition,
+        actualEndPosition = hexDataResult.endPosition,
+        dataType = dataType,
+        values = asciiResult,
         format = "",
-        baseOffset = mResult.baseOffset
+        baseOffset = hexDataResult.baseOffset
     )
 
     return MapDataValues(
         name = characteristic.name,
         mapType = CharacteristicType.ASCII,
-        charValues = mCharResult
+        charValues = result
     )
 }

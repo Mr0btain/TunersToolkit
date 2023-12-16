@@ -9,7 +9,6 @@ import moe.tlaster.precompose.navigation.rememberNavigator
 import navigation.drawer.DrawerNavigation
 import navigation.drawer.SideMenuDrawer
 import org.koin.compose.KoinApplication
-import screens.editor.components.MainViewModel
 import ui.theme.TunerToolkitTheme
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
@@ -17,31 +16,32 @@ import ui.theme.TunerToolkitTheme
 fun App() {
     PreComposeApp {
         KoinApplication(application = { modules(mainModule) }) {
-            val mWindowSizeClass = calculateWindowSizeClass()
-            val mViewModel = koinViewModel(vmClass = MainViewModel::class)
-            val mNavigator = rememberNavigator()
+            val windowSizeClass = calculateWindowSizeClass()
+            val viewModel = koinViewModel(vmClass = MainViewModel::class)
+            val navigator = rememberNavigator()
+            viewModel.windowSizeClass.value = calculateWindowSizeClass().widthSizeClass
 
             TunerToolkitTheme(
-                useDarkTheme = mViewModel.settings.value.alwaysDarkMode
+                useDarkTheme = viewModel.settings.value.alwaysDarkMode
             ) {
                 if (getPlatform().name == "Java") {
                     SideMenuDrawer(
-                        viewModel = mViewModel,
-                        windowSizeClass = mWindowSizeClass,
-                        navigator = mNavigator
+                        viewModel = viewModel,
+                        windowSizeClass = windowSizeClass,
+                        navigator = navigator
                     )
                 } else {
-                    if (mWindowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
+                    if (windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
                         DrawerNavigation(
-                            viewModel = mViewModel,
-                            windowSizeClass = mWindowSizeClass,
-                            navigator = mNavigator
+                            viewModel = viewModel,
+                            windowSizeClass = windowSizeClass,
+                            navigator = navigator
                         )
                     } else {
                         SideMenuDrawer(
-                            viewModel = mViewModel,
-                            windowSizeClass = mWindowSizeClass,
-                            navigator = mNavigator
+                            viewModel = viewModel,
+                            windowSizeClass = windowSizeClass,
+                            navigator = navigator
                         )
                     }
                 }

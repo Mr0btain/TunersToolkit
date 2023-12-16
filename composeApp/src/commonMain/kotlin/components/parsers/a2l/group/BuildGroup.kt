@@ -28,19 +28,9 @@ fun buildGroup(input: List<String>): Group {
             input.forEachIndexed { index, line ->
                 when {
                     line.startsWith("/begin ANNOTATION") -> {
-                        val subL = input.subList(index, input.size)
-                        var annotList = listOf("")
-                        var found = false
-                        subL.forEachIndexed { ind, lin ->
-                            when {
-                                !found && lin.contains("/end ANNOTATION") -> {
-                                    annotList = subL.subList(0, ind)
-                                    found = true
-                                }
-                            }
-                        }
+                        val subList = input.subList(index, input.size)
 
-                        mAnnotation.add(annotList.parseAnnotation())
+                        mAnnotation.add(parseAnnotation(subList))
                     }
 
                     line.startsWith("/begin REF_CHARACTERISTIC") -> {

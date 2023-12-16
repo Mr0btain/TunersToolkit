@@ -38,7 +38,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 @Composable
 fun NewProjectDialog(
@@ -49,18 +49,18 @@ fun NewProjectDialog(
     focusRequester: FocusRequester,
     scope: CoroutineScope
 ) {
-    val mProjectName = remember { mutableStateOf("") }
-    val mVersionName = remember { mutableStateOf("") }
-    val mEcuVersion = remember { mutableStateOf("") }
-    val mEcuBrand = remember { mutableStateOf("") }
-    val mVehicleManufacturer = remember { mutableStateOf("") }
-    val mVehicleModel = remember { mutableStateOf("") }
-    val mEngine = remember { mutableStateOf("") }
-    val mTransmission = remember { mutableStateOf("") }
-    val mShowHexFilePicker = remember { mutableStateOf(false) }
-    val mShowA2lFilePicker = remember { mutableStateOf(false) }
+    val projectName = remember { mutableStateOf("") }
+    val versionName = remember { mutableStateOf("") }
+    val ecuVersion = remember { mutableStateOf("") }
+    val ecuBrand = remember { mutableStateOf("") }
+    val vehicleManufacturer = remember { mutableStateOf("") }
+    val vehicleModel = remember { mutableStateOf("") }
+    val engine = remember { mutableStateOf("") }
+    val transmission = remember { mutableStateOf("") }
+    val showHexFilePicker = remember { mutableStateOf(false) }
+    val showA2lFilePicker = remember { mutableStateOf(false) }
 
-    if (mShowHexFilePicker.value) {
+    if (showHexFilePicker.value) {
         FilePicker(
             fileType = FileType.ALL,
             fileAction = {
@@ -68,13 +68,13 @@ fun NewProjectDialog(
                     processHexFile(it, viewModel)
                 }
             },
-            filePickCloser = mShowHexFilePicker,
+            filePickCloser = showHexFilePicker,
             scope = scope,
             focusRequester = focusRequester
         )
     }
 
-    if (mShowA2lFilePicker.value) {
+    if (showA2lFilePicker.value) {
         FilePicker(
             fileType = FileType.A2l,
             fileAction = {
@@ -82,7 +82,7 @@ fun NewProjectDialog(
                     parseAndComputeA2lData(it, viewModel)
                 }
                          },
-            filePickCloser = mShowA2lFilePicker,
+            filePickCloser = showA2lFilePicker,
             scope = scope,
             focusRequester = focusRequester
         )
@@ -113,11 +113,11 @@ fun NewProjectDialog(
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
                     TextButton(
-                        onClick = { mShowA2lFilePicker.value = true }
+                        onClick = { showA2lFilePicker.value = true }
                     ) { Text("A2L File") }
 
                     TextButton(
-                        onClick = { mShowHexFilePicker.value = true }
+                        onClick = { showHexFilePicker.value = true }
                     ) { Text("Hex File") }
                 }
 
@@ -130,16 +130,16 @@ fun NewProjectDialog(
                 )
 
                 OutlinedTextField(
-                    value = mProjectName.value,
-                    onValueChange = { mProjectName.value = it },
+                    value = projectName.value,
+                    onValueChange = { projectName.value = it },
                     label = { Text(text = "Project Name") }
                 )
 
                 Spacer(modifier = Modifier.padding(4.dp))
 
                 OutlinedTextField(
-                    value = mVersionName.value,
-                    onValueChange = { mVersionName.value = it },
+                    value = versionName.value,
+                    onValueChange = { versionName.value = it },
                     label = { Text(text = "Version Name") }
                 )
 
@@ -154,48 +154,48 @@ fun NewProjectDialog(
                 Spacer(modifier = Modifier.padding(4.dp))
 
                 OutlinedTextField(
-                    value = mVehicleManufacturer.value,
-                    onValueChange = { mVehicleManufacturer.value = it },
+                    value = vehicleManufacturer.value,
+                    onValueChange = { vehicleManufacturer.value = it },
                     label = { Text(text = "Vehicle Manufacturer") }
                 )
 
                 Spacer(modifier = Modifier.padding(4.dp))
 
                 OutlinedTextField(
-                    value = mVehicleModel.value,
-                    onValueChange = { mVehicleModel.value = it },
+                    value = vehicleModel.value,
+                    onValueChange = { vehicleModel.value = it },
                     label = { Text(text = "Vehicle Model") }
                 )
 
                 Spacer(modifier = Modifier.padding(4.dp))
 
                 OutlinedTextField(
-                    value = mEngine.value,
-                    onValueChange = { mEngine.value = it },
+                    value = engine.value,
+                    onValueChange = { engine.value = it },
                     label = { Text(text = "Engine") }
                 )
 
                 Spacer(modifier = Modifier.padding(4.dp))
 
                 OutlinedTextField(
-                    value = mTransmission.value,
-                    onValueChange = { mTransmission.value = it },
+                    value = transmission.value,
+                    onValueChange = { transmission.value = it },
                     label = { Text(text = "Transmission") }
                 )
 
                 Spacer(modifier = Modifier.padding(4.dp))
 
                 OutlinedTextField(
-                    value = mEcuBrand.value,
-                    onValueChange = { mEcuBrand.value = it },
+                    value = ecuBrand.value,
+                    onValueChange = { ecuBrand.value = it },
                     label = { Text(text = "Ecu Brand") }
                 )
 
                 Spacer(modifier = Modifier.padding(4.dp))
 
                 OutlinedTextField(
-                    value = mEcuVersion.value,
-                    onValueChange = { mEcuVersion.value = it },
+                    value = ecuVersion.value,
+                    onValueChange = { ecuVersion.value = it },
                     label = { Text(text = "Ecu version") }
                 )
 
@@ -214,22 +214,22 @@ fun NewProjectDialog(
                             viewModel.showNewProjectDialog.value = false
 
                             viewModel.projectInfo.value = ProjectInfo(
-                                name = mProjectName.value,
-                                projectVersion = mVersionName.value.ifBlank { "Original" },
-                                manufacturer = mVehicleManufacturer.value,
-                                model = mVehicleModel.value,
-                                engine = mEngine.value,
-                                transmission = mTransmission.value,
-                                ecuBrand = mEcuBrand.value,
-                                ecuVersion = mEcuVersion.value
+                                name = projectName.value,
+                                projectVersion = versionName.value.ifBlank { "Original" },
+                                manufacturer = vehicleManufacturer.value,
+                                model = vehicleModel.value,
+                                engine = engine.value,
+                                transmission = transmission.value,
+                                ecuBrand = ecuBrand.value,
+                                ecuVersion = ecuVersion.value
                             )
 
                             saveNewProject(
                                 viewModel = viewModel,
                                 filesManager = filesManager,
                                 scope = scope,
-                                projectName = mProjectName.value,
-                                projectVersion = mVersionName.value.ifBlank { "Original" }
+                                projectName = projectName.value,
+                                projectVersion = versionName.value.ifBlank { "Original" }
                             )
                         }
                     ) { Text("Confirm") }

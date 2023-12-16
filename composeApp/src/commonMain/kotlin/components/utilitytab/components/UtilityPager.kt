@@ -25,7 +25,7 @@ import components.utilitytab.buttonbartab.ButtonBarTab
 import components.utilitytab.maplisttab.MapsView
 import components.utilitytab.projecttab.ProjectInfoTab
 import kotlinx.coroutines.CoroutineScope
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

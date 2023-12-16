@@ -19,9 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import components.utilitytab.projecttab.components.InputTextOption
-import moe.tlaster.precompose.viewmodel.viewModel
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 // TODO: Maybe add drop down menu for autofill?
 @Composable

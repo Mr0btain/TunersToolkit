@@ -35,7 +35,7 @@ import screens.dialog.DeleteVersionDialog
 import screens.dialog.ImportDialog
 import screens.dialog.NewProjectDialog
 import screens.dialog.OpenProjectDialog
-import screens.editor.components.MainViewModel
+import MainViewModel
 import ui.theme.TunerToolkitTheme
 
 @OptIn(ExperimentalResourceApi::class)

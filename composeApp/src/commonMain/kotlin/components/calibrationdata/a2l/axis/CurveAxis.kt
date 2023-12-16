@@ -15,21 +15,21 @@ fun readCurveAxisValues(
     segmentData: Map<String, HexSegmentData>,
     axisDescr: AxisDescr
 ): Pair<ULong, AxisDataValues> {
-    val mCharacteristic = axisDescr.getReferenceCurveAxis(a2lData)
+    val characteristic = axisDescr.getReferenceCurveAxis(a2lData)
 
-    if (mCharacteristic != Characteristic()) {
-        val mRefAxisDescr = mCharacteristic.getAxisDescrX()
+    if (characteristic != Characteristic()) {
+        val refAxisDescr = characteristic.getAxisDescrX()
 
-        if (mRefAxisDescr != AxisDescr()) {
-            when (mRefAxisDescr.type) {
+        if (refAxisDescr != AxisDescr()) {
+            when (refAxisDescr.type) {
                 AxisType.STD_AXIS -> {
                     // Read Axis values from byte segment data and format them
                     return readStdAxisValues(
                         a2lData,
                         segmentData,
-                        mRefAxisDescr,
-                        mCharacteristic.address,
-                        mCharacteristic,
+                        refAxisDescr,
+                        characteristic.address,
+                        characteristic,
                         AxisDataType.X
                     )
                 }
@@ -39,19 +39,19 @@ fun readCurveAxisValues(
                     return readComAxisValues(
                         a2lData,
                         segmentData,
-                        mRefAxisDescr,
+                        refAxisDescr,
                         AxisDataType.X
                     )
                 }
 
                 AxisType.FIX_AXIS -> {
                     // Compute Axis values
-                    return Pair(ULong.MIN_VALUE, mRefAxisDescr.computeFixAxis(AxisDataType.X))
+                    return Pair(ULong.MIN_VALUE, refAxisDescr.computeFixAxis(AxisDataType.X))
                 }
 
                 AxisType.CURVE_AXIS -> {
                     // Read Axis values using ref axis
-                    return readCurveAxisValues(a2lData, segmentData, mRefAxisDescr)
+                    return readCurveAxisValues(a2lData, segmentData, refAxisDescr)
                 }
 
                 AxisType.RES_AXIS -> {
@@ -59,7 +59,7 @@ fun readCurveAxisValues(
                     return readResAxisValues(
                         a2lData,
                         segmentData,
-                        mRefAxisDescr,
+                        refAxisDescr,
                         AxisDataType.X
                     )
                 }

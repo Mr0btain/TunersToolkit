@@ -24,7 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 @Composable
 fun ExposedDropDownMenu(
@@ -33,10 +33,10 @@ fun ExposedDropDownMenu(
     expanded: MutableState<Boolean>,
     content: @Composable ColumnScope.(String) -> Unit
 ) {
-    var mIsEnabled by remember { mutableStateOf(false) }
+    var isEnabled by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = viewModel.hexDataSegments.size) {
-        if (viewModel.hexDataSegments.size > 0) mIsEnabled = true
+        if (viewModel.hexDataSegments.size > 0) isEnabled = true
     }
 
     Surface(
@@ -45,7 +45,7 @@ fun ExposedDropDownMenu(
         shadowElevation = 4.dp
     ) {
         TextButton(
-            enabled = mIsEnabled,
+            enabled = isEnabled,
             onClick = { expanded.value = !expanded.value },
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.primary)

@@ -25,64 +25,64 @@ fun readValueCharacteristicData(
     segmentData: Map<String, HexSegmentData>,
     characteristic: Characteristic
 ): MapDataValues {
-    val mByteOrder = characteristic.getByteOrder()
-    val mBitMask = characteristic.getBitMask()
-    val mCompuMethod = characteristic.getCompuMethod(a2lData)
-    val mFormat = characteristic.getFormat()
-    val mRecordLayout = characteristic.getRecordLayout(a2lData)
-    val mDataType = mRecordLayout.getFncValues().dataType
-    val mConverted: Any
+    val byteOrder = characteristic.getByteOrder()
+    val bitMask = characteristic.getBitMask()
+    val compuMethod = characteristic.getCompuMethod(a2lData)
+    val format = characteristic.getFormat()
+    val recordLayout = characteristic.getRecordLayout(a2lData)
+    val dataType = recordLayout.getFncValues().dataType
+    val converted: Any
 
     // Read Characteristic values from byte segment data
-    val mCharHexData = getValueData(
+    val charHexData = getValueData(
         a2lData = a2lData,
         segmentList = segmentData,
         position = characteristic.address,
-        dataType = mDataType,
-        byteOrder = mByteOrder,
+        dataType = dataType,
+        byteOrder = byteOrder,
         numberOfValues = 1,
-        recordLayout = mRecordLayout
+        recordLayout = recordLayout
     )
 
     // Format the Characteristic data
-     if (mCompuMethod.conversionType != ConversionType.TAB_VERB) {
+     if (compuMethod.conversionType != ConversionType.TAB_VERB) {
         // If bitmask exists, apply it
-        val mValue = if (mBitMask != ULong.MIN_VALUE && mBitMask != 0UL) {
-            characteristic.applyBitMask(mCharHexData.formattedValues.first())
-        } else mCharHexData.formattedValues.first()
+        val value = if (bitMask != ULong.MIN_VALUE && bitMask != 0UL) {
+            characteristic.applyBitMask(charHexData.formattedValues.first())
+        } else charHexData.formattedValues.first()
 
         // Compute final value
-        mConverted = mCompuMethod.compute(mValue, a2lData)
+        converted = compuMethod.compute(value, a2lData)
     } else {
         // If bitmask exists, apply it
-        val mValue = if (mBitMask != ULong.MIN_VALUE && mBitMask != 0UL) {
-            characteristic.applyBitMask(mCharHexData.formattedValues.first())
-        } else mCharHexData.formattedValues.first()
+        val value = if (bitMask != ULong.MIN_VALUE && bitMask != 0UL) {
+            characteristic.applyBitMask(charHexData.formattedValues.first())
+        } else charHexData.formattedValues.first()
 
         // Compute Tab Verb
-        mConverted = mCompuMethod.computeTabVerb(mValue, a2lData)
+        converted = compuMethod.computeTabVerb(value, a2lData)
     }
 
     // Create the data container for the value
-    val mCharDataValue = CharDataValues(
-        byteSegmentId = mCharHexData.segmentId,
-        actualStartPosition = mCharHexData.startPosition,
-        actualEndPosition = mCharHexData.endPosition,
-        dataType = mDataType,
+    val charDataValue = CharDataValues(
+        byteSegmentId = charHexData.segmentId,
+        actualStartPosition = charHexData.startPosition,
+        actualEndPosition = charHexData.endPosition,
+        dataType = dataType,
         values = mutableListOf(FormattedValue(
-            originalValue = mConverted.toString(),
-            formattedValue = if (mConverted is Number) { mConverted.toString().formatLength(mFormat) } else mConverted.toString(),
+            originalValue = converted.toString(),
+            formattedValue = if (converted is Number) { converted.toString().formatLength(format) } else converted.toString(),
             column = 0,
             row = 0,
-            hexData = mCharHexData.hexData.joinToString(""))
+            hexData = charHexData.hexData.joinToString(""))
         ),
-        format = mFormat,
-        baseOffset = mCharHexData.baseOffset
+        format = format,
+        baseOffset = charHexData.baseOffset
     )
 
     return MapDataValues(
         name = characteristic.name,
         mapType = CharacteristicType.VALUE,
-        charValues = mCharDataValue
+        charValues = charDataValue
     )
 }

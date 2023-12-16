@@ -18,8 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import components.utilitytab.projecttab.components.InputTextOption
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 // TODO: Make version a drop down menu with all current versions and maybe add version?
 @Composable

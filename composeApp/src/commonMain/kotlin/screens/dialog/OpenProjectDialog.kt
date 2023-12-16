@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 import moe.tlaster.precompose.navigation.NavOptions
 import moe.tlaster.precompose.navigation.Navigator
 import moe.tlaster.precompose.navigation.PopUpTo
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 @Composable
 fun OpenProjectDialog(
@@ -44,8 +44,8 @@ fun OpenProjectDialog(
     viewModel: MainViewModel,
     scope: CoroutineScope
 ) {
-    val mProjects = filesManager.getProjectList()
-    val mCurrentScreen = navigator.currentEntry.collectAsState(initial = null)
+    val projects = filesManager.getProjectList()
+    val currentScreen = navigator.currentEntry.collectAsState(initial = null)
 
     Dialog(
         onDismissRequest = onDismissRequest
@@ -68,7 +68,7 @@ fun OpenProjectDialog(
                         .scrollable(orientation = Orientation.Vertical, state = rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    mProjects.forEach {
+                    projects.forEach {
                         if (it != "settings.sts") {
                             TextButton(
                                 onClick = {
@@ -79,7 +79,7 @@ fun OpenProjectDialog(
                                         val versions = filesManager.getProjectVersionsList(it)
                                         filesManager.processFileData(it, versions.last(), viewModel)
                                         viewModel.isLoading.value = false
-                                        if (mCurrentScreen.value?.route?.route != "editor") {
+                                        if (currentScreen.value?.route?.route != "editor") {
                                             navigator.navigate(
                                                 route = "editor",
                                                 NavOptions(

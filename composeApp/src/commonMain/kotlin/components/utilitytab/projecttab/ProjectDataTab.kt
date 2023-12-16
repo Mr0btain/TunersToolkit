@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -19,8 +18,7 @@ import components.utilitytab.projecttab.classes.ProjectInfo
 import components.utilitytab.projecttab.components.EcuField
 import components.utilitytab.projecttab.components.ProjectField
 import components.utilitytab.projecttab.components.VehicleField
-import moe.tlaster.precompose.viewmodel.viewModel
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 @Composable
 fun ProjectInfoTab(

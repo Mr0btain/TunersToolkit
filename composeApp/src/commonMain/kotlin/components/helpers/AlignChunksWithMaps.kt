@@ -9,63 +9,63 @@ fun alignChunksWithMaps(
     lineCount: Int,
     minChunkSize: Int
 ): Pair<Map<Int, String>, Map<Int, List<MapDataValues>>> {
-    val mWholeHexData = hexSegmentData.data.values.joinToString("")
-    val mHexChunkResults = mutableMapOf<Int, String>()
-    var mPosition = 0
-    val mMapsInChunk = mutableMapOf<Int, List<MapDataValues>>()
+    val wholeHexData = hexSegmentData.data.values.joinToString("")
+    val hexChunkResults = mutableMapOf<Int, String>()
+    var position = 0
+    val mapsInChunk = mutableMapOf<Int, List<MapDataValues>>()
 
     // Until we hit the end of the Hex data, loop through and make chunks
-    while (mPosition < mWholeHexData.length) {
+    while (position < wholeHexData.length) {
         // Starting end position
-        var mEnd = mPosition + minChunkSize
+        var end = position + minChunkSize
 
         // Check each map, if one starts in a chunk, make sure its end also falls inside chunk
         // else extend the end by one line until it fits to make sure there is no overlap
         mapDataValues.forEach { map ->
             // Check if start position lies inside start and end
-            if (map.charValues.actualStartPosition in mPosition..mEnd) {
+            if (map.charValues.actualStartPosition in position..end) {
                 // Check if end position is inside if it is, add the map
-                if (map.charValues.actualEndPosition in mPosition..mEnd) {
-                    if (mMapsInChunk.containsKey(mPosition)) {
-                        mMapsInChunk[mPosition] = mMapsInChunk[mPosition]?.plus(
+                if (map.charValues.actualEndPosition in position..end) {
+                    if (mapsInChunk.containsKey(position)) {
+                        mapsInChunk[position] = mapsInChunk[position]?.plus(
                             map.copy(
                                 charOffsetsInSeg = Pair(
-                                    map.charValues.actualStartPosition - mPosition,
-                                    map.charValues.actualEndPosition - mPosition
+                                    map.charValues.actualStartPosition - position,
+                                    map.charValues.actualEndPosition - position
                                 )
                             )
                         ) ?: listOf()
                     } else {
-                        mMapsInChunk[mPosition] = listOf(
+                        mapsInChunk[position] = listOf(
                             map.copy(
                                 charOffsetsInSeg = Pair(
-                                    map.charValues.actualStartPosition - mPosition,
-                                    map.charValues.actualEndPosition - mPosition
+                                    map.charValues.actualStartPosition - position,
+                                    map.charValues.actualEndPosition - position
                                 )
                             )
                         )
                     }
                 } else {
                     // else extend the End one line at a time until it fits
-                    while (map.charValues.actualEndPosition > mEnd) {
-                        mEnd += lineCount
+                    while (map.charValues.actualEndPosition > end) {
+                        end += (lineCount * 2)
                     }
 
-                    if (mMapsInChunk.containsKey(mPosition)) {
-                        mMapsInChunk[mPosition] = mMapsInChunk[mPosition]?.plus(
+                    if (mapsInChunk.containsKey(position)) {
+                        mapsInChunk[position] = mapsInChunk[position]?.plus(
                             map.copy(
                                 charOffsetsInSeg = Pair(
-                                    map.charValues.actualStartPosition - mPosition,
-                                    map.charValues.actualEndPosition - mPosition
+                                    map.charValues.actualStartPosition - position,
+                                    map.charValues.actualEndPosition - position
                                 )
                             )
                         ) ?: listOf()
                     } else {
-                        mMapsInChunk[mPosition] = listOf(
+                        mapsInChunk[position] = listOf(
                             map.copy(
                                 charOffsetsInSeg = Pair(
-                                    map.charValues.actualStartPosition - mPosition,
-                                    map.charValues.actualEndPosition - mPosition
+                                    map.charValues.actualStartPosition - position,
+                                    map.charValues.actualEndPosition - position
                                 )
                             )
                         )
@@ -75,17 +75,17 @@ fun alignChunksWithMaps(
         }
 
         // Check we haven't exceeded the length of the data
-        if (mEnd < mWholeHexData.length) {
-            mHexChunkResults[mPosition] = mWholeHexData.substring(mPosition, mEnd)
-            mPosition = mEnd
+        if (end < wholeHexData.length) {
+            hexChunkResults[position] = wholeHexData.substring(position, end)
+            position = end
         } else {
             // else make last chunk with length
-            mHexChunkResults[mPosition] = mWholeHexData.substring(mPosition, mWholeHexData.length)
-            mPosition = mWholeHexData.length
+            hexChunkResults[position] = wholeHexData.substring(position, wholeHexData.length)
+            position = wholeHexData.length
         }
     }
 
-    return Pair(mHexChunkResults, mMapsInChunk.mapValues { (_, list) ->
+    return Pair(hexChunkResults, mapsInChunk.mapValues { (_, list) ->
         list.sortedBy { it.charValues.actualStartPosition }
     })
 }

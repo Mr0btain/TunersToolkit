@@ -11,16 +11,20 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Annotation(
-    val label: String,
-    val origin: String,
-    val text: String
+    val label: String = "",
+    val origin: String = "",
+    val text: String = ""
 ): A2lOptional
 
 /**
  * Parses a list of strings and returns an Annotation if it contains one
  */
 
-fun List<String>.parseAnnotation(): Annotation {
+fun parseAnnotation(input: List<String>): Annotation {
+    return input.takeWhile { !it.contains("/end ANNOTATION") }.buildAnnotation()
+}
+
+private fun List<String>.buildAnnotation(): Annotation {
     var label = ""
     var origin = ""
     var text = ""

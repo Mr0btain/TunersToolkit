@@ -20,22 +20,22 @@ fun MapGrid(
     dataTextStyle: TextStyle,
     headerTextStyle: TextStyle,
 ) {
-    var mAxisXUnit = ""
-    var mAxisYUnit = ""
+    var axisXUnit = ""
+    var axisYUnit = ""
 
     // Get Units for each Axis
     if (mapData.axisValues.isNotEmpty()) {
-        mAxisXUnit = mapData.axisValues[0].unit
+        axisXUnit = mapData.axisValues[0].unit
         // Check for Y Axis Header
         if (mapData.axisValues.size >= 2) {
-            mAxisYUnit = mapData.axisValues[1].unit
+            axisYUnit = mapData.axisValues[1].unit
         }
     }
 
     // Get X Axis Unit Box (X Axis Header)
-    val mXHeaderBox = @Composable {
+    val xHeaderBox = @Composable {
         Text(
-            text = mAxisXUnit,
+            text = axisXUnit,
             style = headerTextStyle,
             modifier = Modifier
                 .wrapContentSize()
@@ -45,9 +45,9 @@ fun MapGrid(
 
     // Get Y Axis Unit Box
     // This box is rotated -90 degrees already
-    val mYHeaderBox = @Composable {
+    val yHeaderBox = @Composable {
         Text(
-            text = mAxisYUnit,
+            text = axisYUnit,
             style = headerTextStyle,
             modifier = Modifier
                 .wrapContentSize()
@@ -57,7 +57,7 @@ fun MapGrid(
         )
     }
 
-    val mGridView = @Composable {
+    val gridView = @Composable {
         MapValuesToGrid(
             map = mapData,
             modifier = Modifier,
@@ -70,44 +70,44 @@ fun MapGrid(
         modifier = modifier.wrapContentSize()
     ) {
         Layout(
-            contents = listOf(mXHeaderBox, mYHeaderBox, mGridView),
+            contents = listOf(xHeaderBox, yHeaderBox, gridView),
             modifier = Modifier.wrapContentSize()
         ) { ( mXHeaderMeasurable, mYHeaderMeasurable, mGridViewMeasurable ), constraints ->
             // Measure Items
-            val mXHeaderPlaceable = mXHeaderMeasurable[0].measure(constraints)
-            val mYHeaderPlaceable = mYHeaderMeasurable[0].measure(constraints)
-            val mGridViewPlaceable = mGridViewMeasurable[0].measure(constraints)
+            val xHeaderPlaceable = mXHeaderMeasurable[0].measure(constraints)
+            val yHeaderPlaceable = mYHeaderMeasurable[0].measure(constraints)
+            val gridViewPlaceable = mGridViewMeasurable[0].measure(constraints)
 
-            val mWidth = if (mAxisYUnit.isNotBlank()) {
-                mGridViewPlaceable.width + mYHeaderPlaceable.width
-            } else mGridViewPlaceable.width
-            val mHeight = if (mAxisYUnit.isNotBlank()) {
-                mGridViewPlaceable.height + mXHeaderPlaceable.height
-            } else mGridViewPlaceable.height
+            val width = if (axisYUnit.isNotBlank()) {
+                gridViewPlaceable.width + yHeaderPlaceable.width
+            } else gridViewPlaceable.width
+            val height = if (axisYUnit.isNotBlank()) {
+                gridViewPlaceable.height + xHeaderPlaceable.height
+            } else gridViewPlaceable.height
 
-            var mGridX = 0
-            var mGridY = 0
+            var gridX = 0
+            var gridY = 0
 
-            layout(height = mHeight, width = mWidth) {
-                if (mAxisXUnit.isNotBlank()) {
-                    mXHeaderPlaceable.place(
-                        x = ((mGridViewPlaceable.width / 2) - (mXHeaderPlaceable.width / 2)) + mYHeaderPlaceable.width,
+            layout(height = height, width = width) {
+                if (axisXUnit.isNotBlank()) {
+                    xHeaderPlaceable.place(
+                        x = ((gridViewPlaceable.width / 2) - (xHeaderPlaceable.width / 2)) + yHeaderPlaceable.width,
                         y = 0
                     )
-                    mGridY = mXHeaderPlaceable.height
+                    gridY = xHeaderPlaceable.height
                 }
 
-                if (mAxisYUnit.isNotBlank()) {
-                    mYHeaderPlaceable.place(
+                if (axisYUnit.isNotBlank()) {
+                    yHeaderPlaceable.place(
                         x = 0,
-                        y = ((mGridViewPlaceable.height / 2) - (mYHeaderPlaceable.height / 2)) + mXHeaderPlaceable.height
+                        y = ((gridViewPlaceable.height / 2) - (yHeaderPlaceable.height / 2)) + xHeaderPlaceable.height
                     )
-                    mGridX = mYHeaderPlaceable.width
+                    gridX = yHeaderPlaceable.width
                 }
 
-                mGridViewPlaceable.place(
-                    x = mGridX,
-                    y = mGridY
+                gridViewPlaceable.place(
+                    x = gridX,
+                    y = gridY
                 )
             }
         }

@@ -1,5 +1,5 @@
-package screens.editor.components
-
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -7,11 +7,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.sp
-import components.parsers.a2l.classes.data.A2lData
 import components.datastorage.components.getSettings
 import components.datastorage.components.saveSettings
-import components.parsers.hex.HexSegmentData
+import components.errorstuff.Logger
 import components.maptextoverlay.classes.MapValuesSorted
+import components.parsers.a2l.classes.data.A2lData
+import components.parsers.hex.HexSegmentData
 import components.utilitytab.maplisttab.classes.MapDataContainer
 import components.utilitytab.projecttab.classes.ProjectInfo
 import kotlinx.coroutines.Dispatchers
@@ -53,6 +54,8 @@ class MainViewModel() : ViewModel() {
     val mapFillColor = mutableStateOf(md_theme_light_inverseSurface)
     val mapOutlineColor = mutableStateOf(md_theme_light_primary)
     val mapSelectedOutlineColor = mutableStateOf(md_theme_light_error)
+    val windowSizeClass = mutableStateOf(WindowWidthSizeClass.Compact)
+    val logger = Logger()
 
     /*
     font("JetBrains", "jbmono_reg", FontWeight.Normal, FontStyle.Normal),

@@ -1,5 +1,6 @@
 package screens.editor.components
 
+import MainViewModel
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentHeight

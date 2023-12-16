@@ -40,180 +40,180 @@ fun readStdAxisValues(
     axisType: AxisDataType
 ): Pair<ULong, AxisDataValues> {
     // TODO: Deposit
-    val mAxisHexData: HexDataResult
-    val mByteOrder = axisDescr.getByteOrder()
-    val mCompuMethod = axisDescr.getCompuMethod(a2lData)
-    val mDataType: DataType
-    val mDeposit = axisDescr.getDeposit()
-    val mFormat = axisDescr.getFormat()
-    val mIndexIncr: IndexIncrement
-    val mNumOfAxisPts: Int
-    var mPosition = position
-    val mRecordLayout = characteristic.getRecordLayout(a2lData)
-    val mResult = mutableListOf<AxisDataValue>()
-    val mSrcAddress = mRecordLayout.getSrcAddr(axisType)
-    val mAxisPts = mRecordLayout.getAxisPts(axisType)
-    val mNoAxisPts = mRecordLayout.getNoAxisPts(axisType)
+    val axisHexData: HexDataResult
+    val byteOrder = axisDescr.getByteOrder()
+    val compuMethod = axisDescr.getCompuMethod(a2lData)
+    val dataType: DataType
+    val deposit = axisDescr.getDeposit()
+    val format = axisDescr.getFormat()
+    val indexIncr: IndexIncrement
+    val numOfAxisPts: Int
+    var position1 = position
+    val recordLayout = characteristic.getRecordLayout(a2lData)
+    val result = mutableListOf<AxisDataValue>()
+    val srcAddress = recordLayout.getSrcAddr(axisType)
+    val axisPts = recordLayout.getAxisPts(axisType)
+    val noAxisPts = recordLayout.getNoAxisPts(axisType)
 
     if (characteristic.type == CharacteristicType.MAP) {
-        mDataType = if (mNoAxisPts.dataType != DataType.Default) {
-            mNoAxisPts.dataType
+        dataType = if (noAxisPts.dataType != DataType.Default) {
+            noAxisPts.dataType
         } else { DataType.Default }
 
         // Check for SRC_ADDR
-        if (mSrcAddress != SrcAddress()) {
-            mPosition += mSrcAddress.dataType.size.toULong()
+        if (srcAddress != SrcAddress()) {
+            position1 += srcAddress.dataType.size.toULong()
         }
 
         // Get the ID of the byte segment that contains our data
         // TODO: All our data *should* be in the same segment maybe add some logic to make sure?
         val segmentId = getSegmentId(
             segments = segmentData,
-            dataType = mDataType,
-            position = mPosition
+            dataType = dataType,
+            position = position1
         )
 
-        mPosition = mPosition.alignA2lAddress(mRecordLayout, mDataType, a2lData)
+        position1 = position1.alignA2lAddress(recordLayout, dataType, a2lData)
 
-        mNumOfAxisPts = getDataFromHexSegment(
-            mByteOrder,
+        numOfAxisPts = getDataFromHexSegment(
+            byteOrder,
             segmentData[segmentId] ?: HexSegmentData(),
-            mPosition,
-            mDataType
-        ).hexData.formatValue(mDataType).toInt()
+            position1,
+            dataType
+        ).hexData.formatValue(dataType).toInt()
 
-        mPosition += (mDataType.size).toULong()
+        position1 += (dataType.size).toULong()
 
         // Get Axis values from Byte data
-        mAxisHexData = getValueData(
+        axisHexData = getValueData(
             a2lData = a2lData,
             segmentList = segmentData,
-            position = mPosition,
-            dataType = mDataType,
-            byteOrder = mByteOrder,
-            numberOfValues = mNumOfAxisPts,
-            recordLayout = mRecordLayout
+            position = position1,
+            dataType = dataType,
+            byteOrder = byteOrder,
+            numberOfValues = numOfAxisPts,
+            recordLayout = recordLayout
         )
 
-        mIndexIncr = mAxisPts.indexIncrement
+        indexIncr = axisPts.indexIncrement
 
-        if (mCompuMethod.conversionType != ConversionType.TAB_VERB) {
-            mAxisHexData.formattedValues.forEachIndexed { index, result ->
-                val mPhysUnit = mCompuMethod.compute(result, a2lData)
+        if (compuMethod.conversionType != ConversionType.TAB_VERB) {
+            axisHexData.formattedValues.forEachIndexed { index, formattedValue ->
+                val physUnit = compuMethod.compute(formattedValue, a2lData)
 
-                mResult.add(
-                    mIndexIncr.sortAxisPosition(
-                        input = mPhysUnit,
+                result.add(
+                    indexIncr.sortAxisPosition(
+                        input = physUnit,
                         index = index,
                         axisType = axisType,
-                        numOfAxisPts = mNumOfAxisPts,
-                        format = mFormat
+                        numOfAxisPts = numOfAxisPts,
+                        format = format
                     )
                 )
             }
         } else {
-            mAxisHexData.formattedValues.forEachIndexed { index, result ->
-                val mPhysUnit = mCompuMethod.computeTabVerb(result, a2lData)
+            axisHexData.formattedValues.forEachIndexed { index, formattedValue ->
+                val physUnit = compuMethod.computeTabVerb(formattedValue, a2lData)
 
-                mResult.add(
-                    mIndexIncr.sortAxisPosition(
-                        input = mPhysUnit,
+                result.add(
+                    indexIncr.sortAxisPosition(
+                        input = physUnit,
                         index = index,
                         axisType = axisType,
-                        numOfAxisPts = mNumOfAxisPts,
-                        format = mFormat
+                        numOfAxisPts = numOfAxisPts,
+                        format = format
                     )
                 )
             }
         }
     } else {
         // Set Data Type
-        mDataType = if (mAxisPts.dataType != DataType.Default) {
-             mAxisPts.dataType
+        dataType = if (axisPts.dataType != DataType.Default) {
+             axisPts.dataType
         } else DataType.Default
 
         // Set Index Increment
-        mIndexIncr = mAxisPts.indexIncrement
+        indexIncr = axisPts.indexIncrement
 
         // Check for SRC_ADDR
-        if (mSrcAddress != SrcAddress()) {
-            mPosition += mSrcAddress.dataType.size.toULong()
+        if (srcAddress != SrcAddress()) {
+            position1 += srcAddress.dataType.size.toULong()
         }
 
         // Get the ID of the byte segment that contains our data
         // TODO: All our data *should* be in the same segment maybe add some logic to make sure?
         val segmentId = getSegmentId(
             segments = segmentData,
-            dataType = mDataType,
-            position = mPosition
+            dataType = dataType,
+            position = position1
         )
 
-        mPosition = mPosition.alignA2lAddress(mRecordLayout, mDataType, a2lData)
+        position1 = position1.alignA2lAddress(recordLayout, dataType, a2lData)
 
-        mNumOfAxisPts = getDataFromHexSegment(
-            mByteOrder,
+        numOfAxisPts = getDataFromHexSegment(
+            byteOrder,
             segmentData[segmentId] ?: HexSegmentData(),
-            mPosition,
-            mDataType
-        ).hexData.formatValue(mDataType).toInt()
+            position1,
+            dataType
+        ).hexData.formatValue(dataType).toInt()
 
-        mPosition += (mDataType.size).toULong()
+        position1 += (dataType.size).toULong()
 
         // Get Axis values from Byte data
-        mAxisHexData = getValueData(
+        axisHexData = getValueData(
             a2lData = a2lData,
             segmentList = segmentData,
-            position = mPosition,
-            dataType = mDataType,
-            byteOrder = mByteOrder,
-            numberOfValues = mNumOfAxisPts,
-            recordLayout = mRecordLayout
+            position = position1,
+            dataType = dataType,
+            byteOrder = byteOrder,
+            numberOfValues = numOfAxisPts,
+            recordLayout = recordLayout
         )
 
         // Convert Axis values
-        if (mCompuMethod.conversionType != ConversionType.TAB_VERB) {
-            var mPhysValue = 0.0
-            var mPredValue = 0.0
+        if (compuMethod.conversionType != ConversionType.TAB_VERB) {
+            var physValue = 0.0
+            var predValue = 0.0
 
-            mAxisHexData.formattedValues.forEachIndexed { index, result ->
-                if (mDeposit != Deposit.DIFFERENCE) {
-                    mPhysValue = mCompuMethod.compute(result, a2lData)
+            axisHexData.formattedValues.forEachIndexed { index, formattedValue ->
+                if (deposit != Deposit.DIFFERENCE) {
+                    physValue = compuMethod.compute(formattedValue, a2lData)
                 } else {
                     if (index == 0) {
-                        mPhysValue = mCompuMethod.compute(result, a2lData)
-                        mPredValue = mPhysValue
+                        physValue = compuMethod.compute(formattedValue, a2lData)
+                        predValue = physValue
                     }
-                    if (index > 0 && index < mNumOfAxisPts - 1) {
-                        mPhysValue = mCompuMethod.compute(result, a2lData) + mPredValue
-                        mPredValue = mPhysValue
+                    if (index > 0 && index < numOfAxisPts - 1) {
+                        physValue = compuMethod.compute(formattedValue, a2lData) + predValue
+                        predValue = physValue
                     }
-                    if (index == mNumOfAxisPts - 1) {
-                        mPhysValue = mCompuMethod.compute(result, a2lData) + mPredValue
-                        mPredValue = mPhysValue
+                    if (index == numOfAxisPts - 1) {
+                        physValue = compuMethod.compute(formattedValue, a2lData) + predValue
+                        predValue = physValue
                     }
                 }
 
-                mResult.add(
-                    mIndexIncr.sortAxisPosition(
-                        input = mPhysValue,
+                result.add(
+                    indexIncr.sortAxisPosition(
+                        input = physValue,
                         index = index,
                         axisType = axisType,
-                        numOfAxisPts = mNumOfAxisPts,
-                        format = mFormat
+                        numOfAxisPts = numOfAxisPts,
+                        format = format
                     )
                 )
             }
         } else {
-            mAxisHexData.formattedValues.forEachIndexed { index, result ->
-                val mPhysValue = mCompuMethod.computeTabVerb(result, a2lData)
+            axisHexData.formattedValues.forEachIndexed { index, formattedValue ->
+                val physValue = compuMethod.computeTabVerb(formattedValue, a2lData)
 
-                mResult.add(
-                    mIndexIncr.sortAxisPosition(
-                        input = mPhysValue,
+                result.add(
+                    indexIncr.sortAxisPosition(
+                        input = physValue,
                         index = index,
                         axisType = axisType,
-                        numOfAxisPts = mNumOfAxisPts,
-                        format = mFormat
+                        numOfAxisPts = numOfAxisPts,
+                        format = format
                     )
                 )
             }
@@ -221,18 +221,18 @@ fun readStdAxisValues(
     }
 
     return Pair(
-        mPosition,
+        position1,
         AxisDataValues(
             axisDataType = axisType,
-            byteSegmentId = mAxisHexData.segmentId,
-            startPosition = mAxisHexData.startPosition,
-            endPosition = mAxisHexData.endPosition,
-            values = mResult,
-            dataType = mDataType,
-            format = mFormat,
+            byteSegmentId = axisHexData.segmentId,
+            startPosition = axisHexData.startPosition,
+            endPosition = axisHexData.endPosition,
+            values = result,
+            dataType = dataType,
+            format = format,
             upperLimit = axisDescr.upperLimit,
             lowerLimit = axisDescr.lowerLimit,
-            unit = mCompuMethod.unit
+            unit = compuMethod.unit
         )
     )
 }

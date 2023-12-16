@@ -9,157 +9,157 @@ fun MapDataValues.getMapPath(
     dimensMap: DimensionMapper,
     textStart: Int
 ): Path {
-    val mPath = Path()
-    val mEndPosition = this.charValues.actualStartPosition + (this.charValues.values.size * (this.charValues.dataType.size * 2))
-    var mStart = dimensMap.getTransformedOffset(this.charValues.actualStartPosition - textStart) + 1
-    val mEnd = dimensMap.getTransformedOffset(mEndPosition - textStart)
+    val path = Path()
+    val endPosition = this.charValues.actualStartPosition + (this.charValues.values.size * (this.charValues.dataType.size * 2))
+    var start = dimensMap.getTransformedOffset(this.charValues.actualStartPosition - textStart) + 1
+    val end = dimensMap.getTransformedOffset(endPosition - textStart)
 
 
     // Get variables ued by all conditions
-    val mStartLine= dimensMap.getLineForPosition(mStart)
-    val mEndLine = dimensMap.getLineForPosition(mEnd)
+    val startLine= dimensMap.getLineForPosition(start)
+    val endLine = dimensMap.getLineForPosition(end)
 
     // Boolean Checks
-    val isSingleLine = mStartLine == mEndLine
-    val mStartsOnLineStart = mStart == dimensMap.getLineStart(mStartLine)
-    val mEndsOnLineEnd = mEnd + 1 == dimensMap.getLineEnd(mEndLine)
+    val isSingleLine = startLine == endLine
+    val startsOnLineStart = start == dimensMap.getLineStart(startLine)
+    val endsOnLineEnd = end + 1 == dimensMap.getLineEnd(endLine)
 
     // If we start at the beginning of a line, shift by one space to account for new line character
-    if (mStartsOnLineStart) mStart += 1
+    if (startsOnLineStart) start += 1
 
-    val mPathStart = dimensMap.getRectBoxForPosition(mStart)
-    val mPathEnd = dimensMap.getRectBoxForPosition(mEnd)
+    val pathStart = dimensMap.getRectBoxForPosition(start)
+    val pathEnd = dimensMap.getRectBoxForPosition(end)
 
     // TEST
-    val mHex = StringBuilder()
+    val hex = StringBuilder()
 
     this.charValues.values.forEach {
-        mHex.append(it.hexData)
+        hex.append(it.hexData)
     }
 
     when {
         // Single Line Rectangle
-        (isSingleLine) || (mStartsOnLineStart && mEndsOnLineEnd) -> {
+        (isSingleLine) || (startsOnLineStart && endsOnLineEnd) -> {
             // Start and End are on same line, simple Rectangle
-            val mLeftLineX = mPathStart.left
-            val mRightLineX = mPathEnd.right
-            val mTopLine = mPathStart.top
-            val mBottomLine = mPathEnd.bottom
+            val leftLineX = pathStart.left
+            val rightLineX = pathEnd.right
+            val topLine = pathStart.top
+            val bottomLine = pathEnd.bottom
 
 
             // Start Point
-            mPath.moveTo(mLeftLineX, mTopLine)
+            path.moveTo(leftLineX, topLine)
             // Top Line
-            mPath.lineTo(mRightLineX, mTopLine)
+            path.lineTo(rightLineX, topLine)
             // Right Line
-            mPath.lineTo(mRightLineX, mBottomLine)
+            path.lineTo(rightLineX, bottomLine)
             // Bottom Line
-            mPath.lineTo(mLeftLineX, mBottomLine)
+            path.lineTo(leftLineX, bottomLine)
             // Left Line
-            mPath.lineTo(mLeftLineX, mTopLine)
+            path.lineTo(leftLineX, topLine)
 
             // Return Result
-            return  mPath
+            return  path
         }
 
         // Top NOT Square, Bottom is
-        !mStartsOnLineStart && mEndsOnLineEnd -> {
-            val mStartLineStart = dimensMap.getRectBoxForPosition(dimensMap.getLineStart(mStartLine) + 1)
+        !startsOnLineStart && endsOnLineEnd -> {
+            val startLineStart = dimensMap.getRectBoxForPosition(dimensMap.getLineStart(startLine) + 1)
 
             // Apply shifts to values used more than once to save calculations
-            val mRightLineX = mPathEnd.right
-            val mFirstCharLeftX = mPathStart.left
-            val mLeftLineX = mStartLineStart.left
-            val mTopLine = mPathStart.top
-            val mBottom = mPathEnd.bottom
-            val mBottomStart = mPathStart.bottom
+            val rightLineX = pathEnd.right
+            val firstCharLeftX = pathStart.left
+            val leftLineX = startLineStart.left
+            val topLine = pathStart.top
+            val bottom = pathEnd.bottom
+            val bottomStart = pathStart.bottom
 
             // Start Point
-            mPath.moveTo(mFirstCharLeftX, mTopLine)
+            path.moveTo(firstCharLeftX, topLine)
             // Top Line
-            mPath.lineTo(mRightLineX, mTopLine)
+            path.lineTo(rightLineX, topLine)
             // Right Line
-            mPath.lineTo(mRightLineX, mBottom)
+            path.lineTo(rightLineX, bottom)
             // Bottom Line
-            mPath.lineTo(mLeftLineX, mBottom)
+            path.lineTo(leftLineX, bottom)
             // Left Line
-            mPath.lineTo(mLeftLineX, mBottomStart)
+            path.lineTo(leftLineX, bottomStart)
             // Top line back to Start Char Left
-            mPath.lineTo(mFirstCharLeftX, mBottomStart)
+            path.lineTo(firstCharLeftX, bottomStart)
             // Left line back to Start Top
-            mPath.lineTo(mFirstCharLeftX, mTopLine)
+            path.lineTo(firstCharLeftX, topLine)
 
             // Return Result
-            return  mPath
+            return  path
         }
 
         // Top IS square, Bottom isn't
-        mStartsOnLineStart -> {
-            val mStartLineEnd = dimensMap.getRectBoxForPosition(dimensMap.getLineEnd(mStartLine) - 1)
+        startsOnLineStart -> {
+            val startLineEnd = dimensMap.getRectBoxForPosition(dimensMap.getLineEnd(startLine) - 1)
 
             // Apply Shifts to values used more then once, to reduce calculations
-            val mLeftLineX = mPathStart.left
-            val mRightLineX = mStartLineEnd.right
-            val mEndCharRightX = mPathEnd.right
-            val mTopLine = mPathStart.top
-            val mTopEnd = mPathEnd.top
-            val mBottom = mPathEnd.bottom
+            val leftLineX = pathStart.left
+            val rightLineX = startLineEnd.right
+            val endCharRightX = pathEnd.right
+            val topLine = pathStart.top
+            val topEnd = pathEnd.top
+            val bottom = pathEnd.bottom
 
             // Start Point
-            mPath.moveTo(mLeftLineX, mTopLine)
+            path.moveTo(leftLineX, topLine)
             // Top Line
-            mPath.lineTo(mRightLineX, mTopLine)
+            path.lineTo(rightLineX, topLine)
             // Right Line
-            mPath.lineTo(mRightLineX, mTopEnd)
+            path.lineTo(rightLineX, topEnd)
             // Bottom Line
-            mPath.lineTo(mEndCharRightX, mTopEnd)
+            path.lineTo(endCharRightX, topEnd)
             // Right line around End Char
-            mPath.lineTo(mEndCharRightX, mBottom)
+            path.lineTo(endCharRightX, bottom)
             // Bottom Line to last line start
-            mPath.lineTo(mLeftLineX, mBottom)
+            path.lineTo(leftLineX, bottom)
             // Left line back to Start
-            mPath.lineTo(mLeftLineX, mTopLine)
+            path.lineTo(leftLineX, topLine)
 
             // Return Result
-            return  mPath
+            return  path
         }
 
         // Neither are square
         else -> {
-            val mStartLineEnd = dimensMap.getRectBoxForPosition(dimensMap.getLineEnd(mStartLine) - 1)
-            val mStartLineStart = dimensMap.getRectBoxForPosition(dimensMap.getLineStart(mStartLine) + 1)
+            val startLineEnd = dimensMap.getRectBoxForPosition(dimensMap.getLineEnd(startLine) - 1)
+            val startLineStart = dimensMap.getRectBoxForPosition(dimensMap.getLineStart(startLine) + 1)
 
             // Apply Shifts to values used more than once, to reduce the amount of calcs
-            val mFirstCharLeftLineX = mPathStart.left
-            val mRightLineX = mStartLineEnd.right
-            val mEndCharRightLineX = mPathEnd.right
-            val mLeftLineX = mStartLineStart.left
-            val mTopStart = mPathStart.top
-            val mTopBottom = mPathStart.bottom
-            val mEndTop = mPathEnd.top
-            val mEndBottom = mPathEnd.bottom
+            val firstCharLeftLineX = pathStart.left
+            val rightLineX = startLineEnd.right
+            val endCharRightLineX = pathEnd.right
+            val leftLineX = startLineStart.left
+            val topStart = pathStart.top
+            val topBottom = pathStart.bottom
+            val endTop = pathEnd.top
+            val endBottom = pathEnd.bottom
 
             // Start Point
-            mPath.moveTo(mFirstCharLeftLineX, mTopStart)
+            path.moveTo(firstCharLeftLineX, topStart)
             // Top Line
-            mPath.lineTo(mRightLineX, mStartLineEnd.top)
+            path.lineTo(rightLineX, startLineEnd.top)
             // Right Line
-            mPath.lineTo(mRightLineX, mEndTop)
+            path.lineTo(rightLineX, endTop)
             // Bottom Line
-            mPath.lineTo(mEndCharRightLineX, mEndTop)
+            path.lineTo(endCharRightLineX, endTop)
             // Right line around End Char
-            mPath.lineTo(mEndCharRightLineX, mEndBottom)
+            path.lineTo(endCharRightLineX, endBottom)
             // Bottom Line to last line start
-            mPath.lineTo(mLeftLineX, mEndBottom)
+            path.lineTo(leftLineX, endBottom)
             // Left line back to Start Bottom
-            mPath.lineTo(mLeftLineX, mTopBottom)
+            path.lineTo(leftLineX, topBottom)
             // Top line to Start Bottom Left
-            mPath.lineTo(mFirstCharLeftLineX, mTopBottom)
+            path.lineTo(firstCharLeftLineX, topBottom)
             // Left Line back to Start position
-            mPath.lineTo(mFirstCharLeftLineX, mTopStart)
+            path.lineTo(firstCharLeftLineX, topStart)
 
             // Return Result
-            return  mPath
+            return  path
         }
     }
 }

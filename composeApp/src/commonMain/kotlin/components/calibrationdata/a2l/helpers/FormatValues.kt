@@ -15,138 +15,138 @@ import components.parsers.a2l.compumethod.compute
  * Formats a String using the format spec %5.1
  */
 fun String.formatLength(format: String): String {
-    val mFormat = format.replace("\"", "").replace("%", "").split(".")
-    val mInput = this.split(".")
+    val format1 = format.replace("\"", "").replace("%", "").split(".")
+    val input = this.split(".")
 
-    when (mInput.size) {
+    when (input.size) {
         1 -> {
-            if (mFormat.size > 1) {
-                val mBeforeLength = mFormat[0].replace(".", "").toInt()
-                val mAfterLength = mFormat[1].replace(".", "").toInt()
-                val mInputBefore = mInput[0]
-                val mResult = StringBuilder()
+            if (format1.size > 1) {
+                val beforeLength = format1[0].replace(".", "").toInt()
+                val afterLength = format1[1].replace(".", "").toInt()
+                val inputBefore = input[0]
+                val result = StringBuilder()
 
                 when {
-                    mInputBefore.length == mBeforeLength -> {
-                        mResult.append(mInputBefore)
+                    inputBefore.length == beforeLength -> {
+                        result.append(inputBefore)
                     }
 
-                    mInputBefore.length < mBeforeLength -> {
-                        for (i in 0..(mBeforeLength - mInputBefore.length)) {
-                            mResult.append("0")
+                    inputBefore.length < beforeLength -> {
+                        for (i in 0..(beforeLength - inputBefore.length)) {
+                            result.append("0")
                         }
 
-                        mResult.append(mInputBefore)
+                        result.append(inputBefore)
                     }
 
                     else -> {
-                        mResult.append(mInputBefore.subSequence(0, mBeforeLength))
+                        result.append(inputBefore.subSequence(0, beforeLength))
                     }
                 }
 
-                if (mAfterLength != 0) { mResult.append(".") }
+                if (afterLength != 0) { result.append(".") }
 
-                for (i in 0.. mAfterLength) {
-                    mResult.append("0")
+                for (i in 0.. afterLength) {
+                    result.append("0")
                 }
 
-                return mResult.toString()
+                return result.toString()
             } else {
-                val mBeforeLength = mFormat[0].replace(".", "").toInt()
-                val mInputBefore = mInput[0]
-                val mResult = StringBuilder()
+                val beforeLength = format1[0].replace(".", "").toInt()
+                val inputBefore = input[0]
+                val result = StringBuilder()
 
                 when {
-                    mInputBefore.length == mBeforeLength -> {
-                        mResult.append(mInputBefore)
+                    inputBefore.length == beforeLength -> {
+                        result.append(inputBefore)
                     }
 
-                    mInputBefore.length < mBeforeLength -> {
-                        for (i in 0 until (mBeforeLength - mInputBefore.length)) {
-                            mResult.append("0")
+                    inputBefore.length < beforeLength -> {
+                        for (i in 0 until (beforeLength - inputBefore.length)) {
+                            result.append("0")
                         }
 
-                        mResult.append(mInputBefore)
+                        result.append(inputBefore)
                     }
 
                     else -> {
-                        mResult.append(mInputBefore.subSequence(0, mBeforeLength))
+                        result.append(inputBefore.subSequence(0, beforeLength))
                     }
                 }
 
-                return mResult.toString()
+                return result.toString()
             }
         }
 
         2 -> {
-            if (mFormat.size > 1) {
-                val mBeforeLength = mFormat[0].replace(".", "").toInt()
-                val mAfterLength = mFormat[1].replace(".", "").toInt()
-                val mInputBefore = mInput[0]
-                val mInputAfter = mInput[1]
-                val mResult = StringBuilder()
+            if (format1.size > 1) {
+                val beforeLength = format1[0].replace(".", "").toInt()
+                val afterLength = format1[1].replace(".", "").toInt()
+                val inputBefore = input[0]
+                val inputAfter = input[1]
+                val result = StringBuilder()
 
                 when {
-                    mInputBefore.length == mBeforeLength -> {
-                        mResult.append(mInputBefore)
+                    inputBefore.length == beforeLength -> {
+                        result.append(inputBefore)
                     }
 
-                    mInputBefore.length < mBeforeLength -> {
-                        for (i in 0 until (mBeforeLength - mInputBefore.length)) {
-                            mResult.append("0")
+                    inputBefore.length < beforeLength -> {
+                        for (i in 0 until (beforeLength - inputBefore.length)) {
+                            result.append("0")
                         }
 
-                        mResult.append(mInputBefore)
+                        result.append(inputBefore)
                     }
 
                     else -> {
-                        mResult.append(mInputBefore.subSequence(0, mBeforeLength))
+                        result.append(inputBefore.subSequence(0, beforeLength))
                     }
                 }
 
-                if (mAfterLength != 0) { mResult.append(".") }
+                if (afterLength != 0) { result.append(".") }
 
                 when {
-                    mInputAfter.length == mAfterLength -> { mResult.append(mInputAfter) }
+                    inputAfter.length == afterLength -> { result.append(inputAfter) }
 
-                    mInputAfter.length < mAfterLength -> {
-                        mResult.append(mInputAfter)
+                    inputAfter.length < afterLength -> {
+                        result.append(inputAfter)
 
-                        for (i in 0 until (mAfterLength - mInputAfter.length)) {
-                            mResult.append("0")
+                        for (i in 0 until (afterLength - inputAfter.length)) {
+                            result.append("0")
                         }
                     }
 
-                    mInputAfter.length > mAfterLength -> {
-                        mResult.append(mInputAfter.subSequence(0, mAfterLength))
+                    inputAfter.length > afterLength -> {
+                        result.append(inputAfter.subSequence(0, afterLength))
                     }
                 }
 
-                return mResult.toString()
+                return result.toString()
             } else {
-                val mBeforeLength = mFormat[0].replace(".", "").toInt()
-                val mInputBefore = mInput[0]
-                val mResult = StringBuilder()
+                val beforeLength = format1[0].replace(".", "").toInt()
+                val inputBefore = input[0]
+                val result = StringBuilder()
 
                 when {
-                    mInputBefore.length == mBeforeLength -> {
-                        mResult.append(mInputBefore)
+                    inputBefore.length == beforeLength -> {
+                        result.append(inputBefore)
                     }
 
-                    mInputBefore.length < mBeforeLength -> {
-                        for (i in 0 until (mBeforeLength - mInputBefore.length)) {
-                            mResult.append("0")
+                    inputBefore.length < beforeLength -> {
+                        for (i in 0 until (beforeLength - inputBefore.length)) {
+                            result.append("0")
                         }
 
-                        mResult.append(mInputBefore)
+                        result.append(inputBefore)
                     }
 
                     else -> {
-                        mResult.append(mInputBefore.subSequence(0, mBeforeLength))
+                        result.append(inputBefore.subSequence(0, beforeLength))
                     }
                 }
 
-                return mResult.toString()
+                return result.toString()
             }
         }
     }
@@ -213,25 +213,25 @@ fun HexDataResult.formatMapValues(
     a2lData: A2lData,
     format: String
 ): List<Any> {
-    val mResult = mutableListOf<Any>()
+    val result = mutableListOf<Any>()
 
     if (compuMethod.conversionType != ConversionType.TAB_VERB) {
         this.formattedValues.forEach {
-            mResult.add(compuMethod.compute(it, a2lData))
+            result.add(compuMethod.compute(it, a2lData))
         }
     } else if (characteristic.getBitMask() != ULong.MIN_VALUE) {
         // Else if bitmask is not empty apply bitmask if its not blank
         this.formattedValues.forEach {
-            mResult.add(characteristic.applyBitMask(it))
+            result.add(characteristic.applyBitMask(it))
         }
     } else {
         // Else just convert the value straight to a double
         this.formattedValues.forEach {
-            mResult.add(it.toDouble())
+            result.add(it.toDouble())
         }
     }
 
-    return mResult
+    return result
 }
 
 /**

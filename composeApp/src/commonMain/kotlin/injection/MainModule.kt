@@ -1,7 +1,7 @@
 package injection
 
 import org.koin.dsl.module
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 val mainModule = module {
     factory { MainViewModel() }

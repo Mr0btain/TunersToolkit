@@ -1,5 +1,6 @@
 package components.parsers.a2l.classes.data
 
+import components.parsers.a2l.characteristic.CharOpt
 import components.parsers.a2l.objects.A2lOptional
 import kotlinx.serialization.Serializable
 
@@ -15,5 +16,33 @@ data class MatrixDim(
         } else if (xDim != Int.MIN_VALUE && yDim != Int.MIN_VALUE) {
             arrayOf(xDim, yDim)
         } else arrayOf(xDim)
+    }
+}
+
+fun parseMatrixDim(input: String): MatrixDim {
+    val result = input
+        .replace("MATRIX_DIM", "")
+        .trim()
+        .split(" ")
+        .filter { it.isNotBlank() }
+
+    if (result.size >= 3) {
+        return MatrixDim(
+            xDim = result[0].toInt(),
+            yDim = result[1].toInt(),
+            zDim = result[2].toInt()
+        )
+    } else if (result.size == 2) {
+        return MatrixDim(
+            xDim = result[0].toInt(),
+            yDim = result[1].toInt(),
+            zDim = Int.MIN_VALUE
+        )
+    } else {
+        return MatrixDim(
+            xDim = result[0].toInt(),
+            yDim = Int.MIN_VALUE,
+            zDim = Int.MIN_VALUE
+        )
     }
 }

@@ -24,7 +24,7 @@ import components.utilitytab.buttonbartab.components.UtilityIconButton
 import kotlinx.coroutines.CoroutineScope
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 // The main Utility bar that is always shown
 @OptIn(ExperimentalResourceApi::class)

@@ -28,16 +28,16 @@ fun readCurveCharacteristicData(
     characteristic: Characteristic
 ): MapDataValues {
     // Get Axis Description
-    val mAxisDescription = characteristic.getAxisDescrX()
+    val axisDescription = characteristic.getAxisDescrX()
 
     // Depending on Axis type, get the values
-    if (mAxisDescription != AxisDescr()) {
+    if (axisDescription != AxisDescr()) {
         // Check the Axis Type and read the data using the method for them
-        return when (mAxisDescription.type) {
+        return when (axisDescription.type) {
             // FIX or Fixed axis Point
             AxisType.FIX_AXIS -> {
                 // Compute Axis values
-                val mAxisResult = mAxisDescription.computeFixAxis(AxisDataType.X)
+                val mAxisResult = axisDescription.computeFixAxis(AxisDataType.X)
 
                 // Read Characteristic values from byte segment data
                 val mCharResult = mAxisResult.getFixCharData(a2lData, segmentData, characteristic)
@@ -53,20 +53,20 @@ fun readCurveCharacteristicData(
             // Standard Axis
             AxisType.STD_AXIS -> {
                 // Read Axis values from byte segment data and format them
-                val mAxisResult = readStdAxisValues(
+                val axisResult = readStdAxisValues(
                     a2lData = a2lData,
                     segmentData = segmentData,
-                    axisDescr = mAxisDescription,
+                    axisDescr = axisDescription,
                     position = characteristic.address,
                     characteristic = characteristic,
                     axisType = AxisDataType.X
                 )
 
                 // Read Characteristic values from byte segment data
-                val mCharResult = mAxisResult.second.getCharData(
+                val charResult = axisResult.second.getCharData(
                     a2lData = a2lData,
                     segmentData = segmentData,
-                    position = mAxisResult.first,
+                    position = axisResult.first,
                     characteristic = characteristic,
                     axisType = AxisType.STD_AXIS
                 )
@@ -74,23 +74,23 @@ fun readCurveCharacteristicData(
                 MapDataValues(
                     name = characteristic.name,
                     mapType = CharacteristicType.CURVE,
-                    charValues = mCharResult,
-                    axisValues = listOf(mAxisResult.second)
+                    charValues = charResult,
+                    axisValues = listOf(axisResult.second)
                 )
             }
 
             // COM or Common Axis Point shared by multiple AXIS_DESC
             AxisType.COM_AXIS -> {
                 // Read Axis values from byte segment data and format them
-                val mAxisResult =  readComAxisValues(
+                val axisResult =  readComAxisValues(
                     a2lData = a2lData,
                     segmentData = segmentData,
-                    axisDescr = mAxisDescription,
+                    axisDescr = axisDescription,
                     axisDataType = AxisDataType.X
                 )
 
                 // Read Characteristic values from byte segment data
-                val mCharResult = mAxisResult.second.getCharData(
+                val charResult = axisResult.second.getCharData(
                     a2lData = a2lData,
                     segmentData = segmentData,
                     position = characteristic.address,
@@ -101,23 +101,23 @@ fun readCurveCharacteristicData(
                 MapDataValues(
                     name = characteristic.name,
                     mapType = CharacteristicType.CURVE,
-                    charValues = mCharResult,
-                    axisValues = listOf(mAxisResult.second)
+                    charValues = charResult,
+                    axisValues = listOf(axisResult.second)
                 )
             }
 
             AxisType.RES_AXIS -> {
                 // TODO: Test
                 // Read Axis values from byte segment data and format them
-                val mAxisResult =  readResAxisValues(
+                val axisResult = readResAxisValues(
                     a2lData = a2lData,
                     segmentData = segmentData,
-                    axisDescr = mAxisDescription,
+                    axisDescr = axisDescription,
                     axisType = AxisDataType.X
                 )
 
                 // Read Characteristic values from byte segment data
-                val mCharResult = mAxisResult.second.getCharData(
+                val charResult = axisResult.second.getCharData(
                     a2lData = a2lData,
                     segmentData = segmentData,
                     position = characteristic.address,
@@ -128,8 +128,8 @@ fun readCurveCharacteristicData(
                 MapDataValues(
                     name = characteristic.name,
                     mapType = CharacteristicType.CURVE,
-                    charValues = mCharResult,
-                    axisValues = listOf(mAxisResult.second)
+                    charValues = charResult,
+                    axisValues = listOf(axisResult.second)
                 )
             }
 
@@ -137,10 +137,10 @@ fun readCurveCharacteristicData(
             AxisType.CURVE_AXIS -> {
                 // TODO: Test
                 // Get Curve Axis data from its reference Characteristic
-                val mAxisResult = readCurveAxisValues(a2lData, segmentData, mAxisDescription)
+                val axisResult = readCurveAxisValues(a2lData, segmentData, axisDescription)
 
                 // Read Characteristic values from byte segment data
-                val mCharResult = mAxisResult.second.getCharData(
+                val charResult = axisResult.second.getCharData(
                     a2lData = a2lData,
                     segmentData = segmentData,
                     position = characteristic.address,
@@ -151,8 +151,8 @@ fun readCurveCharacteristicData(
                 MapDataValues(
                     name = characteristic.name,
                     mapType = CharacteristicType.CURVE,
-                    charValues = mCharResult,
-                    axisValues = listOf(mAxisResult.second)
+                    charValues = charResult,
+                    axisValues = listOf(axisResult.second)
                 )
             }
 

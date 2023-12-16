@@ -8,7 +8,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 fun saveNewProject(
     viewModel: MainViewModel,
@@ -18,9 +18,9 @@ fun saveNewProject(
     projectVersion: String = "Original"
 ) {
     scope.launch(Dispatchers.IO) {
-        val mMapDataSer = Json.encodeToString(viewModel.mapData.value)
-        val mHexData = Json.encodeToString(HexSegmentMap(viewModel.hexDataSegments))
-        val mMapList = Json.encodeToString(viewModel.mapListItems.toList())
+        val mapDataSer = Json.encodeToString(viewModel.mapData.value)
+        val hexData = Json.encodeToString(HexSegmentMap(viewModel.hexDataSegments))
+        val mapList = Json.encodeToString(viewModel.mapListItems.toList())
         //val mA2lData = Json.encodeToString(viewModel.a2lData.value)
 
         if (projectName.isBlank()) {
@@ -36,29 +36,29 @@ fun saveNewProject(
 
             viewModel.projectInfo.value = viewModel.projectInfo.value.copy(name = "Project$nameNum")
 
-            val mInfoData = Json.encodeToString(viewModel.projectInfo.value)
+            val infoData = Json.encodeToString(viewModel.projectInfo.value)
 
             filesManager.addProjectVersion(
                 name = "Project$nameNum",
                 version = projectVersion,
                 data = listOf(
-                    Pair(ProjectFileType.HexData, mHexData.encodeToByteArray()),
-                    Pair(ProjectFileType.MapData, mMapDataSer.encodeToByteArray()),
-                    Pair(ProjectFileType.ProjectInfo, mInfoData.encodeToByteArray()),
-                    Pair(ProjectFileType.MapListData, mMapList.encodeToByteArray())
+                    Pair(ProjectFileType.HexData, hexData.encodeToByteArray()),
+                    Pair(ProjectFileType.MapData, mapDataSer.encodeToByteArray()),
+                    Pair(ProjectFileType.ProjectInfo, infoData.encodeToByteArray()),
+                    Pair(ProjectFileType.MapListData, mapList.encodeToByteArray())
                 )
             )
         } else {
-            val mInfoData = Json.encodeToString(viewModel.projectInfo.value)
+            val infoData = Json.encodeToString(viewModel.projectInfo.value)
 
             filesManager.addProjectVersion(
                 name = projectName,
                 version = projectVersion,
                 data = listOf(
-                    Pair(ProjectFileType.HexData, mHexData.encodeToByteArray()),
-                    Pair(ProjectFileType.MapData, mMapDataSer.encodeToByteArray()),
-                    Pair(ProjectFileType.ProjectInfo, mInfoData.encodeToByteArray()),
-                    Pair(ProjectFileType.MapListData, mMapList.encodeToByteArray())
+                    Pair(ProjectFileType.HexData, hexData.encodeToByteArray()),
+                    Pair(ProjectFileType.MapData, mapDataSer.encodeToByteArray()),
+                    Pair(ProjectFileType.ProjectInfo, infoData.encodeToByteArray()),
+                    Pair(ProjectFileType.MapListData, mapList.encodeToByteArray())
                 )
             )
         }
@@ -73,22 +73,22 @@ fun saveNewVersion(
     projectName: String
 ) {
     scope.launch(Dispatchers.IO) {
-        val mMapDataSer = Json.encodeToString(viewModel.mapData.value)
-        val mHexData = Json.encodeToString(HexSegmentMap(viewModel.hexDataSegments))
-        val mInfoData = Json.encodeToString(viewModel.projectInfo)
-        val mMapList = Json.encodeToString(viewModel.mapListItems)
+        val mapDataSer = Json.encodeToString(viewModel.mapData.value)
+        val hexData = Json.encodeToString(HexSegmentMap(viewModel.hexDataSegments))
+        val infoData = Json.encodeToString(viewModel.projectInfo)
+        val mapList = Json.encodeToString(viewModel.mapListItems)
         //val mA2lData = Json.encodeToString(viewModel.a2lData.value)
 
-        val mVersion = viewModel.projectInfo.value.projectVersion
+        val version = viewModel.projectInfo.value.projectVersion
 
         filesManager.addProjectVersion(
             name = projectName,
-            version = mVersion,
+            version = version,
             data = listOf(
-                Pair(ProjectFileType.HexData, mHexData.encodeToByteArray()),
-                Pair(ProjectFileType.MapData, mMapDataSer.encodeToByteArray()),
-                Pair(ProjectFileType.ProjectInfo, mInfoData.encodeToByteArray()),
-                Pair(ProjectFileType.MapListData, mMapList.encodeToByteArray())
+                Pair(ProjectFileType.HexData, hexData.encodeToByteArray()),
+                Pair(ProjectFileType.MapData, mapDataSer.encodeToByteArray()),
+                Pair(ProjectFileType.ProjectInfo, infoData.encodeToByteArray()),
+                Pair(ProjectFileType.MapListData, mapList.encodeToByteArray())
             )
         )
         //  Pair(ProjectFileType.A2lData, mA2lData.encodeToByteArray()

@@ -41,7 +41,7 @@ import components.utilitytab.components.UtilityPagerView
 import kotlinx.coroutines.launch
 import screens.editor.components.EditorView
 import screens.editor.components.FloatingMapButton
-import screens.editor.components.MainViewModel
+import MainViewModel
 import components.utilitytab.tabbar.CompactUtilityTabView
 import ui.theme.TunerToolkitTheme
 

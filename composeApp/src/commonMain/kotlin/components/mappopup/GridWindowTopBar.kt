@@ -26,7 +26,7 @@ fun GridWindowTopBar(
     label: String,
     closeOnClick: () -> Unit
 ) {
-    var mSize = IntSize(0, 0)
+    var size = IntSize(0, 0)
 
     Row(
         modifier = modifier
@@ -34,9 +34,9 @@ fun GridWindowTopBar(
             .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
             .fillMaxWidth()
             .wrapContentHeight()
-            .onGloballyPositioned { mSize = it.size }
+            .onGloballyPositioned { size = it.size }
     ) {
-        val mLabel = @Composable {
+        val label1 = @Composable {
             Text(
                 text = label,
                 style = TextStyle(
@@ -48,25 +48,25 @@ fun GridWindowTopBar(
             )
         }
 
-        val mButtonBar = @Composable {
+        val buttonBar = @Composable {
             GridWindowButtonBar(closeOnClick)
         }
 
         Layout(
-            contents = listOf(mLabel, mButtonBar)
+            contents = listOf(label1, buttonBar)
         ) { (mLabelMeasureable, mButtonBarMeasureable), constraints ->
-            val mLabelPlaceable = mLabelMeasureable.first().measure(constraints)
-            val mButtonBarPlaceable = mButtonBarMeasureable.first().measure(constraints)
+            val labelPlaceable = mLabelMeasureable.first().measure(constraints)
+            val buttonBarPlaceable = mButtonBarMeasureable.first().measure(constraints)
 
-            layout(width = mSize.width, height = mSize.height) {
-                mLabelPlaceable.place(
-                    x = (mSize.width / 2) - (mLabelPlaceable.width / 2),
-                    y = (mSize.height / 2) - (mLabelPlaceable.height / 2)
+            layout(width = size.width, height = size.height) {
+                labelPlaceable.place(
+                    x = (size.width / 2) - (labelPlaceable.width / 2),
+                    y = (size.height / 2) - (labelPlaceable.height / 2)
                 )
 
-                mButtonBarPlaceable.place(
-                    x = mSize.width - mButtonBarPlaceable.width,
-                    y = (mSize.height / 2) - (mLabelPlaceable.height / 2)
+                buttonBarPlaceable.place(
+                    x = size.width - buttonBarPlaceable.width,
+                    y = (size.height / 2) - (labelPlaceable.height / 2)
                 )
             }
         }

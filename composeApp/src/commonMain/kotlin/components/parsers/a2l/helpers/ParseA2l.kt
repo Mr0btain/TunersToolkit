@@ -1,5 +1,6 @@
 package components.parsers.a2l.helpers
 
+import components.errorstuff.LogDataEntry
 import components.parsers.a2l.axis.AxisPts
 import components.parsers.a2l.axis.buildAxisPts
 import components.parsers.a2l.axis.validate
@@ -38,21 +39,22 @@ import components.parsers.a2l.recordlayout.RecordLayout
 import components.parsers.a2l.recordlayout.buildRecordLayout
 import components.parsers.a2l.recordlayout.validate
 
-fun List<String>.parseA2l(): A2lData {
-    var mHeader = Header()
-    var mModPar = ModPar()
-    var mModCommon = ModCommon()
-    val mCharacteristics = mutableMapOf<String, Characteristic>()
-    val mCompuMethods = mutableMapOf<String, CompuMethod>()
-    val mCompuTabs = mutableMapOf<String, CompuTab>()
-    val mCompuVTabs = mutableMapOf<String, CompuVTab>()
-    val mCompuVTabRanges = mutableMapOf<String, CompuVTabRange>()
-    val mFunctions = mutableMapOf<String, A2LFunction>()
-    val mGroups = mutableMapOf<String, Group>()
-    val mMeasurements = mutableMapOf<String, Measurement>()
-    val mAxisPoints = mutableMapOf<String, AxisPts>()
-    val mRecordLayouts = mutableMapOf<String, RecordLayout>()
-    var mVersion = Float.MIN_VALUE
+fun List<String>.parseA2l(): Pair<A2lData, List<LogDataEntry>> {
+    var header = Header()
+    var modPar = ModPar()
+    var modCommon = ModCommon()
+    val characteristics = mutableMapOf<String, Characteristic>()
+    val compuMethods = mutableMapOf<String, CompuMethod>()
+    val compuTabs = mutableMapOf<String, CompuTab>()
+    val compuVTabs = mutableMapOf<String, CompuVTab>()
+    val compuVTabRanges = mutableMapOf<String, CompuVTabRange>()
+    val functions = mutableMapOf<String, A2LFunction>()
+    val groups = mutableMapOf<String, Group>()
+    val measurements = mutableMapOf<String, Measurement>()
+    val axisPoints = mutableMapOf<String, AxisPts>()
+    val recordLayouts = mutableMapOf<String, RecordLayout>()
+    var version = Float.MIN_VALUE
+    val errors = mutableListOf<LogDataEntry>()
 
     var line = this[0].trim()
     var lineIndex = 1
@@ -63,9 +65,16 @@ fun List<String>.parseA2l(): A2lData {
 
         // This is a check to mke sure were working with an actual Asap2 file
         if (inputTestMatch.toString().isBlank()) {
-            println("ERROR: This is not a Recognized file!")
-            println(line)
-            return A2lData()
+            errors.add(
+                LogDataEntry(
+                    process = "ParseA2lFile",
+                    message = "Not a valid A2l File!",
+                    cause = line,
+                    error = true
+                )
+            )
+
+            return Pair(A2lData(), errors)
         }
 
         while (lineIndex < this.size) {
@@ -89,11 +98,13 @@ fun List<String>.parseA2l(): A2lData {
                         lineIndex++
                     }
 
-                    val result = buildCharacteristic(characList)
+                    val (result, error) = buildCharacteristic(characList)
 
                     if (result.validate()) {
-                        mCharacteristics[result.name] = result
+                        characteristics[result.name] = result
                     }
+
+                    errors.addAll(error)
                 }
 
                 // Parse and build Axis points
@@ -107,10 +118,13 @@ fun List<String>.parseA2l(): A2lData {
                         lineIndex++
                     }
 
-                    val result = buildAxisPts(axisPtsList)
+                    val (result, error) = buildAxisPts(axisPtsList)
+
                     if (result.validate()) {
-                        mAxisPoints[result.name] = result
+                        axisPoints[result.name] = result
                     }
+
+                    errors.addAll(error)
                 }
 
                 // Parse and build Record Layouts
@@ -126,7 +140,7 @@ fun List<String>.parseA2l(): A2lData {
 
                     val result = buildRecordLayout(recordLayoutList)
                     if (result.validate()) {
-                        mRecordLayouts[result.name] = result
+                        recordLayouts[result.name] = result
                     }
                 }
 
@@ -143,7 +157,7 @@ fun List<String>.parseA2l(): A2lData {
 
                     val result = buildMeasurement(measurementList)
                     if (result.validate()) {
-                        mMeasurements[result.name] = result
+                        measurements[result.name] = result
                     }
                 }
 
@@ -159,7 +173,7 @@ fun List<String>.parseA2l(): A2lData {
 
                     val result = buildCompuMethod(compuMethodList)
                     if (result.validate()) {
-                        mCompuMethods[result.name] = result
+                        compuMethods[result.name] = result
                     }
                 }
 
@@ -176,7 +190,7 @@ fun List<String>.parseA2l(): A2lData {
 
                     val result = buildCompuVTab(compuVTabList)
                     if (result.validate()) {
-                        mCompuVTabs[result.name] = result
+                        compuVTabs[result.name] = result
                     }
                 }
 
@@ -193,7 +207,7 @@ fun List<String>.parseA2l(): A2lData {
 
                     val result = buildCompuVTabRange(compuVTabRangeList)
                     if (result.validate()) {
-                        mCompuVTabRanges[result.name] = result
+                        compuVTabRanges[result.name] = result
                     }
                 }
 
@@ -209,7 +223,7 @@ fun List<String>.parseA2l(): A2lData {
 
                     val result = buildCompuTab(compuTabList)
                     if (result.validate()) {
-                        mCompuTabs[result.name] = result
+                        compuTabs[result.name] = result
                     }
                 }
 
@@ -226,7 +240,7 @@ fun List<String>.parseA2l(): A2lData {
 
                     val result = buildGroup(groupList)
                     if (result.validate()) {
-                        mGroups[result.name] = result
+                        groups[result.name] = result
                     }
                 }
 
@@ -243,7 +257,7 @@ fun List<String>.parseA2l(): A2lData {
 
                     val result = buildA2lFunction(functionList)
                     if (result.validate()) {
-                        mFunctions[result.name] = result
+                        functions[result.name] = result
                     }
                 }
 
@@ -251,7 +265,7 @@ fun List<String>.parseA2l(): A2lData {
                 line.startsWith("ASAP2_VERSION") -> {
                     val result = line.replace("ASAP2_VERSION", "")
                         .trim().replace(" ", ".").toFloatOrNull()
-                    if (result != null) { mVersion = result }
+                    if (result != null) { version = result }
                     line = this[lineIndex].trim()
                     lineIndex++
                 }
@@ -267,7 +281,7 @@ fun List<String>.parseA2l(): A2lData {
                         lineIndex++
                     }
 
-                    mHeader = buildHeader(h)
+                    header = buildHeader(h)
                 }
 
                 // Parse and build Mod Par
@@ -280,7 +294,7 @@ fun List<String>.parseA2l(): A2lData {
                         lineIndex++
                     }
 
-                    mModPar = buildModPar(modParList)
+                    modPar = buildModPar(modParList)
                 }
 
                 // Parse and build Mod Common
@@ -294,7 +308,7 @@ fun List<String>.parseA2l(): A2lData {
                         lineIndex++
                     }
 
-                    mModCommon = buildModCommon(modCommonList)
+                    modCommon = buildModCommon(modCommonList)
                 }
 
                 // Parse and build IfData
@@ -322,19 +336,22 @@ fun List<String>.parseA2l(): A2lData {
     }
 
     // Return collection of Objects
-    return A2lData(
-        axisPoints = mAxisPoints,
-        header = mHeader,
-        modPar = mModPar,
-        modCommon = mModCommon,
-        characteristics = mCharacteristics,
-        measurements = mMeasurements,
-        recordLayouts = mRecordLayouts,
-        compuMethods = mCompuMethods,
-        compuTabs = mCompuTabs,
-        compuVTabRanges = mCompuVTabRanges,
-        compuVTabs = mCompuVTabs,
-        functions = mFunctions,
-        groups = mGroups
+    return Pair(
+        A2lData(
+            axisPoints = axisPoints,
+            header = header,
+            modPar = modPar,
+            modCommon = modCommon,
+            characteristics = characteristics,
+            measurements = measurements,
+            recordLayouts = recordLayouts,
+            compuMethods = compuMethods,
+            compuTabs = compuTabs,
+            compuVTabRanges = compuVTabRanges,
+            compuVTabs = compuVTabs,
+            functions = functions,
+            groups = groups
+        ),
+        errors
     )
 }

@@ -1,17 +1,16 @@
 package components.parsers.a2l
 
-import components.parsers.a2l.classes.data.A2lData
-import components.parsers.a2l.classes.enums.MemorySegmentProgramType
-import components.parsers.a2l.helpers.parseA2l
-import components.parsers.a2l.functions.parseFunctionsToMapList
-import components.calibrationdata.classes.MapDataValues
+import MainViewModel
 import components.calibrationdata.a2l.getCharacteristicData
+import components.calibrationdata.classes.MapDataValues
 import components.errorstuff.safeCall
 import components.helpers.alignChunksWithMaps
+import components.maptextoverlay.classes.MapValuesSorted
+import components.parsers.a2l.classes.enums.MemorySegmentProgramType
+import components.parsers.a2l.functions.parseFunctionsToMapList
+import components.parsers.a2l.helpers.parseA2l
 import components.parsers.hex.HexSegmentData
 import components.parsers.hex.toAsciiString
-import components.maptextoverlay.classes.MapValuesSorted
-import screens.editor.components.MainViewModel
 
 fun parseAndComputeA2lData(
     input: ByteArray,
@@ -20,81 +19,84 @@ fun parseAndComputeA2lData(
     // Set the loading to true
     viewModel.isLoading.value = true
 
-    viewModel.appBarTitle.value = "Pulling data from A2L File.."
+    val hexData = viewModel.hexDataSegments
+    var segmentId = ""
+    var baseOffset = 0UL
+    var startOffset = 0UL
+    var endOffset = 0UL
 
-    val mHexData = viewModel.hexDataSegments
-    var mSegmentId = ""
-    var mBaseOffset = 0UL
-    var mStartOffset = 0UL
-    var mEndOffset = 0UL
-    val mA2lData = safeCall { input.toAsciiString().split("\n").parseA2l() }
+    safeCall {
+        val (a2lData, errors) = input.toAsciiString().split("\n").parseA2l()
 
-    if (mA2lData.isSuccess) {
-        val mCharResult = mutableListOf<MapDataValues>()
-        mA2lData.getOrNull()?.let { a2lData ->
-            // Update the list of maps for our MapListTab
-            viewModel.mapListItems.addAll(parseFunctionsToMapList(a2lData.functions))
+        val charResult = mutableListOf<MapDataValues>()
 
-            // Format the results
-            a2lData.characteristics.forEach { (_, characteristic) ->
-                val result = safeCall {
-                    getCharacteristicData(
-                        mA2lData.getOrDefault(A2lData()),
-                        viewModel.hexDataSegments,
-                        characteristic
-                    )
-                }
-                if (result.isSuccess) {
-                    result.getOrNull()?.let {
-                        mCharResult.add(it)
-                    }
+        // Update the list of maps for our MapListTab
+        viewModel.mapListItems.addAll(parseFunctionsToMapList(a2lData.functions))
+
+        // Format the results
+        a2lData.characteristics.forEach { (_, characteristic) ->
+            val result = safeCall {
+                getCharacteristicData(
+                    a2lData,
+                    viewModel.hexDataSegments,
+                    characteristic
+                )
+            }
+            if (result.isSuccess) {
+                result.getOrNull()?.let {
+                    charResult.add(it)
                 }
             }
+        }
 
-            a2lData.modPar.memorySegments.forEach { memSeg ->
-                if (memSeg.value.prgType == MemorySegmentProgramType.CODE) {
-                    mHexData.forEach { (key, data) ->
-                        if (data.startOffset == memSeg.value.address) {
-                            mSegmentId = key
-                            mBaseOffset = data.baseOffset
-                            mStartOffset = data.startOffset
-                            mEndOffset = data.endOffset
-                        }
+        a2lData.modPar.memorySegments.forEach { memSeg ->
+            if (memSeg.value.prgType == MemorySegmentProgramType.CODE) {
+                hexData.forEach { (key, data) ->
+                    if (data.startOffset == memSeg.value.address) {
+                        segmentId = key
+                        baseOffset = data.baseOffset
+                        startOffset = data.startOffset
+                        endOffset = data.endOffset
                     }
                 }
             }
         }
 
         // Align segments with maps
-        val mFinalData = safeCall {
-            mHexData[mSegmentId]?.let {
+        val finalData = safeCall {
+            hexData[segmentId]?.let {
                 alignChunksWithMaps(
                     hexSegmentData = it,
-                    mapDataValues = mCharResult,
+                    mapDataValues = charResult,
                     lineCount = viewModel.digitsPerLine.value,
                     minChunkSize = 4000
                 )
             }
         }
 
-        if (mFinalData.isSuccess) {
-            mFinalData.getOrNull()?.let {
-                viewModel.hexDataSegments[mSegmentId] = HexSegmentData(
-                        data = it.first,
-                        baseOffset = mBaseOffset,
-                        startOffset = mStartOffset,
-                        endOffset = mEndOffset
+        if (finalData.isSuccess) {
+            finalData.getOrNull()?.let {
+                viewModel.hexDataSegments[segmentId] = HexSegmentData(
+                    data = it.first,
+                    baseOffset = baseOffset,
+                    startOffset = startOffset,
+                    endOffset = endOffset
                 )
 
                 // Update the Sorted Map List in View Model
                 viewModel.mapData.value = MapValuesSorted(
-                    segmentId = mSegmentId,
+                    segmentId = segmentId,
                     mapsSortedByChunk = it.second
                 )
             }
         }
+
+        if (errors.isNotEmpty()) {
+            viewModel.logger.addAll(errors)
+            println("Errors occurred parsing A2l!")
+            errors.forEach { println(it) }
+        }
     }
 
     viewModel.isLoading.value = false
-    viewModel.appBarTitle.value = "Tuners Toolkit"
 }

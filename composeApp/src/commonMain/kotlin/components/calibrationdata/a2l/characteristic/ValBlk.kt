@@ -29,60 +29,60 @@ fun readValBlkCharacteristicData(
     characteristic: Characteristic
 ): MapDataValues {
     // TODO: Needs Major testing, and add ability to handle more than 2 axis
-    val mByteOrder = characteristic.getByteOrder()
-    val mCompuMethod = characteristic.getCompuMethod(a2lData)
-    val mCharDataFormatted = mutableListOf<FormattedValue>()
-    val mDimArray = characteristic.getDimArray()
-    val mRecordLayout = characteristic.getRecordLayout(a2lData)
-    val mFncValues = mRecordLayout.getFncValues()
-    val mFormat = characteristic.getFormat()
-    val mIndexMode = mFncValues.indexMode
-    val mPosition = characteristic.address
+    val byteOrder = characteristic.getByteOrder()
+    val compuMethod = characteristic.getCompuMethod(a2lData)
+    val charDataFormatted = mutableListOf<FormattedValue>()
+    val dimArray = characteristic.getDimArray()
+    val recordLayout = characteristic.getRecordLayout(a2lData)
+    val fncValues = recordLayout.getFncValues()
+    val format = characteristic.getFormat()
+    val indexMode = fncValues.indexMode
+    val position = characteristic.address
 
-    if (mDimArray.size < 2 || mDimArray[1] == 1) {
+    if (dimArray.size < 2 || dimArray[1] == 1) {
         // Get Data from Byte Segments
-        val mCharHexData = getValueData(
+        val charHexData = getValueData(
             a2lData = a2lData,
             segmentList = segmentData,
-            byteOrder = mByteOrder,
-            dataType = mFncValues.dataType,
-            position = mPosition,
-            numberOfValues = mDimArray[0],
-            recordLayout = mRecordLayout
+            byteOrder = byteOrder,
+            dataType = fncValues.dataType,
+            position = position,
+            numberOfValues = dimArray[0],
+            recordLayout = recordLayout
         )
 
-        mCharHexData.formattedValues.forEachIndexed { index, it ->
+        charHexData.formattedValues.forEachIndexed { index, it ->
             // Check Computation Method
-            if (mCompuMethod != CompuMethod()) {
+            if (compuMethod != CompuMethod()) {
                 // Check conversion type
-                if (mCompuMethod.conversionType != ConversionType.TAB_VERB) {
-                    val mPhysUnit = mCompuMethod.compute(it, a2lData)
+                if (compuMethod.conversionType != ConversionType.TAB_VERB) {
+                    val physUnit = compuMethod.compute(it, a2lData)
 
-                    mCharDataFormatted.add(
+                    charDataFormatted.add(
                         FormattedValue(
-                            originalValue = mPhysUnit.toString(),
-                            formattedValue = mPhysUnit.toString().formatLength(mFormat),
+                            originalValue = physUnit.toString(),
+                            formattedValue = physUnit.toString().formatLength(format),
                             column = index,
                             row = 0,
-                            hexData = mCharHexData.hexData.joinToString("")
+                            hexData = charHexData.hexData.joinToString("")
                         )
                     )
                 } else {
                     // Apply bitmask if its not blank
-                    val mCharDataTabVerb = if (characteristic.getBitMask() != ULong.MIN_VALUE) {
+                    val charDataTabVerb = if (characteristic.getBitMask() != ULong.MIN_VALUE) {
                         characteristic.applyBitMask(it)
                     } else it
 
                     // Compute Tab Verb and add it to our result
-                    val mPhysUnit = mCompuMethod.computeTabVerb(mCharDataTabVerb, a2lData)
+                    val physUnit = compuMethod.computeTabVerb(charDataTabVerb, a2lData)
 
-                    mCharDataFormatted.add(
+                    charDataFormatted.add(
                         FormattedValue(
-                            originalValue = mPhysUnit,
-                            formattedValue = mPhysUnit,
+                            originalValue = physUnit,
+                            formattedValue = physUnit,
                             column = index,
                             row = 0,
-                            hexData = mCharHexData.hexData.joinToString("")
+                            hexData = charHexData.hexData.joinToString("")
                         )
                     )
                 }
@@ -90,60 +90,60 @@ fun readValBlkCharacteristicData(
         }
 
         // Set Data class for Characteristic Values
-        val mCharResult = CharDataValues(
-            byteSegmentId = mCharHexData.segmentId,
-            actualStartPosition = mCharHexData.startPosition,
-            actualEndPosition = mCharHexData.endPosition,
-            dataType = mFncValues.dataType,
-            values = mCharDataFormatted,
-            format = mFormat,
-            baseOffset = mCharHexData.baseOffset
+        val charResult = CharDataValues(
+            byteSegmentId = charHexData.segmentId,
+            actualStartPosition = charHexData.startPosition,
+            actualEndPosition = charHexData.endPosition,
+            dataType = fncValues.dataType,
+            values = charDataFormatted,
+            format = format,
+            baseOffset = charHexData.baseOffset
         )
 
         return MapDataValues(
             name = characteristic.name,
             mapType = CharacteristicType.VAL_BLK,
-            charValues = mCharResult
+            charValues = charResult
         )
     } else {
         // Get Data from byte segments
-        val mCharHexData = getValueData(
+        val charHexData = getValueData(
             a2lData = a2lData,
             segmentList = segmentData,
-            byteOrder = mByteOrder,
-            dataType = mFncValues.dataType,
-            position = mPosition,
-            numberOfValues = mDimArray[0] * mDimArray[1],
-            recordLayout = mRecordLayout
+            byteOrder = byteOrder,
+            dataType = fncValues.dataType,
+            position = position,
+            numberOfValues = dimArray[0] * dimArray[1],
+            recordLayout = recordLayout
         )
 
         // Position the values and format them
-        val mCharDataFinal = mCharHexData.formattedValues.positionValues(
+        val charDataFinal = charHexData.formattedValues.positionValues(
             a2lData = a2lData,
-            axisXDim = mDimArray[0],
-            axisYDim = mDimArray[1],
+            axisXDim = dimArray[0],
+            axisYDim = dimArray[1],
             characteristic = characteristic,
-            indexMode = mIndexMode,
+            indexMode = indexMode,
             numOfAxisPts = 1,
-            hexData = mCharHexData.hexData,
-            format = mFormat
+            hexData = charHexData.hexData,
+            format = format
         )
 
         // Set Data class for Characteristic Values
-        val mCharResult = CharDataValues(
-            byteSegmentId = mCharHexData.segmentId,
-            actualStartPosition = mCharHexData.startPosition,
-            actualEndPosition = mCharHexData.endPosition,
-            dataType = mFncValues.dataType,
-            values = mCharDataFinal,
-            format = mFormat,
-            baseOffset = mCharHexData.baseOffset
+        val charResult = CharDataValues(
+            byteSegmentId = charHexData.segmentId,
+            actualStartPosition = charHexData.startPosition,
+            actualEndPosition = charHexData.endPosition,
+            dataType = fncValues.dataType,
+            values = charDataFinal,
+            format = format,
+            baseOffset = charHexData.baseOffset
         )
 
         return MapDataValues(
             name = characteristic.name,
             mapType = CharacteristicType.VAL_BLK,
-            charValues = mCharResult
+            charValues = charResult
         )
     }
 }

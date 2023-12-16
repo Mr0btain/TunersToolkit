@@ -6,8 +6,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import screens.editor.components.MainViewModel
-import screens.settings.classes.SettingsData
+import MainViewModel
 
 // TODO setup layout for this
 @Composable

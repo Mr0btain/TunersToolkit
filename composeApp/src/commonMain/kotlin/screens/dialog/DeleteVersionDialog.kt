@@ -11,7 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
@@ -20,7 +20,7 @@ fun DeleteVersionDialog(
     projectName: String,
     versionName: String,
     filesManager: ProjectFilesManager,
-    viewModel: MainViewModel,scope: CoroutineScope
+    viewModel: MainViewModel, scope: CoroutineScope
 ) {
     AlertDialogView(
         onDismissRequest = { onDismissRequest() },

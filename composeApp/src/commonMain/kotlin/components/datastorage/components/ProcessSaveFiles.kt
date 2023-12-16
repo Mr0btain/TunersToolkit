@@ -7,7 +7,7 @@ import components.parsers.hex.HexSegmentMap
 import components.maptextoverlay.classes.MapValuesSorted
 import components.utilitytab.maplisttab.classes.MapDataContainer
 import components.utilitytab.projecttab.classes.ProjectInfo
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 fun ProjectFilesManager.processFileData(name: String, version: String, viewModel: MainViewModel) {
     this.getProjectData(name, version).forEach { file ->

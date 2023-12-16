@@ -51,7 +51,7 @@ import components.mappopup.GridWindow
 import components.utilitytab.UtilityView
 import screens.editor.components.EditorView
 import screens.editor.components.FloatingMapButton
-import screens.editor.components.MainViewModel
+import MainViewModel
 import screens.editor.components.hexview.MainUtilityBar
 import ui.theme.TunerToolkitTheme
 

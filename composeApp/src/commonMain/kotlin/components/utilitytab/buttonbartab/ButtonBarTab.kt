@@ -33,7 +33,7 @@ import components.utilitytab.buttonbartab.components.UtilityButtonBar2
 import components.utilitytab.components.UtilityActionAnimated
 import components.utilitytab.components.UtilityDialog
 import kotlinx.coroutines.CoroutineScope
-import screens.editor.components.MainViewModel
+import MainViewModel
 import ui.theme.TunerToolkitTheme
 
 @Composable

@@ -23,7 +23,7 @@ import moe.tlaster.precompose.navigation.Navigator
 import moe.tlaster.precompose.navigation.PopUpTo
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable

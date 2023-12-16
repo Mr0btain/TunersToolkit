@@ -3,8 +3,6 @@
 package components.mappopup
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
@@ -17,11 +15,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 // TODO: Make this look way better
 
@@ -32,7 +27,7 @@ fun GridMapTextBox(
     column: Int,
     textStyle: TextStyle
 ) {
-    val mValue = remember { mutableStateOf(TextFieldValue(value.toString())) }
+    val rememberedValue = remember { mutableStateOf(TextFieldValue(value.toString())) }
 
     val customTextSelectionColors = TextSelectionColors(
         handleColor = Color.Transparent,
@@ -44,8 +39,8 @@ fun GridMapTextBox(
         LocalTextSelectionColors provides customTextSelectionColors,
     ) {
         BasicTextField(
-            value = mValue.value,
-            onValueChange = { mValue.value = MapGridOnValueChanged(it) },
+            value = rememberedValue.value,
+            onValueChange = { rememberedValue.value = MapGridOnValueChanged(it) },
             textStyle = textStyle,
             singleLine = true,
             modifier = Modifier

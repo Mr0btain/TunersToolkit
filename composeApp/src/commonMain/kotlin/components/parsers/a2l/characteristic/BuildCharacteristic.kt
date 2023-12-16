@@ -1,5 +1,7 @@
 package components.parsers.a2l.characteristic
 
+import components.errorstuff.LogDataEntry
+import components.errorstuff.safeCall
 import components.parsers.a2l.axis.buildAxisDescription
 import components.parsers.a2l.classes.data.AnnotList
 import components.parsers.a2l.classes.data.Annotation
@@ -13,7 +15,6 @@ import components.parsers.a2l.classes.data.Format
 import components.parsers.a2l.classes.data.FunctionList
 import components.parsers.a2l.classes.data.IfDataList
 import components.parsers.a2l.classes.data.MapList
-import components.parsers.a2l.classes.data.MatrixDim
 import components.parsers.a2l.classes.data.MaxRefresh
 import components.parsers.a2l.classes.data.MemorySegmentReference
 import components.parsers.a2l.classes.data.PhysUnit
@@ -22,6 +23,9 @@ import components.parsers.a2l.classes.data.SymbolLink
 import components.parsers.a2l.classes.data.VirtCharacteristic
 import components.parsers.a2l.classes.data.parseAnnotation
 import components.parsers.a2l.classes.data.parseExtendedLimits
+import components.parsers.a2l.classes.data.parseMatrixDim
+import components.parsers.a2l.classes.enums.CalibrationAccess
+import components.parsers.a2l.classes.enums.Deposit
 import components.parsers.a2l.classes.enums.Discrete
 import components.parsers.a2l.classes.enums.GuardRails
 import components.parsers.a2l.classes.enums.ReadOnly
@@ -29,6 +33,7 @@ import components.parsers.a2l.classes.enums.parseByteOrder
 import components.parsers.a2l.classes.enums.parseCalibrationAccess
 import components.parsers.a2l.classes.enums.parseCharacteristicType
 import components.parsers.a2l.classes.enums.parseDeposit
+import components.parsers.a2l.helpers.parseItemsFromList
 import components.parsers.a2l.ifdata.components.parseIfDataSection
 import components.parsers.a2l.objects.A2lOptional
 
@@ -37,336 +42,437 @@ import components.parsers.a2l.objects.A2lOptional
  * options it contains
  */
 
-fun buildCharacteristic(input: List<String>): Characteristic {
-    // Check if size it big enough else we get index out of bounds
-    if (input.size >= 9) {
-        val mAnnotation = mutableListOf<Annotation>()
-        var mAxisIncrement = 0
-        var mName = ""
-        val mIfData = mutableListOf<components.parsers.a2l.ifdata.IfData>()
-        val mOptionalParams = mutableMapOf<CharOpt, A2lOptional>()
+fun buildCharacteristic(input: List<String>): Pair<Characteristic, List<LogDataEntry>> {
+    val process = "BuildCharacteristic"
+    val errors = mutableListOf<LogDataEntry>()
+
+    safeCall {
+        val annotations = mutableListOf<Annotation>()
+        var axisIncrement = 0
+        var name = ""
+        val ifData = mutableListOf<components.parsers.a2l.ifdata.IfData>()
+        val optionalParams = mutableMapOf<CharOpt, A2lOptional>()
 
         // Parse the optional params
-        try {
-            input.forEachIndexed { index, line ->
-                when {
-                    line.startsWith("BIT_MASK") -> {
-                        mOptionalParams[CharOpt.BitMask] = BitMask(
+        input.forEachIndexed { index, line ->
+            when {
+                line.startsWith("BIT_MASK") -> {
+                    safeCall {
+                        optionalParams[CharOpt.BitMask] = BitMask(
                             line.replace("BIT_MASK", "").trim()
-                                .replace("0x", "").toULongOrNull(16) ?: ULong.MIN_VALUE
+                                .replace("0x", "").toULong()
+                        )
+                    }.onFailure {
+                        errors.add(
+                            LogDataEntry(
+                                process = process,
+                                message = "Failure to set BitMask!; ${it.message}",
+                                cause = it.cause.toString(),
+                                error = true
+                            )
+                        )
+                    }
+                }
+
+                line.startsWith("BYTE_ORDER") -> {
+                    optionalParams[CharOpt.ByteOrder] = line
+                        .replace("BYTE_ORDER", "").trim().parseByteOrder()
+                }
+
+                line.startsWith("CALIBRATION_ACCESS") -> {
+                    val calibration = line.parseCalibrationAccess()
+
+                    if (calibration != CalibrationAccess.NOT_SET) {
+                        optionalParams[CharOpt.CalibrationAccess] = calibration
+                    } else {
+                        errors.add(
+                            LogDataEntry(
+                                process = process,
+                                message = "Failure to set CalibrationAcees!",
+                                error = true
+                            )
                         )
                     }
 
-                    line.startsWith("BYTE_ORDER") -> {
-                        mOptionalParams[CharOpt.ByteOrder] = line
-                            .replace("BYTE_ORDER", "").trim().parseByteOrder()
-                    }
+                }
 
-                    line.startsWith("CALIBRATION_ACCESS") -> {
-                        mOptionalParams[CharOpt.CalibrationAccess] = line.parseCalibrationAccess()
-                    }
+                line.startsWith("COMPARISON_QUANTITY") -> {
+                    optionalParams[CharOpt.ComparisonQuantity] = ComparisonQuantity(
+                        line.replace("COMPARISON_QUANTITY", "").trim()
+                    )
+                }
 
-                    line.startsWith("COMPARISON_QUANTITY") -> {
-                        mOptionalParams[CharOpt.ComparisonQuantity] = ComparisonQuantity(
-                            line.replace("COMPARISON_QUANTITY", "").trim()
+                line.startsWith("DISCRETE") -> {
+                    optionalParams[CharOpt.Discrete] = Discrete.True
+                }
+
+                line.startsWith("DISPLAY_IDENTIFIER") -> {
+                    optionalParams[CharOpt.DisplayIdentifier] = DisplayIdentifier(
+                        line.replace("DISPLAY_IDENTIFIER", "").trim()
+                    )
+                }
+
+                line.startsWith("DEPOSIT") -> {
+                    val deposit = line.replace("DEPOSIT", "").trim().parseDeposit()
+
+                    if (deposit != Deposit.NOT_SET) {
+                        optionalParams[CharOpt.Deposit] = deposit
+                    } else {
+                        errors.add(
+                            LogDataEntry(
+                                process = process,
+                                message = "Failure to set Deposit!",
+                                error = true
+                            )
                         )
                     }
 
-                    line.startsWith("DISCRETE") -> {
-                        mOptionalParams[CharOpt.Discrete] = Discrete.True
-                    }
+                }
 
-                    line.startsWith("DISPLAY_IDENTIFIER") -> {
-                        mOptionalParams[CharOpt.DisplayIdentifier] = DisplayIdentifier(
-                            line.replace("DISPLAY_IDENTIFIER", "").trim()
+                line.startsWith("FORMAT") -> {
+                    if (!optionalParams.containsKey(CharOpt.Format)) {
+                        optionalParams[CharOpt.Format] = Format(
+                            line.replace("FORMAT", "").trim()
+                        )
+                    }
+                }
+
+                line.startsWith("EXTENDED_LIMITS") -> {
+                    safeCall {
+                        optionalParams[CharOpt.ExtendedLimits] = line.parseExtendedLimits()
+                    }.onFailure {
+                        errors.add(
+                            LogDataEntry(
+                                process = process,
+                                message = "Failure to parse ExtendedLimits!; ${it.message}",
+                                cause = it.cause.toString(),
+                                error = true
+                            )
+                        )
+                    }
+                }
+
+                line.startsWith("ECU_ADDRESS_EXTENSION") -> {
+                    optionalParams[CharOpt.EcuAddressExtension] = EcuAddressExtension(
+                        line.replace("ECU_ADDRESS_EXTENSION", "").trim()
+                            .replace("0x", "")
+                    )
+                }
+
+                line.startsWith("NUMBER") -> {
+                    safeCall {
+                        optionalParams[CharOpt.Number] =  CharNum(
+                            line.replace("NUMBER", "").trim().toInt()
+                        )
+                    }.onFailure {
+                        errors.add(
+                            LogDataEntry(
+                                process = process,
+                                message = "Failure to set Number!; ${it.message}",
+                                cause = it.cause.toString(),
+                                error = true
+                            )
+                        )
+                    }
+                }
+
+                line.startsWith("MATRIX_DIM") -> {
+                    safeCall {
+                        optionalParams[CharOpt.MatrixDim] = parseMatrixDim(line)
+                    }.onFailure {
+                        errors.add(
+                            LogDataEntry(
+                                process = process,
+                                message = "Failure to set MatrixDim!; ${it.message}",
+                                cause = it.cause.toString(),
+                                error = true
+                            )
+                        )
+                    }
+                }
+
+                line.startsWith("MAX_REFRESH") -> {
+                    safeCall {
+                        val result = line.replace("MAX_REFRESH", "")
+                            .trim()
+                            .split(" ")
+                            .filter { it.isNotBlank() }
+
+                        optionalParams[CharOpt.MaxRefresh] = MaxRefresh(
+                            scalingUnit = result[0].toUInt(),
+                            rate = result[1].toULong()
+                        )
+                    }.onFailure {
+                        errors.add(
+                            LogDataEntry(
+                                process = process,
+                                message = "Failure to set MaxRefresh!; ${it.message}",
+                                cause = it.cause.toString(),
+                                error = true
+                            )
+                        )
+                    }
+                }
+
+                line.startsWith("READ_ONLY") -> {
+                    optionalParams[CharOpt.ReadOnly] = ReadOnly.True
+                }
+
+                line.startsWith("GUARD_RAILS") -> {
+                    optionalParams[CharOpt.GuardRails] = GuardRails.True
+                }
+
+                line.startsWith("PHYS_UNIT") -> {
+                    optionalParams[CharOpt.PhysUnit] = PhysUnit(
+                        line.replace("PHYS_UNIT", "").trim()
+                    )
+                }
+
+                line.startsWith("STEP_SIZE") -> {
+                    safeCall {
+                        optionalParams[CharOpt.StepSize] = StepSize(
+                            line.replace("STEP_SIZE", "")
+                                .trim()
+                                .toFloat()
+                        )
+                    }.onFailure {
+                        errors.add(
+                            LogDataEntry(
+                                process = process,
+                                message = "Failure to set StepSize!; ${it.message}",
+                                cause = it.cause.toString(),
+                                error = true
+                            )
+                        )
+                    }
+                }
+
+                line.startsWith("SYMBOL_LINK") -> {
+                    safeCall {
+                        val result = line.replace("SYMBOL_LINK", "")
+                            .trim()
+                            .split(" ")
+
+                        optionalParams[CharOpt.SymbolLink] = SymbolLink(
+                            symbolName = result[0],
+                            offset = result[1].toULong()
+                        )
+                    }.onFailure {
+                        errors.add(
+                            LogDataEntry(
+                                process = process,
+                                message = "Failure to set SymbolLink!; ${it.message}",
+                                cause = it.cause.toString(),
+                                error = true
+                            )
                         )
                     }
 
-                    line.startsWith("DEPOSIT") -> {
-                        mOptionalParams[CharOpt.Deposit] = line
-                            .replace("DEPOSIT", "").trim().parseDeposit()
-                    }
+                }
 
-                    line.startsWith("FORMAT") -> {
-                        if (!mOptionalParams.containsKey(CharOpt.Format)) {
-                            mOptionalParams[CharOpt.Format] = Format(line.replace("FORMAT", "").trim())
+                line.startsWith("REF_MEMORY_SEGMENT") -> {
+                    optionalParams[CharOpt.RefMemorySegment] = MemorySegmentReference(
+                        line.replace("REF_MEMORY_SEGMENT", "").trim()
+                    )
+                }
+
+                line.contains("/begin") -> {
+                    when {
+                        line.contains("AXIS_DESCR") -> {
+                            val subList = input.subList(index, input.size).takeWhile { !it.contains("/end AXIS_DESCR") }
+
+                            val (result, error) = buildAxisDescription(subList)
+                            val axis = axisIncrement.getCharAxisDescType()
+                            axisIncrement++
+
+                            if (error.isEmpty()) {
+                                optionalParams[axis] = result
+                            } else {
+                                errors.addAll(error)
+                                optionalParams[axis] = result
+                            }
                         }
-                    }
 
-                    line.startsWith("EXTENDED_LIMITS") -> {
-                        mOptionalParams[CharOpt.ExtendedLimits] = line.parseExtendedLimits()
-                    }
-
-                    line.startsWith("ECU_ADDRESS_EXTENSION") -> {
-                        mOptionalParams[CharOpt.EcuAddressExtension] = EcuAddressExtension(
-                            line.replace("ECU_ADDRESS_EXTENSION", "").trim()
-                                .replace("0x", "")
-                        )
-                    }
-
-                    line.startsWith("NUMBER") -> {
-                        mOptionalParams[CharOpt.Number] =  CharNum(
-                            line.replace("NUMBER", "").trim().toIntOrNull() ?: Int.MIN_VALUE
-                        )
-                    }
-
-                    line.startsWith("MATRIX_DIM") -> {
-                        // TODO: Test Matrix Dim
-                        val result = line.replace("MATRIX_DIM", "").trim().split(" ")
-                        if (result.size >= 3) {
-                            mOptionalParams[CharOpt.MatrixDim] = MatrixDim(
-                                xDim = result[0].toIntOrNull() ?: Int.MIN_VALUE,
-                                yDim = result[1].toIntOrNull() ?: Int.MIN_VALUE,
-                                zDim = result[2].toIntOrNull() ?: Int.MIN_VALUE
-                            )
-                        } else if (result.size == 2) {
-                            mOptionalParams[CharOpt.MatrixDim] = MatrixDim(
-                                xDim = result[0].toIntOrNull() ?: Int.MIN_VALUE,
-                                yDim = result[1].toIntOrNull() ?: Int.MIN_VALUE,
-                                zDim = Int.MIN_VALUE
-                            )
-                        } else {
-                            mOptionalParams[CharOpt.MatrixDim] = MatrixDim(
-                                xDim = result[0].toIntOrNull() ?: Int.MIN_VALUE,
-                                yDim = Int.MIN_VALUE,
-                                zDim = Int.MIN_VALUE
-                            )
+                        line.contains("IF_DATA") -> {
+                            safeCall {
+                                ifData.add(input.subList(index, input.size).parseIfDataSection())
+                            }.onFailure {
+                                errors.add(
+                                    LogDataEntry(
+                                        process = process,
+                                        message = "Failure to parse IfData!; ${it.message}",
+                                        cause = it.cause.toString(),
+                                        error = true
+                                    )
+                                )
+                            }
                         }
-                    }
 
-                    line.startsWith("MAX_REFRESH") -> {
-                        // TODO: Test max refresh
-                        val result = line.replace("MAX_REFRESH", "").trim().split(" ")
-                        val scalingUnit = result[0].toUIntOrNull()
-                        val rate = result[1].toULongOrNull()
-                        if (scalingUnit != null && rate != null) {
-                            mOptionalParams[CharOpt.MaxRefresh] = MaxRefresh(
-                                scalingUnit = scalingUnit,
-                                rate = rate
-                            )
+                        line.contains("FUNCTION_LIST") -> {
+                            safeCall {
+                                optionalParams[CharOpt.FunctionList] = FunctionList(
+                                    parseItemsFromList(
+                                        input = input.subList(index, input.size),
+                                        startingId = "/begin FUNCTION_LIST",
+                                        endId = "/end FUNCTION_LIST"
+                                    )
+                                )
+                            }.onFailure {
+                                errors.add(
+                                    LogDataEntry(
+                                        process = process,
+                                        message = "Failure to parse FunctionList!; ${it.message}",
+                                        cause = it.cause.toString(),
+                                        error = true
+                                    )
+                                )
+                            }
                         }
-                    }
 
-                    line.startsWith("READ_ONLY") -> {
-                        mOptionalParams[CharOpt.ReadOnly] = ReadOnly.True
-                    }
-
-                    line.startsWith("GUARD_RAILS") -> {
-                        mOptionalParams[CharOpt.GuardRails] = GuardRails.True
-                    }
-
-                    line.startsWith("PHYS_UNIT") -> {
-                        mOptionalParams[CharOpt.PhysUnit] = PhysUnit(
-                            line.replace("PHYS_UNIT", "").trim()
-                        )
-                    }
-
-                    line.startsWith("STEP_SIZE") -> {
-                        mOptionalParams[CharOpt.StepSize] = StepSize(
-                            line.replace("STEP_SIZE", "").trim().toFloatOrNull() ?: Float.NaN
-                        )
-                    }
-
-                    line.startsWith("SYMBOL_LINK") -> {
-                        // TODO: Test Symbol link
-                        val result = line.replace("SYMBOL_LINK", "").trim().split(" ")
-                        if (result.size >= 2) {
-                            mOptionalParams[CharOpt.SymbolLink] = SymbolLink(
-                                symbolName = result[0],
-                                offset = result[1].toULong()
-                            )
+                        line.contains("VIRTUAL_CHARACTERISTIC") -> {
+                            safeCall {
+                                optionalParams[CharOpt.VirtualCharacteristic] = VirtCharacteristic(
+                                    parseItemsFromList(
+                                        input = input.subList(index, input.size),
+                                        startingId = "/begin VIRTUAL_CHARACTERISTIC",
+                                        endId = "/end VIRTUAL_CHARACTERISTIC"
+                                    )
+                                )
+                            }.onFailure {
+                                errors.add(
+                                    LogDataEntry(
+                                        process = process,
+                                        message = "Failure to parse VirtualCharacteristic!; ${it.message}",
+                                        cause = it.cause.toString(),
+                                        error = true
+                                    )
+                                )
+                            }
                         }
-                    }
 
-                    line.startsWith("REF_MEMORY_SEGMENT") -> {
-                        mOptionalParams[CharOpt.RefMemorySegment] = MemorySegmentReference(
-                            line.replace("REF_MEMORY_SEGMENT", "").trim()
-                        )
-                    }
-
-                    line.contains("/begin") -> {
-                        when {
-                            line.contains("AXIS_DESCR") -> {
-                                val subL = input.subList(index, input.size)
-                                var found = false
-
-                                subL.forEachIndexed { ind, lin ->
-                                    when {
-                                        !found && lin.contains("/end AXIS_DESCR") -> {
-                                            val result = buildAxisDescription(subL.subList(0, ind + 1))
-                                            val axis = mAxisIncrement.getCharAxisDescType()
-                                            found = true
-                                            mAxisIncrement++
-                                            mOptionalParams[axis] = result
-                                        }
-                                    }
-                                }
+                        line.contains("DEPENDENT_CHARACTERISTIC") -> {
+                            safeCall {
+                                optionalParams[CharOpt.DependantCharacteristic] = DependantCharacteristic(
+                                    parseItemsFromList(
+                                        input = input.subList(index, input.size),
+                                        startingId = "/begin DEPENDENT_CHARACTERISTIC",
+                                        endId = "/end DEPENDENT_CHARACTERISTIC"
+                                    )
+                                )
+                            }.onFailure {
+                                errors.add(
+                                    LogDataEntry(
+                                        process = process,
+                                        message = "Failure to parse DependentCharacteristic!; ${it.message}",
+                                        cause = it.cause.toString(),
+                                        error = true
+                                    )
+                                )
                             }
+                        }
 
-                            line.contains("IF_DATA") -> {
-                                mIfData.add(input.subList(index, input.size).parseIfDataSection())
+                        line.contains("MAP_LIST") -> {
+                            safeCall {
+                                optionalParams[CharOpt.MapList] = MapList(
+                                    parseItemsFromList(
+                                        input = input.subList(index, input.size),
+                                        startingId = "/begin MAP_LIST",
+                                        endId = "/end MAP_LIST"
+                                    )
+                                )
+                            }.onFailure {
+                                errors.add(
+                                    LogDataEntry(
+                                        process = process,
+                                        message = "Failure to parse MapList!; ${it.message}",
+                                        cause = it.cause.toString(),
+                                        error = true
+                                    )
+                                )
                             }
+                        }
 
-                            line.contains("FUNCTION_LIST") -> {
-                                val subL = input.subList(index, input.size)
-                                var found = false
-                                val mFunctionList = mutableListOf<String>()
-                                subL.forEachIndexed { ind, lin ->
-                                    when {
-                                        !found && lin.contains("/end FUNCTION_LIST") -> {
-                                            val result = subL.subList(0, ind).joinToString(" ").trim()
-                                                .replace("/begin FUNCTION_LIST", "")
-                                                .replace("/end FUNCTION_LIST", "").split(" ")
-                                            found = true
-                                            result.forEach {
-                                                mFunctionList.add(it)
-                                            }
-                                        }
-                                    }
-                                }
-
-                                mOptionalParams[CharOpt.FunctionList] = FunctionList(mFunctionList)
+                        line.contains("ANNOTATION") -> {
+                            safeCall {
+                                annotations.add(parseAnnotation(input.subList(index, input.size)))
+                            }.onFailure {
+                                errors.add(
+                                    LogDataEntry(
+                                        process = process,
+                                        message = "Failure to parse Annotations!; ${it.message}",
+                                        cause = it.cause.toString(),
+                                        error = true
+                                    )
+                                )
                             }
+                        }
 
-                            line.contains("VIRTUAL_CHARACTERISTIC") -> {
-                                val subL = input.subList(index, input.size)
-                                var found = false
-                                val mVirtualCharacteristic = mutableListOf<String>()
-
-                                subL.forEachIndexed { ind, lin ->
-                                    when {
-                                        !found && lin.contains("/end VIRTUAL_CHARACTERISTIC") -> {
-                                            val result = subL.subList(0, ind).joinToString(" ").trim()
-                                                .replace("/begin VIRTUAL_CHARACTERISTIC", "")
-                                                .replace("/end VIRTUAL_CHARACTERISTIC", "")
-                                                .split(" ")
-                                            found = true
-                                            result.forEach {
-                                                mVirtualCharacteristic.add(it)
-                                            }
-                                        }
-                                    }
-                                }
-
-                                mOptionalParams[CharOpt.VirtualCharacteristic] = VirtCharacteristic(mVirtualCharacteristic)
-                            }
-
-                            line.contains("DEPENDENT_CHARACTERISTIC") -> {
-                                // TODO: Test Dependant Characteristic
-                                val subL = input.subList(index, input.size)
-                                var found = false
-                                val mDependantCharacteristic = mutableListOf<String>()
-
-                                subL.forEachIndexed { ind, lin ->
-                                    when {
-                                        !found && lin.contains("/end DEPENDENT_CHARACTERISTIC") -> {
-                                            val result = subL.subList(0, ind).joinToString(" ").trim()
-                                                .replace("/begin DEPENDENT_CHARACTERISTIC", "")
-                                                .replace("/end DEPENDENT_CHARACTERISTIC", "")
-                                                .split(" ")
-                                            found = true
-                                            result.forEach {
-                                                mDependantCharacteristic.add(it)
-                                            }
-                                        }
-                                    }
-                                }
-
-                                mOptionalParams[CharOpt.DependantCharacteristic] = DependantCharacteristic(mDependantCharacteristic)
-                            }
-
-                            line.contains("MAP_LIST") -> {
-                                // TODO: Test Map List
-                                val subL = input.subList(index, input.size)
-                                var found = false
-                                val mMapList = mutableListOf<String>()
-
-                                subL.forEachIndexed { ind, lin ->
-                                    when {
-                                        !found && lin.contains("/end MAP_LIST") -> {
-                                            val result = subL.subList(0, ind).joinToString(" ").trim()
-                                                .replace("/begin MAP_LIST", "")
-                                                .replace("/end MAP_LIST", "")
-                                                .split(" ")
-                                            found = true
-                                            result.forEach {
-                                                mMapList.add(it)
-                                            }
-                                        }
-                                    }
-                                }
-
-                                mOptionalParams[CharOpt.MapList] = MapList(mMapList)
-                            }
-
-                            line.contains("ANNOTATION") -> {
-                                val subL = input.subList(index, input.size)
-                                var annotList = listOf("")
-                                var found = false
-
-                                subL.forEachIndexed { ind, lin ->
-                                    when {
-                                        !found && lin.contains("/end ANNOTATION") -> {
-                                            annotList = subL.subList(0, ind)
-                                            found = true
-                                        }
-                                    }
-                                }
-                                mAnnotation.add(annotList.parseAnnotation())
-                            }
-
-                            line.contains("CHARACTERISTIC") -> {
-                                val result = line.replace("/begin CHARACTERISTIC", "").trim()
-                                if (result.isNotBlank()) {
-                                    mName = result
-                                }
+                        line.contains("CHARACTERISTIC") -> {
+                            val result = line.replace("/begin CHARACTERISTIC", "").trim()
+                            if (result.isNotBlank()) {
+                                name = result
                             }
                         }
                     }
                 }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
 
         when {
             // Add Annotations
-            mAnnotation.isNotEmpty() -> {
-                mOptionalParams[CharOpt.Annotations] = AnnotList(mAnnotation)
+            annotations.isNotEmpty() -> {
+                optionalParams[CharOpt.Annotations] = AnnotList(annotations)
             }
 
             // Add IfData
-            mIfData.isNotEmpty() -> {
-                mOptionalParams[CharOpt.IfData] = IfDataList(mIfData)
+            ifData.isNotEmpty() -> {
+                optionalParams[CharOpt.IfData] = IfDataList(ifData)
             }
         }
 
-        return if (mName.isNotBlank()) {
-            Characteristic(
-                name = mName,
-                identifier = input[1].replace("\"", "").trim(),
-                type = input[2].parseCharacteristicType(),
-                address = input[3].replace("0x", "").trim().toULongOrNull(16) ?: ULong.MIN_VALUE,
-                refRecordLayout = input[4].trim(),
-                maxDiff = (input[5].trim().toDoubleOrNull() ?: Double.NaN),
-                conversion = input[6].trim(),
-                lowerLimit = (input[7].toDoubleOrNull() ?: Double.NaN),
-                upperLimit = (input[8].toDoubleOrNull() ?: Double.NaN),
-                optionalParameters = mOptionalParams
+        return if (name.isNotBlank()) {
+            Pair(
+                Characteristic(
+                    name = name,
+                    identifier = input[1].replace("\"", "").trim(),
+                    type = input[2].parseCharacteristicType(),
+                    address = input[3].replace("0x", "").trim().toULongOrNull(16) ?: ULong.MIN_VALUE,
+                    refRecordLayout = input[4].trim(),
+                    maxDiff = (input[5].trim().toDoubleOrNull() ?: Double.NaN),
+                    conversion = input[6].trim(),
+                    lowerLimit = (input[7].toDoubleOrNull() ?: Double.NaN),
+                    upperLimit = (input[8].toDoubleOrNull() ?: Double.NaN),
+                    optionalParameters = optionalParams
+                ),
+                errors
             )
         } else {
-            Characteristic(
-                name = input[1].trim(),
-                identifier = input[2].replace("\"", "").trim(),
-                type = input[3].parseCharacteristicType(),
-                address = input[4].replace("0x", "").trim().toULongOrNull(16) ?: ULong.MIN_VALUE,
-                refRecordLayout = input[5].trim(),
-                maxDiff = (input[6].trim().toDoubleOrNull() ?: Double.NaN),
-                conversion = input[7].trim(),
-                lowerLimit = (input[8].toDoubleOrNull() ?: Double.NaN),
-                upperLimit = (input[9].toDoubleOrNull() ?: Double.NaN),
-                optionalParameters = mOptionalParams
+            Pair(
+                Characteristic(
+                    name = input[1].trim(),
+                    identifier = input[2].replace("\"", "").trim(),
+                    type = input[3].parseCharacteristicType(),
+                    address = input[4].replace("0x", "").trim().toULongOrNull(16) ?: ULong.MIN_VALUE,
+                    refRecordLayout = input[5].trim(),
+                    maxDiff = (input[6].trim().toDoubleOrNull() ?: Double.NaN),
+                    conversion = input[7].trim(),
+                    lowerLimit = (input[8].toDoubleOrNull() ?: Double.NaN),
+                    upperLimit = (input[9].toDoubleOrNull() ?: Double.NaN),
+                    optionalParameters = optionalParams
+                ),
+                errors
             )
         }
-    } else return Characteristic()
+    }.onFailure {
+        errors.add(
+            LogDataEntry(
+                process = process,
+                message = "Failure to Build Characteristic!; ${it.message}",
+                cause = it.cause.toString(),
+                error = true
+            )
+        )
+    }
+
+    return Pair(Characteristic(), errors)
 }

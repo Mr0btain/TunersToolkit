@@ -8,13 +8,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import getPlatform
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import moe.tlaster.precompose.navigation.Navigator
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 @Composable
 fun AdaptiveAppBar(
@@ -26,49 +27,62 @@ fun AdaptiveAppBar(
     windowSizeClass: WindowSizeClass,
     navigator: Navigator
 ) {
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            if (getPlatform().name == "Java") {
+    val platform = remember { getPlatform() }
+
+    if (platform.name == "Java") {
+        Scaffold(
+            modifier = modifier,
+            topBar = {
                 SideTopAppBar(
-                    menuButtonOnClick = { scope.launch { drawerState.open() } },
+                    menuButtonOnClick = {
+                        scope.launch {
+                            drawerState.open()
+                        }
+                    },
                     viewModel = viewModel,
                     navigator = navigator
                 )
-            } else {
-                when (windowSizeClass.widthSizeClass) {
-                    WindowWidthSizeClass.Compact -> {
+            }
+        ) {
+            Box(
+                modifier = Modifier.padding(PaddingValues(start = 58.dp))
+            ) { content() }
+        }
+    } else {
+        when (windowSizeClass.widthSizeClass) {
+            WindowWidthSizeClass.Compact -> {
+                Scaffold(
+                    modifier = modifier,
+                    topBar = {
                         CustomTopAppBar(
                             navButtonOnClick = { scope.launch { drawerState.open() } },
                             viewModel = viewModel,
                             navigator = navigator
                         )
                     }
+                ) {
+                    Box(
+                        modifier = Modifier.padding(it)
+                    ) { content() }
+                }
+            }
 
-                    else -> {
+            else -> {
+                Scaffold(
+                    modifier = modifier,
+                    topBar = {
                         SideTopAppBar(
                             menuButtonOnClick = { scope.launch { drawerState.open() } },
                             viewModel = viewModel,
                             navigator = navigator
                         )
                     }
+                ) {
+                    Box(
+                        modifier = Modifier.padding(PaddingValues(start = 58.dp))
+                    ) { content() }
                 }
-            }
-        },
-    ) {
-        when (windowSizeClass.widthSizeClass) {
-            WindowWidthSizeClass.Compact -> {
-                Box(
-                    modifier = Modifier
-                        .padding(it)
-                ) { content() }
-            }
-            else -> {
-                Box(
-                    modifier = Modifier
-                        .padding(PaddingValues(start = 58.dp)
-                    )
-                ) { content() }
+
             }
         }
     }

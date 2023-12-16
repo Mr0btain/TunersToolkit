@@ -26,14 +26,8 @@ data class ExtendedLimits(
 
 fun String.parseExtendedLimits(): ExtendedLimits {
     val limits = this.replace("EXTENDED_LIMITS", "").trim().split(" ")
-    return if (limits.size == 2) {
-        val a = limits[0].toDoubleOrNull()
-        val b = limits[1].toDoubleOrNull()
-        ExtendedLimits(
-            a ?: Double.NaN,
-            b ?: Double.NaN
-        )
-    } else {
-        ExtendedLimits()
-    }
+    return ExtendedLimits(
+        limits[0].toDouble(),
+        limits[1].toDouble()
+    )
 }

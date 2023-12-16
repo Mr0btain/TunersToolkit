@@ -7,8 +7,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.saveable.rememberSaveable
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 @Composable
 fun persistedLazyScrollState(viewModel: MainViewModel): LazyListState {

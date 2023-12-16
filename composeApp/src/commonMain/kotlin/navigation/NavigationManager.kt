@@ -7,7 +7,7 @@ import moe.tlaster.precompose.navigation.transition.NavTransition
 import components.screenconfig.AdaptiveScreen
 import screens.editor.CompactEditor
 import screens.editor.ExpandedEditor
-import screens.editor.components.MainViewModel
+import MainViewModel
 import screens.main.CompactMain
 import screens.main.ExpandedMain
 import screens.settings.CompactSettings

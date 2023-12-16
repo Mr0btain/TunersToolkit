@@ -11,7 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
@@ -22,9 +22,9 @@ fun DeleteProjectDialog(
     viewModel: MainViewModel,
     scope: CoroutineScope
 ) {
-    val mOnConfirm = mutableStateOf(false)
+    val onConfirm = mutableStateOf(false)
 
-    if (mOnConfirm.value) {
+    if (onConfirm.value) {
         scope.launch {
             viewModel.showDeleteProjectDialog.value = false
             viewModel.isLoading.value = true
@@ -32,12 +32,12 @@ fun DeleteProjectDialog(
             clearProjectData(viewModel)
             viewModel.isLoading.value = false
         }
-        mOnConfirm.value = false
+        onConfirm.value = false
     }
 
     AlertDialogView(
         onDismissRequest = { onDismissRequest() },
-        onConfirmation = { mOnConfirm.value = true },
+        onConfirmation = { onConfirm.value = true },
         dialogTitle = "Delete Project?",
         dialogText = "Are you sure you want to delete this project: $projectName?",
         icon = painterResource("icons/delete.png")

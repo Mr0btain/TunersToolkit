@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable

@@ -46,7 +46,7 @@ fun List<Any>.positionMapValues(
     hexData: List<String>,
     format: String
 ): MutableList<FormattedValue> {
-    val mResult = mutableListOf<FormattedValue>()
+    val result = mutableListOf<FormattedValue>()
 
     // Format the data positions according to IndexMode
     if (indexMode == IndexMode.COLUMN_DIR) {
@@ -57,7 +57,7 @@ fun List<Any>.positionMapValues(
         this.formatColumnOrRowDir(numberOfValues, false).forEachIndexed { index, list ->
             // The Index from this will be used as their Row Counter
             list.forEach {
-                mResult.add(
+                result.add(
                     FormattedValue(
                         originalValue = it.toString(),
                         formattedValue = if (it is Number) { it.toString().formatLength(format) } else it.toString(),
@@ -80,7 +80,7 @@ fun List<Any>.positionMapValues(
         this.formatColumnOrRowDir(numberOfValues, true).forEachIndexed { index, list ->
             // The Index from this will be used as their Row Counter
             list.forEach {
-                mResult.add(
+                result.add(
                     FormattedValue(
                         originalValue = it.toString(),
                         formattedValue = if (it is Number) { it.toString().formatLength(format) } else it.toString(),
@@ -97,7 +97,7 @@ fun List<Any>.positionMapValues(
         }
     }
 
-    return mResult
+    return result
 }
 
 fun List<Number>.positionValuesInMap(
@@ -108,12 +108,12 @@ fun List<Number>.positionValuesInMap(
     indexMode: IndexMode,
     hexData: List<String>
 ): MutableList<FormattedValue> {
-    val mResult = mutableListOf<FormattedValue>()
-    val mCompuMethod = characteristic.getCompuMethod(a2lData)
-    val mFormat = characteristic.getFormat()
-    val mBitMask = characteristic.getBitMask()
+    val result = mutableListOf<FormattedValue>()
+    val compuMethod = characteristic.getCompuMethod(a2lData)
+    val format = characteristic.getFormat()
+    val bitMask = characteristic.getBitMask()
 
-    if (mCompuMethod.conversionType != ConversionType.TAB_VERB) {
+    if (compuMethod.conversionType != ConversionType.TAB_VERB) {
         var row = 0
         var col: Int
         this.forEachIndexed { index, value ->
@@ -124,12 +124,12 @@ fun List<Number>.positionValuesInMap(
 
                 col = index % axisYDim
 
-                val mPhysValue = mCompuMethod.compute(value, a2lData)
+                val physValue = compuMethod.compute(value, a2lData)
 
-                mResult.add(
+                result.add(
                     FormattedValue(
-                        originalValue = mPhysValue.toString(),
-                        formattedValue = mPhysValue.toString().formatLength(mFormat),
+                        originalValue = physValue.toString(),
+                        formattedValue = physValue.toString().formatLength(format),
                         column = col,
                         row = row,
                         hexData = hexData.joinToString("")
@@ -142,12 +142,12 @@ fun List<Number>.positionValuesInMap(
 
                 col = index % axisXDim
 
-                val mPhysValue = mCompuMethod.compute(value, a2lData)
+                val physValue = compuMethod.compute(value, a2lData)
 
-                mResult.add(
+                result.add(
                     FormattedValue(
-                        originalValue = mPhysValue.toString(),
-                        formattedValue = mPhysValue.toString().formatLength(mFormat),
+                        originalValue = physValue.toString(),
+                        formattedValue = physValue.toString().formatLength(format),
                         column = row,
                         row = col,
                         hexData = hexData.joinToString("")
@@ -156,33 +156,33 @@ fun List<Number>.positionValuesInMap(
             }
         }
     } else {
-        val mCharDataBitmask = mutableListOf<Number>()
+        val charDataBitmask = mutableListOf<Number>()
 
-        if (mBitMask != ULong.MIN_VALUE) {
+        if (bitMask != ULong.MIN_VALUE) {
             this.forEach {
-                mCharDataBitmask.add(it.applyBitMask(mBitMask))
+                charDataBitmask.add(it.applyBitMask(bitMask))
             }
         } else {
             this.forEach {
-                mCharDataBitmask.add(it)
+                charDataBitmask.add(it)
             }
         }
 
         var row = 0
         var col: Int
-        mCharDataBitmask.forEachIndexed { index, value ->
+        charDataBitmask.forEachIndexed { index, value ->
             if (indexMode == IndexMode.COLUMN_DIR) {
                 if (index != 0 && index % axisYDim == 0) {
                     row += 1
                 }
                 col = index % axisYDim
 
-                val mPhysUnit = mCompuMethod.computeTabVerb(value, a2lData)
+                val physUnit = compuMethod.computeTabVerb(value, a2lData)
 
-                mResult.add(
+                result.add(
                     FormattedValue(
-                        originalValue = mPhysUnit,
-                        formattedValue = mPhysUnit,
+                        originalValue = physUnit,
+                        formattedValue = physUnit,
                         column = col,
                         row = row,
                         hexData = hexData.joinToString("")
@@ -194,12 +194,12 @@ fun List<Number>.positionValuesInMap(
                 }
                 col = index % axisXDim
 
-                val mPhysUnit = mCompuMethod.computeTabVerb(value, a2lData)
+                val physUnit = compuMethod.computeTabVerb(value, a2lData)
 
-                mResult.add(
+                result.add(
                     FormattedValue(
-                        originalValue = mPhysUnit,
-                        formattedValue = mPhysUnit,
+                        originalValue = physUnit,
+                        formattedValue = physUnit,
                         column = row,
                         row = col,
                         hexData = hexData.joinToString("")
@@ -209,7 +209,7 @@ fun List<Number>.positionValuesInMap(
         }
     }
 
-    return mResult
+    return result
 }
 
 fun IndexIncrement.sortAxisPosition(

@@ -40,7 +40,7 @@ import components.maptextoverlay.classes.DimensionMapper
 import components.maptextoverlay.components.getMapPath
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import screens.editor.components.MainViewModel
+import MainViewModel
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 

@@ -18,51 +18,51 @@ fun Characteristic.readDataValues(
     segmentData: Map<String, HexSegmentData>,
     position: ULong
 ): CharDataValues {
-    val mByteOrder = getByteOrder()
-    val mRecordLayout = getRecordLayout(a2lData)
-    val mFncValues = mRecordLayout.getFncValues()
+    val byteOrder = getByteOrder()
+    val recordLayout = getRecordLayout(a2lData)
+    val fncValues = recordLayout.getFncValues()
     // val mAddrType = mFncValues.addressType
-    val mIndexMode = mFncValues.indexMode
-    val mDataType = mFncValues.dataType
-    val mFormat = getFormat()
+    val indexMode = fncValues.indexMode
+    val dataType = fncValues.dataType
+    val format = getFormat()
     // val mCompuMethod = characteristic.getCompuMethod(a2lData)
 
     // Get Axis Points
-    val mNumOfAxisPts = if (axisYDim != Int.MIN_VALUE && axisYDim != 0) {
+    val numOfAxisPts = if (axisYDim != Int.MIN_VALUE && axisYDim != 0) {
         axisXDim * axisYDim
     } else axisXDim
 
     // Get Characteristic values from Byte data
-    val mCharData = getValueData(
+    val charData = getValueData(
         a2lData = a2lData,
         segmentList = segmentData,
         position = position,
-        dataType = mDataType,
-        byteOrder = mByteOrder,
-        numberOfValues = mNumOfAxisPts,
-        recordLayout = mRecordLayout
+        dataType = dataType,
+        byteOrder = byteOrder,
+        numberOfValues = numOfAxisPts,
+        recordLayout = recordLayout
     )
 
     // Position the values and format them
-    val mCharDataFinal = mCharData.formattedValues.positionValues(
+    val formattedValues = charData.formattedValues.positionValues(
         a2lData = a2lData,
         axisXDim = axisXDim,
         axisYDim = axisYDim,
         characteristic = this,
-        indexMode = mIndexMode,
+        indexMode = indexMode,
         numOfAxisPts = if (axisYDim != 0) 2 else 1,
-        hexData = mCharData.hexData,
-        format = mFormat
+        hexData = charData.hexData,
+        format = format
     )
 
     return CharDataValues(
-        byteSegmentId = mCharData.segmentId,
-        actualStartPosition = mCharData.startPosition,
-        actualEndPosition = mCharData.endPosition,
-        dataType = mDataType,
-        values = mCharDataFinal,
-        format = mFormat,
-        baseOffset = mCharData.baseOffset
+        byteSegmentId = charData.segmentId,
+        actualStartPosition = charData.startPosition,
+        actualEndPosition = charData.endPosition,
+        dataType = dataType,
+        values = formattedValues,
+        format = format,
+        baseOffset = charData.baseOffset
     )
 }
 
@@ -73,37 +73,37 @@ fun readFixCharacteristicData(
     a2lData: A2lData,
     segmentData: Map<String, HexSegmentData>
 ): CharDataValues {
-    val mByteOrder = characteristic.getByteOrder()
-    val mRecordLayout = characteristic.getRecordLayout(a2lData)
-    val mFncValues = mRecordLayout.getFncValues()
+    val byteOrder = characteristic.getByteOrder()
+    val recordLayout = characteristic.getRecordLayout(a2lData)
+    val fncValues = recordLayout.getFncValues()
     // val mAddrType = mFncValues.addressType
-    val mIndexMode = mFncValues.indexMode
-    val mCharData: HexDataResult
-    val mDataType = mFncValues.dataType
-    val mFormat = characteristic.getFormat()
-    val mCompuMethod = characteristic.getCompuMethod(a2lData)
+    val indexMode = fncValues.indexMode
+    val charData: HexDataResult
+    val dataType = fncValues.dataType
+    val format = characteristic.getFormat()
+    val compuMethod = characteristic.getCompuMethod(a2lData)
 
     // Get Characteristic values from Byte data
-    mCharData = getValueData(
+    charData = getValueData(
         a2lData = a2lData,
         segmentList = segmentData,
         position = characteristic.address,
-        dataType = mDataType,
-        byteOrder = mByteOrder,
+        dataType = dataType,
+        byteOrder = byteOrder,
         numberOfValues = mNumOfAxisPts,
-        recordLayout = mRecordLayout
+        recordLayout = recordLayout
     )
 
     // Format the values
-    val mCharDataResult = mCharData.formatMapValues(characteristic, mCompuMethod, a2lData, mFormat)
+    val charDataResult = charData.formatMapValues(characteristic, compuMethod, a2lData, format)
 
     return CharDataValues(
-        byteSegmentId = mCharData.segmentId,
-        actualStartPosition = mCharData.startPosition,
-        actualEndPosition = mCharData.endPosition,
-        dataType = mDataType,
-        values = mCharDataResult.positionMapValues(mIndexMode, mNumOfAxisPts, mCharData.hexData, mFormat).toMutableList(),
-        format = mFormat,
-        baseOffset = mCharData.baseOffset
+        byteSegmentId = charData.segmentId,
+        actualStartPosition = charData.startPosition,
+        actualEndPosition = charData.endPosition,
+        dataType = dataType,
+        values = charDataResult.positionMapValues(indexMode, mNumOfAxisPts, charData.hexData, format).toMutableList(),
+        format = format,
+        baseOffset = charData.baseOffset
     )
 }

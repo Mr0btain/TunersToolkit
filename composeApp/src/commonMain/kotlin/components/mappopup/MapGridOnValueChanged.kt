@@ -9,28 +9,28 @@ import androidx.compose.ui.text.input.TextFieldValue
 fun MapGridOnValueChanged(
     textField: TextFieldValue
 ): TextFieldValue {
-    val mAllowedChars = setOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.')
-    var mDecimalCount = 0
-    val mResult = StringBuilder()
-    val mContents = textField.text.map { it }
-    var mSelection = textField.selection.start
+    val allowedChars = setOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.')
+    var decimalCount = 0
+    val result = StringBuilder()
+    val contents = textField.text.map { it }
+    var selection = textField.selection.start
 
     // Make sure we only have allowed characters and one decimal
-    mContents.forEachIndexed { index, char ->
+    contents.forEachIndexed { index, char ->
         if (char == '.') {
-            if (mDecimalCount == 0) {
+            if (decimalCount == 0) {
                 if (index == 0) {
-                    mDecimalCount++
-                    mResult.append('0')
-                    mResult.append(char)
-                    mSelection++
+                    decimalCount++
+                    result.append('0')
+                    result.append(char)
+                    selection++
                 } else {
-                    mDecimalCount++
-                    mResult.append(char)
+                    decimalCount++
+                    result.append(char)
                 }
-            } else mSelection--
-        } else if (char in mAllowedChars) mResult.append(char)
+            } else selection--
+        } else if (char in allowedChars) result.append(char)
     }
 
-    return textField.copy(text = mResult.toString(), selection = TextRange(mSelection))
+    return textField.copy(text = result.toString(), selection = TextRange(selection))
 }

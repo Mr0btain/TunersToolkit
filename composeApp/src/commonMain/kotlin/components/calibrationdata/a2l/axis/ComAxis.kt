@@ -41,176 +41,176 @@ fun readComAxisValues(
     axisDescr: AxisDescr,
     axisDataType: AxisDataType,
 ): Pair<ULong, AxisDataValues> {
-    val mAxisHexData: HexDataResult
-    var mAxisPts = RecordLayoutAxisPoint()
-    val mAxisPtsRef = axisDescr.getRefAxisPoint(a2lData)
-    val mResult = mutableListOf<AxisDataValue>()
-    var mByteOrder = axisDescr.getByteOrder()
-    val mCompuMethod = axisDescr.getCompuMethod(a2lData)
-    var mDataType = DataType.NOT_SET
-    val mFormat = axisDescr.getFormat()
-    var mIndexIncr = IndexIncrement.NOT_SET
-    var mNumOfAxisPts = axisDescr.maxAxisPoints.toInt()
-    val mNoAxisPts: NoAxisPts
-    var mPosition = ULong.MIN_VALUE
-    val mRecordLayout = mAxisPtsRef.getRecordLayout(a2lData)
-    var mReserved = mRecordLayout.getReserved()
+    val axisHexData: HexDataResult
+    var axisPts = RecordLayoutAxisPoint()
+    val axisPtsRef = axisDescr.getRefAxisPoint(a2lData)
+    val result = mutableListOf<AxisDataValue>()
+    var byteOrder = axisDescr.getByteOrder()
+    val compuMethod = axisDescr.getCompuMethod(a2lData)
+    var dataType = DataType.NOT_SET
+    val format = axisDescr.getFormat()
+    var indexIncr = IndexIncrement.NOT_SET
+    var numOfAxisPts = axisDescr.maxAxisPoints.toInt()
+    val noAxisPts: NoAxisPts
+    var position = ULong.MIN_VALUE
+    val recordLayout = axisPtsRef.getRecordLayout(a2lData)
+    var reserved = recordLayout.getReserved()
     // var mSrcAddress = SrcAddress()
 
     // Check Axis point reference
-    if (mAxisPtsRef != AxisPts()) {
+    if (axisPtsRef != AxisPts()) {
         // Get the address of the axis point data from reference axis point
-        if (mAxisPtsRef.address != ULong.MIN_VALUE) {
-            mPosition = mAxisPtsRef.address
+        if (axisPtsRef.address != ULong.MIN_VALUE) {
+            position = axisPtsRef.address
         }
 
         // Get Byte Order
-        mByteOrder = mAxisPtsRef.getByteOrder()
+        byteOrder = axisPtsRef.getByteOrder()
 
         // Get RecordLayout Values for AXIS_PTS
-        if (mRecordLayout != RecordLayout()) {
+        if (recordLayout != RecordLayout()) {
             // Get Reserved
-            mReserved = mRecordLayout.getReserved()
+            reserved = recordLayout.getReserved()
 
             // Get SrcAddress
             // mSrcAddress = mRecordLayout.getSrcAddrX()
 
-            val mRecordLayoutAxisPts = mRecordLayout.getAxisPtsX()
+            val mRecordLayoutAxisPts = recordLayout.getAxisPtsX()
 
             if (mRecordLayoutAxisPts != RecordLayoutAxisPoint()) {
-                mAxisPts = mRecordLayoutAxisPts
+                axisPts = mRecordLayoutAxisPts
             }
         }
 
         // If number of axis points hasn't been found, use it from reference axis point
-        if (mNumOfAxisPts == 0 && mAxisPtsRef.maxAxisPoints != UInt.MIN_VALUE) {
-            mNumOfAxisPts = mAxisPtsRef.maxAxisPoints.toInt()
+        if (numOfAxisPts == 0 && axisPtsRef.maxAxisPoints != UInt.MIN_VALUE) {
+            numOfAxisPts = axisPtsRef.maxAxisPoints.toInt()
         }
     }
 
     // Check record layout for Values
-    if (mAxisPts != RecordLayoutAxisPoint()) {
+    if (axisPts != RecordLayoutAxisPoint()) {
 
         // Set index order
-        val mTempAxisPts = mRecordLayout.getAxisPtsX()
+        val tempAxisPts = recordLayout.getAxisPtsX()
 
-        if (mAxisPts.indexIncrement != IndexIncrement.NOT_SET) {
-            mIndexIncr = mAxisPts.indexIncrement
-        } else if (mTempAxisPts != RecordLayoutAxisPoint()) {
-            if (mTempAxisPts.indexIncrement != IndexIncrement.NOT_SET) {
-                mIndexIncr =
-                    mTempAxisPts.indexIncrement
+        if (axisPts.indexIncrement != IndexIncrement.NOT_SET) {
+            indexIncr = axisPts.indexIncrement
+        } else if (tempAxisPts != RecordLayoutAxisPoint()) {
+            if (tempAxisPts.indexIncrement != IndexIncrement.NOT_SET) {
+                indexIncr =
+                    tempAxisPts.indexIncrement
             }
         }
 
         // Set Data type
-        mDataType = mAxisPts.dataType
+        dataType = axisPts.dataType
 
         // Get NO_AXIS_PTS
-        mNoAxisPts = mRecordLayout.getNoAxisPtsX()
+        noAxisPts = recordLayout.getNoAxisPtsX()
 
         // Check no axis pts
-        if (mNoAxisPts != NoAxisPts()) {
-            val result = mRecordLayout.getNoAxisPtsData(
-                byteOrder = mByteOrder,
-                position = mPosition,
-                dataType = mNoAxisPts.dataType,
+        if (noAxisPts != NoAxisPts()) {
+            val dataResult = recordLayout.getNoAxisPtsData(
+                byteOrder = byteOrder,
+                position = position,
+                dataType = noAxisPts.dataType,
                 a2lData = a2lData,
                 segmentData = segmentData
             )
 
             // Update position
-            mPosition = result.first
+            position = dataResult.first
 
             // Update number of axis points if it's not set
-            if (mNumOfAxisPts == Int.MIN_VALUE) {
-                mNumOfAxisPts = result.second
+            if (numOfAxisPts == Int.MIN_VALUE) {
+                numOfAxisPts = dataResult.second
             }
         }
 
     } else {
         // Get Rescale Axis
-        val mAxisRescale = mRecordLayout.getAxisRescaleX()
+        val axisRescale = recordLayout.getAxisRescaleX()
 
-        if (mAxisRescale != RecordLayoutAxisRescale()) {
-            mIndexIncr = mAxisRescale.indexIncrement
+        if (axisRescale != RecordLayoutAxisRescale()) {
+            indexIncr = axisRescale.indexIncrement
 
             // Get Rescale Data
-            val result = mAxisRescale.getAxisRescaleData(
-                position = mPosition,
+            val dataResult = axisRescale.getAxisRescaleData(
+                position = position,
                 segmentData = segmentData,
-                reserved = mReserved,
-                byteOrder = mByteOrder
+                reserved = reserved,
+                byteOrder = byteOrder
             )
 
             // Set position
-            mPosition = result.first
+            position = dataResult.first
 
             // Set number of axis points if it hasn't been already
-            if (mNumOfAxisPts == Int.MIN_VALUE) {
-                mNumOfAxisPts = result.second
+            if (numOfAxisPts == Int.MIN_VALUE) {
+                numOfAxisPts = dataResult.second
             }
 
             // Set Data Type
-            mDataType = mAxisRescale.dataType
+            dataType = axisRescale.dataType
         }
     }
 
     // Get Values from Data
-    mAxisHexData = getValueData(
+    axisHexData = getValueData(
         a2lData = a2lData,
         segmentList = segmentData,
-        position = mPosition,
-        dataType = mDataType,
-        byteOrder = mByteOrder,
-        numberOfValues = mNumOfAxisPts,
-        recordLayout = mRecordLayout
+        position = position,
+        dataType = dataType,
+        byteOrder = byteOrder,
+        numberOfValues = numOfAxisPts,
+        recordLayout = recordLayout
     )
 
     // Convert values and add to array
-    if (mCompuMethod.conversionType != ConversionType.TAB_VERB) {
-        mAxisHexData.formattedValues.forEachIndexed { index, result ->
-            val mPhysUnit = mCompuMethod.compute(result, a2lData)
+    if (compuMethod.conversionType != ConversionType.TAB_VERB) {
+        axisHexData.formattedValues.forEachIndexed { index, formattedValue ->
+            val physUnit = compuMethod.compute(formattedValue, a2lData)
 
-            mResult.add(
-                mIndexIncr.sortAxisPosition(
-                    input = mPhysUnit,
+            result.add(
+                indexIncr.sortAxisPosition(
+                    input = physUnit,
                     index = index,
                     axisType = axisDataType,
-                    numOfAxisPts = mNumOfAxisPts,
-                    format = mFormat
+                    numOfAxisPts = numOfAxisPts,
+                    format = format
                 )
             )
         }
     } else {
-        mAxisHexData.formattedValues.forEachIndexed { index, result ->
-            val mPhysUnit = mCompuMethod.computeTabVerb(result, a2lData)
+        axisHexData.formattedValues.forEachIndexed { index, formattedValue ->
+            val physUnit = compuMethod.computeTabVerb(formattedValue, a2lData)
 
-            mResult.add(
-                mIndexIncr.sortAxisPosition(
-                    input = mPhysUnit,
+            result.add(
+                indexIncr.sortAxisPosition(
+                    input = physUnit,
                     index = index,
                     axisType = axisDataType,
-                    numOfAxisPts = mNumOfAxisPts,
-                    format = mFormat
+                    numOfAxisPts = numOfAxisPts,
+                    format = format
                 )
             )
         }
     }
 
     return Pair(
-        mPosition,
+        position,
         AxisDataValues(
             axisDataType = axisDataType,
-            byteSegmentId = mAxisHexData.segmentId,
-            startPosition = mAxisHexData.startPosition,
-            endPosition = mAxisHexData.endPosition,
-            dataType = mDataType,
-            values = mResult,
-            format = mFormat,
+            byteSegmentId = axisHexData.segmentId,
+            startPosition = axisHexData.startPosition,
+            endPosition = axisHexData.endPosition,
+            dataType = dataType,
+            values = result,
+            format = format,
             upperLimit = axisDescr.upperLimit,
             lowerLimit = axisDescr.lowerLimit,
-            unit = mCompuMethod.unit
+            unit = compuMethod.unit
         )
     )
 }

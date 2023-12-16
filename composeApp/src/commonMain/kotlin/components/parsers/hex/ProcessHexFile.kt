@@ -3,7 +3,7 @@ package components.parsers.hex
 import components.errorstuff.safeCall
 import components.parsers.hex.intel.checkIfIntelHex
 import components.parsers.hex.intel.parseIntelHex
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 fun processHexFile(
     input: ByteArray,

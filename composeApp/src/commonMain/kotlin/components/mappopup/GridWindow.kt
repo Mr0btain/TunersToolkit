@@ -68,9 +68,9 @@ fun GridWindow(
     var offsetX by remember { mutableFloatStateOf(0f) }
     var offsetY by remember { mutableFloatStateOf(0f) }
     val mScrollState = rememberScrollState()
-    var mWidth by remember { mutableIntStateOf(400) }
-    var mHeight by remember { mutableIntStateOf(200) }
-    val mDensity = LocalDensity.current
+    var width by remember { mutableIntStateOf(400) }
+    var height by remember { mutableIntStateOf(200) }
+    val density = LocalDensity.current
 
     AnimatedVisibility(
         modifier = modifier,
@@ -90,14 +90,14 @@ fun GridWindow(
                     .shadow(elevation = 4.dp, shape = RoundedCornerShape(4.dp))
                     .clip(RoundedCornerShape(8.dp))
                     .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .width(mWidth.dp)
-                    .height(mHeight.dp)
+                    .width(width.dp)
+                    .height(height.dp)
             ) {
                 Row(
                     modifier = Modifier
                         .shadow(elevation = 2.dp, shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
                         .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
-                        .width(mWidth.dp)
+                        .width(width.dp)
                         .background(MaterialTheme.colorScheme.primary)
                         .wrapContentHeight()
                         .pointerInput(Unit) {
@@ -178,9 +178,9 @@ fun GridWindow(
                     .pointerInput(Unit) {
                         detectDragGestures { change, dragAmount ->
                             change.consume()
-                            val size = with(mDensity) { dragAmount.toIntSize(this) }
-                            mWidth += size.width
-                            mHeight += size.height
+                            val size = with(density) { dragAmount.toIntSize(this) }
+                            width += size.width
+                            height += size.height
                         }
                     }
             )

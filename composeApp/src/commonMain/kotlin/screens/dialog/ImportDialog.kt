@@ -30,39 +30,43 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 @Composable
 fun ImportDialog(
     modifier: Modifier = Modifier,
     onDismissRequest: () -> Unit,
     viewModel: MainViewModel,
-    focusRequester: FocusRequester,scope: CoroutineScope
+    focusRequester: FocusRequester, scope: CoroutineScope
 ) {
-    val mShowHexFilePicker = remember { mutableStateOf(false) }
-    val mShowA2lFilePicker = remember { mutableStateOf(false) }
+    val showHexFilePicker = remember { mutableStateOf(false) }
+    val showA2lFilePicker = remember { mutableStateOf(false) }
 
-    if (mShowHexFilePicker.value) {
+    if (showHexFilePicker.value) {
         FilePicker(
             fileType = FileType.ALL,
             fileAction = {
+                onDismissRequest()
+
                 scope.launch(Dispatchers.IO) {
                     processHexFile(it, viewModel)
                 } },
-            filePickCloser = mShowHexFilePicker,
+            filePickCloser = showHexFilePicker,
             scope = scope,
             focusRequester = focusRequester
         )
     }
 
-    if (mShowA2lFilePicker.value) {
+    if (showA2lFilePicker.value) {
         FilePicker(
             fileType = FileType.A2l,
             fileAction = {
-                scope.launch {
+                onDismissRequest()
+
+                scope.launch(Dispatchers.Default) {
                     parseAndComputeA2lData(it, viewModel)
                 } },
-            filePickCloser = mShowA2lFilePicker,
+            filePickCloser = showA2lFilePicker,
             scope = scope,
             focusRequester = focusRequester
         )
@@ -91,11 +95,11 @@ fun ImportDialog(
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
                     TextButton(
-                        onClick = { mShowA2lFilePicker.value = true }
+                        onClick = { showA2lFilePicker.value = true }
                     ) { Text("A2L File") }
 
                     TextButton(
-                        onClick = { mShowHexFilePicker.value = true }
+                        onClick = { showHexFilePicker.value = true }
                     ) { Text("Hex File") }
                 }
 

@@ -34,30 +34,30 @@ fun getDataFromHexSegment(
     position: ULong,
     dataType: DataType
 ): RawDataResult {
-    val mLength = dataType.size * 2
-    val mAddress = (position - mHexData.baseOffset).toInt() * 2
-    var mResult = ""
+    val length = dataType.size * 2
+    val address = (position - mHexData.baseOffset).toInt() * 2
+    var result = ""
 
     mHexData.data.entries.forEach { (start, data) ->
-        val mEndPosition = (start + data.length)
+        val endPosition = (start + data.length)
 
-        if (mAddress in start..mEndPosition) {
-            mResult = if (mEndPosition > (mAddress + mLength)) {
-                data.substring(mAddress - start, (mAddress + mLength) - start)
+        if (address in start..endPosition) {
+            result = if (endPosition > (address + length)) {
+                data.substring(address - start, (address + length) - start)
             } else {
-                val mTemp = StringBuilder()
-                mTemp.append(data.subSequence(mAddress - start, data.length))
-                mTemp.append(mHexData.data[start + data.length]?.subSequence(0, (mAddress + mLength) - (start + data.length))
+                val temp = StringBuilder()
+                temp.append(data.subSequence(address - start, data.length))
+                temp.append(mHexData.data[start + data.length]?.subSequence(0, (address + length) - (start + data.length))
                     ?: "")
 
-                mTemp.toString()
+                temp.toString()
             }
         }
     }
 
     return RawDataResult(
-        startPosition = mAddress,
-        hexData = mResult.applyByteOrder(byteOrder)
+        startPosition = address,
+        hexData = result.applyByteOrder(byteOrder)
         )
 }
 
@@ -131,62 +131,62 @@ fun getValueData(
     numberOfValues: Int,
     recordLayout: RecordLayout
 ): HexDataResult {
-    var mPosition = position
-    val mLength = numberOfValues * (dataType.size * 2)
-    val mHexValues = mutableListOf<String>()
-    val mFormattedValues = mutableListOf<Number>()
-    var mActualStart = Int.MIN_VALUE
+    var position1 = position
+    val length = numberOfValues * (dataType.size * 2)
+    val hexValues = mutableListOf<String>()
+    val formattedValues = mutableListOf<Number>()
+    var actualStart = Int.MIN_VALUE
 
     // Get the ID of the byte segment that contains our data
-    val mSegmentId = getSegmentId(
+    val segmentId = getSegmentId(
         segments = segmentList,
         dataType = dataType,
         position = position
     )
 
     // Get Base Offset
-    val mBaseOffset = if (segmentList.containsKey(mSegmentId)) {
-        segmentList[mSegmentId]?.baseOffset ?: 0u
+    val baseOffset = if (segmentList.containsKey(segmentId)) {
+        segmentList[segmentId]?.baseOffset ?: 0u
     } else 0u
 
     for (i in 0 until numberOfValues) {
         // Get the data from the Byte Segments and add it to the list
-        val mHex = getDataFromHexSegment(
+        val rawDataResult = getDataFromHexSegment(
             byteOrder = byteOrder,
-            mHexData = segmentList[mSegmentId] ?: HexSegmentData(),
-            position = mPosition.alignA2lAddress(recordLayout, dataType, a2lData),
+            mHexData = segmentList[segmentId] ?: HexSegmentData(),
+            position = position1.alignA2lAddress(recordLayout, dataType, a2lData),
             dataType = dataType
         )
 
         // Set actual start if it hasn't been already
-        if (mActualStart == Int.MIN_VALUE) {
-            mActualStart = mHex.startPosition
+        if (actualStart == Int.MIN_VALUE) {
+            actualStart = rawDataResult.startPosition
         }
 
         // Add the Hex value to the list
-        mHexValues.add(
-            mHex.hexData
+        hexValues.add(
+            rawDataResult.hexData
         )
 
         // Advance the position to the next section of data
-        mPosition += dataType.size.toULong()
+        position1 += dataType.size.toULong()
     }
 
     // Format each value to its number based on its data type
-    mHexValues.forEach {
-        mFormattedValues.add(
+    hexValues.forEach {
+        formattedValues.add(
             it.formatValue(dataType)
         )
     }
 
     // Return our result
     return HexDataResult(
-        startPosition = mActualStart,
-        endPosition = mActualStart + mLength,
-        hexData = mHexValues,
-        formattedValues = mFormattedValues,
-        segmentId = mSegmentId,
-        baseOffset = mBaseOffset
+        startPosition = actualStart,
+        endPosition = actualStart + length,
+        hexData = hexValues,
+        formattedValues = formattedValues,
+        segmentId = segmentId,
+        baseOffset = baseOffset
     )
 }
 
@@ -202,32 +202,32 @@ fun RecordLayout.getNoAxisPtsData(
     segmentData: Map<String, HexSegmentData>
 ): Pair<ULong, Int> {
     // Align the address
-    var mPosition = position.alignA2lAddress(this, dataType, a2lData)
-    var mNumOfAxisPts = Int.MIN_VALUE
+    var position1 = position.alignA2lAddress(this, dataType, a2lData)
+    var numOfAxisPts = Int.MIN_VALUE
 
-    val mSegmentId = getSegmentId(
+    val segmentId = getSegmentId(
         segments = segmentData,
         dataType = dataType,
-        position = mPosition
+        position = position1
     )
 
     // Get value from segment
-    val mNumberOfAxisPoints = getDataFromHexSegment(
+    val numberOfAxisPoints = getDataFromHexSegment(
         byteOrder,
-        segmentData[mSegmentId] ?: HexSegmentData(),
-        mPosition,
+        segmentData[segmentId] ?: HexSegmentData(),
+        position1,
         dataType
     ).hexData.formatValue(dataType)
 
     // If we've only returned one Byte, which we should have, set it as the number of axis points
-    if (mNumberOfAxisPoints.toInt() != 0) {
-        mNumOfAxisPts = mNumberOfAxisPoints.toInt()
+    if (numberOfAxisPoints.toInt() != 0) {
+        numOfAxisPts = numberOfAxisPoints.toInt()
     }
 
     // Advance position size of data
-    mPosition += (dataType.size).toULong()
+    position1 += (dataType.size).toULong()
 
-    return Pair(mPosition, mNumOfAxisPts)
+    return Pair(position1, numOfAxisPts)
 }
 
 /**
@@ -240,36 +240,36 @@ fun RecordLayoutAxisRescale.getAxisRescaleData(
     reserved: RecordLayoutReserved,
     byteOrder: ByteOrder
 ): Pair<ULong, Int> {
-    val mDataType = this.dataType
-    var mPosition = position
-    var mNumOfAxisPts = Int.MIN_VALUE
+    val dataType1 = this.dataType
+    var position1 = position
+    var numOfAxisPts = Int.MIN_VALUE
 
-    val mSegmentId = getSegmentId(
+    val segmentId = getSegmentId(
         segments = segmentData,
-        dataType = mDataType,
-        position = mPosition
+        dataType = dataType1,
+        position = position1
     )
 
     val numOfAxisResult = getDataFromHexSegment(
         byteOrder,
-        segmentData[mSegmentId] ?: HexSegmentData(),
-        mPosition,
+        segmentData[segmentId] ?: HexSegmentData(),
+        position1,
         dataType
     ).hexData.formatValue(dataType)
 
     // If we've only returned one Byte, which we should have, set it as the number of axis points
     if (numOfAxisResult.toInt() != 0) {
-        mNumOfAxisPts = numOfAxisResult.toInt()
+        numOfAxisPts = numOfAxisResult.toInt()
     }
 
-    mPosition += (this.dataType.size).toULong()
+    position1 += (this.dataType.size).toULong()
 
     // Skip reserved
     if (reserved.dataType != components.parsers.a2l.classes.enums.DataType.NOT_SET) {
-        mPosition += (reserved.dataType.size).toULong()
+        position1 += (reserved.dataType.size).toULong()
     }
 
-    return Pair(mPosition, mNumOfAxisPts)
+    return Pair(position1, numOfAxisPts)
 }
 
 fun AxisDataValues.getCharData(
@@ -279,11 +279,11 @@ fun AxisDataValues.getCharData(
     characteristic: Characteristic,
     axisType: AxisType
 ): CharDataValues {
-    var mPosition = characteristic.address
+    var position1 = characteristic.address
 
     // Check if we should use the end position in case of Standard axis
     if (axisType == AxisType.STD_AXIS) {
-        mPosition = position
+        position1 = position
     }
 
     // Read Characteristic values from byte segment data
@@ -291,7 +291,7 @@ fun AxisDataValues.getCharData(
         axisXDim = this.values.size,
         axisYDim = 0,
         a2lData = a2lData,
-        position = mPosition,
+        position = position1,
         segmentData = segmentData
     )
 }
@@ -305,11 +305,11 @@ fun AxisDataValues.getFixCharData(
     return if (this.values.isNotEmpty()) {
         readFixCharacteristicData(this.values.size, characteristic, a2lData, segmentData)
     } else if (characteristic.type == CharacteristicType.CURVE) {
-        val mSize = characteristic.getAxisDescrX().maxAxisPoints
-        readFixCharacteristicData(mSize.toInt(), characteristic, a2lData, segmentData)
+        val size = characteristic.getAxisDescrX().maxAxisPoints
+        readFixCharacteristicData(size.toInt(), characteristic, a2lData, segmentData)
     } else {
         // TODO: Add better logic for maps and values?
-        val mSize = characteristic.getAxisDescrX().maxAxisPoints
-        readFixCharacteristicData(mSize.toInt(), characteristic, a2lData, segmentData)
+        val size = characteristic.getAxisDescrX().maxAxisPoints
+        readFixCharacteristicData(size.toInt(), characteristic, a2lData, segmentData)
     }
 }

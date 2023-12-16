@@ -19,7 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import screens.editor.components.MainViewModel
+import MainViewModel
 
 // TODO: Maybe make drop down?
 
