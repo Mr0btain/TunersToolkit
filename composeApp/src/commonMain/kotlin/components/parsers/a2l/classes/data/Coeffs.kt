@@ -18,44 +18,29 @@ data class Coeffs(
     val d: Double = Double.NaN,
     val e: Double = Double.NaN,
     val f: Double = Double.NaN,
-): A2lOptional {
-    fun isNotBlank(): Boolean {
-        return when {
-            a.isNaN() -> false
-            b.isNaN() -> false
-            c.isNaN() -> false
-            d.isNaN() -> false
-            e.isNaN() -> false
-            f.isNaN() -> false
-            else -> false
-        }
-    }
+): A2lOptional
 
-    fun isNotIncomplete(): Boolean {
-        return when {
-            this.toString().contains("NaN") -> false
-            else -> true
-        }
+fun Coeffs.validate(): Boolean {
+    return when {
+        a.isNaN() -> false
+        b.isNaN() -> false
+        c.isNaN() -> false
+        d.isNaN() -> false
+        e.isNaN() -> false
+        f.isNaN() -> false
+        else -> true
     }
 }
 
 fun String.parseCoeffs(): Coeffs {
     val result = this.replace("COEFFS", "").trim().split(" ")
-    var a: Double = Double.NaN
-    var b: Double = Double.NaN
-    var c: Double = Double.NaN
-    var d: Double = Double.NaN
-    var e: Double = Double.NaN
-    var f: Double = Double.NaN
 
-    if (result.size >= 6) {
-        a = result[0].toDoubleOrNull() ?: Double.NaN
-        b = result[1].toDoubleOrNull() ?: Double.NaN
-        c = result[2].toDoubleOrNull() ?: Double.NaN
-        d = result[3].toDoubleOrNull() ?: Double.NaN
-        e = result[4].toDoubleOrNull() ?: Double.NaN
-        f = result[5].toDoubleOrNull() ?: Double.NaN
-    }
-
-    return Coeffs(a, b, c, d, e, f)
+    return Coeffs(
+        result[0].toDouble(),
+        result[1].toDouble(),
+        result[2].toDouble(),
+        result[3].toDouble(),
+        result[4].toDouble(),
+        result[5].toDouble()
+    )
 }

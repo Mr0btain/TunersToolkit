@@ -1,5 +1,7 @@
 package components.parsers.a2l.modcommon
 
+import components.errorstuff.LogDataEntry
+import components.errorstuff.safeCall
 import components.parsers.a2l.classes.enums.ByteOrder
 import components.parsers.a2l.classes.enums.DataSize
 import components.parsers.a2l.classes.enums.Deposit
@@ -12,117 +14,196 @@ import components.parsers.a2l.classes.enums.parseDeposit
  */
 
 fun buildModCommon(input: List<String>): ModCommon {
-    var mAlignmentByte = 1
-    var mAlignmentLong = 4
-    var mAlignmentFloat16Ieee = 4
-    var mAlignmentFloat32Ieee = 4
-    var mAlignmentFloat64Ieee = 4
-    var mAlignmentInt64 = 8
-    var mAlignmentWord = 2
-    var mByteOrder = ByteOrder.LITTLE_ENDIAN
-    var mDataSize = DataSize.NOT_SET
-    var mDeposit = Deposit.NOT_SET
+    val process = "BuildModCommon"
+    val errors = mutableListOf<LogDataEntry>()
+    var alignmentByte = 1
+    var alignmentLong = 4
+    var alignmentFloat16Ieee = 4
+    var alignmentFloat32Ieee = 4
+    var alignmentFloat64Ieee = 4
+    var alignmentInt64 = 8
+    var alignmentWord = 2
+    var byteOrder = ByteOrder.LITTLE_ENDIAN
+    var dataSize = DataSize.NOT_SET
+    var deposit = Deposit.NOT_SET
 
-    try {
-        input.forEach { line ->
-            when {
-                line.startsWith("ALIGNMENT_BYTE") -> {
-                    val result = line
+    input.forEach { line ->
+        when {
+            line.startsWith("ALIGNMENT_BYTE") -> {
+                safeCall {
+                    alignmentByte = line
                         .replace("ALIGNMENT_BYTE", "")
                         .replace("\"", "")
-                        .trim().toIntOrNull()
-                    if (result != null) {
-                        mAlignmentByte = result
-                    }
+                        .trim().toInt()
+                }.onFailure {
+                    errors.add(
+                        LogDataEntry(
+                            process = process,
+                            message = "Failure to add AlignmentByte!: ${it.message}",
+                            cause = it.cause.toString(),
+                            error = true
+                        )
+                    )
                 }
+            }
 
-                line.startsWith("ALIGNMENT_LONG") -> {
-                    val result = line
+            line.startsWith("ALIGNMENT_LONG") -> {
+                safeCall {
+                    alignmentLong = line
                         .replace("ALIGNMENT_LONG", "")
                         .replace("\"", "")
-                        .trim().toIntOrNull()
-                    if (result != null) {
-                        mAlignmentLong = result
-                    }
+                        .trim().toInt()
+                }.onFailure {
+                    errors.add(
+                        LogDataEntry(
+                            process = process,
+                            message = "Failure to add AlignmentLong!: ${it.message}",
+                            cause = it.cause.toString(),
+                            error = true
+                        )
+                    )
                 }
+            }
 
-                line.startsWith("ALIGNMENT_FLOAT16_IEEE") -> {
-                    val result = line
+            line.startsWith("ALIGNMENT_FLOAT16_IEEE") -> {
+                safeCall {
+                    alignmentFloat16Ieee = line
                         .replace("ALIGNMENT_FLOAT16_IEEE", "")
                         .replace("\"", "")
-                        .trim().toIntOrNull()
-                    if (result != null) {
-                        mAlignmentFloat16Ieee = result
-                    }
+                        .trim().toInt()
+                }.onFailure {
+                    errors.add(
+                        LogDataEntry(
+                            process = process,
+                            message = "Failure to add AlignmentFloat16!: ${it.message}",
+                            cause = it.cause.toString(),
+                            error = true
+                        )
+                    )
                 }
+            }
 
-                line.startsWith("ALIGNMENT_FLOAT32_IEEE") -> {
-                    val result = line
+            line.startsWith("ALIGNMENT_FLOAT32_IEEE") -> {
+                safeCall {
+                    alignmentFloat32Ieee = line
                         .replace("ALIGNMENT_FLOAT32_IEEE", "")
                         .replace("\"", "")
-                        .trim().toIntOrNull()
-                    if (result != null) {
-                        mAlignmentFloat32Ieee = result
-                    }
+                        .trim().toInt()
+                }.onFailure {
+                    errors.add(
+                        LogDataEntry(
+                            process = process,
+                            message = "Failure to add AlignmentFloat32!: ${it.message}",
+                            cause = it.cause.toString(),
+                            error = true
+                        )
+                    )
                 }
+            }
 
-                line.startsWith("ALIGNMENT_FLOAT64_IEEE") -> {
-                    val result = line
+            line.startsWith("ALIGNMENT_FLOAT64_IEEE") -> {
+                safeCall {
+                    alignmentFloat64Ieee = line
                         .replace("ALIGNMENT_FLOAT64_IEEE", "")
                         .replace("\"", "")
-                        .trim().toIntOrNull()
-                    if (result != null) {
-                        mAlignmentFloat64Ieee = result
-                    }
+                        .trim().toInt()
+                }.onFailure {
+                    errors.add(
+                        LogDataEntry(
+                            process = process,
+                            message = "Failure to add AlignmentFloat64!: ${it.message}",
+                            cause = it.cause.toString(),
+                            error = true
+                        )
+                    )
                 }
 
-                line.startsWith("ALIGNMENT_INT64") -> {
-                    val result = line
+            }
+
+            line.startsWith("ALIGNMENT_INT64") -> {
+                safeCall {
+                    alignmentInt64 = line
                         .replace("ALIGNMENT_INT64", "")
                         .replace("\"", "")
-                        .trim().toIntOrNull()
-                    if (result != null) {
-                        mAlignmentInt64 = result
-                    }
+                        .trim().toInt()
+                }.onFailure {
+                    errors.add(
+                        LogDataEntry(
+                            process = process,
+                            message = "Failure to add AlignmentInt64!: ${it.message}",
+                            cause = it.cause.toString(),
+                            error = true
+                        )
+                    )
                 }
+            }
 
-                line.startsWith("ALIGNMENT_WORD") -> {
-                    val result = line
+            line.startsWith("ALIGNMENT_WORD") -> {
+                safeCall {
+                    alignmentWord = line
                         .replace("ALIGNMENT_WORD", "")
                         .replace("\"", "")
-                        .trim().toIntOrNull()
-                    if (result != null) {
-                        mAlignmentWord = result
-                    }
+                        .trim().toInt()
+                }.onFailure {
+                    errors.add(
+                        LogDataEntry(
+                            process = process,
+                            message = "Failure to add AlignmentWord!: ${it.message}",
+                            cause = it.cause.toString(),
+                            error = true
+                        )
+                    )
                 }
+            }
 
-                line.startsWith("BYTE_ORDER") -> {
-                    mByteOrder = line.parseByteOrder()
+            line.startsWith("BYTE_ORDER") -> {
+                byteOrder = line.parseByteOrder()
+            }
+
+            line.startsWith("DATA_SIZE") -> {
+                val result =  line.parseDataSize()
+
+                if (result != DataSize.NOT_SET) {
+                    dataSize = result
+                } else {
+                    errors.add(
+                        LogDataEntry(
+                            process = process,
+                            message = "Failure to parse DataSize!",
+                            error = true
+                        )
+                    )
                 }
+            }
 
-                line.startsWith("DATA_SIZE") -> {
-                    mDataSize = line.parseDataSize()
-                }
+            line.startsWith("DEPOSIT") -> {
+                val result = line.parseDeposit()
 
-                line.startsWith("DEPOSIT") -> {
-                    mDeposit = line.parseDeposit()
+                if (result != Deposit.NOT_SET) {
+                    deposit = result
+                } else {
+                    errors.add(
+                        LogDataEntry(
+                            process = process,
+                            message = "Failure to parse Deposit!",
+                            error = true
+                        )
+                    )
                 }
             }
         }
-    } catch (e: Exception) {
-        e.printStackTrace()
     }
 
     return ModCommon(
-        alignmentByte = mAlignmentByte,
-        alignmentLong = mAlignmentLong,
-        alignmentFloat16Ieee = mAlignmentFloat16Ieee,
-        alignmentFloat32Ieee = mAlignmentFloat32Ieee,
-        alignmentFloat64Ieee = mAlignmentFloat64Ieee,
-        alignmentInt64 = mAlignmentInt64,
-        alignmentWord = mAlignmentWord,
-        byteOrder = mByteOrder,
-        dataSize = mDataSize,
-        deposit = mDeposit
+        alignmentByte = alignmentByte,
+        alignmentLong = alignmentLong,
+        alignmentFloat16Ieee = alignmentFloat16Ieee,
+        alignmentFloat32Ieee = alignmentFloat32Ieee,
+        alignmentFloat64Ieee = alignmentFloat64Ieee,
+        alignmentInt64 = alignmentInt64,
+        alignmentWord = alignmentWord,
+        byteOrder = byteOrder,
+        dataSize = dataSize,
+        deposit = deposit
     )
 }

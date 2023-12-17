@@ -1,5 +1,7 @@
 package components.parsers.a2l.modpar
 
+import components.errorstuff.LogDataEntry
+import components.errorstuff.safeCall
 import components.parsers.a2l.classes.data.SystemConstant
 import components.parsers.a2l.memorysegment.MemoryLayout
 import components.parsers.a2l.memorysegment.MemorySegment
@@ -10,76 +12,78 @@ import components.parsers.a2l.memorysegment.parseMemoryLayout
  * Parses a list of strings and returns a ModPar with the parameters included if they exist
  */
 
-fun buildModPar(input: List<String>): ModPar {
-    var mAddrEpk = ULong.MIN_VALUE
-    val mCalibrationMethod = mutableListOf<String>()
-    var mCpuType = ""
-    var mCustomer = ""
-    var mCustomerNumber = ""
-    var mEcu = ""
-    var mEcuCalibrationOffset = ULong.MIN_VALUE // TODO: Added to every characteristic
-    var mEcuCalibrationOffsetSet = false
-    var mEpk = ""
-    val mMemoryLayout = mutableListOf<MemoryLayout>()
-    val mMemorySegments = mutableMapOf<String, MemorySegment>()
-    var mNoOfInterfaces = Int.MIN_VALUE
-    var mPhoneNumber = ""
-    var mSupplier = ""
-    val mSystemConstants = mutableMapOf<String, SystemConstant>()
-    var mUser = ""
-    var mVersion = ""
+fun buildModPar(input: List<String>): Pair<ModPar, List<LogDataEntry>> {
+    val process = "BuildModPar"
+    val errors = mutableListOf<LogDataEntry>()
+    var addrEpk = ULong.MIN_VALUE
+    val calibrationMethod = mutableListOf<String>()
+    var cpuType = ""
+    var customer = ""
+    var customerNumber = ""
+    var ecu = ""
+    var ecuCalibrationOffset = ULong.MIN_VALUE // TODO: Added to every characteristic
+    var ecuCalibrationOffsetSet = false
+    var epk = ""
+    val memoryLayout = mutableListOf<MemoryLayout>()
+    val memorySegments = mutableMapOf<String, MemorySegment>()
+    var noOfInterfaces = Int.MIN_VALUE
+    var phoneNumber = ""
+    var supplier = ""
+    val systemConstants = mutableMapOf<String, SystemConstant>()
+    var user = ""
+    var version = ""
 
     input.forEachIndexed { index, line ->
         when {
             line.startsWith("ADDR_EPK") -> {
                 val result = line.replace("ADDR_EPK", "").trim().replace("0x", "").toULongOrNull(16)
                 if (result != null) {
-                    mAddrEpk = result
+                    addrEpk = result
                 }
             }
 
             line.startsWith("CALIBRATION_METHOD") -> {
                 val result = line.replace(" CALIBRATION_METHOD", "").trim().split(" ")
                 result.forEach {
-                    mCalibrationMethod.add(it)
+                    calibrationMethod.add(it)
                 }
             }
 
             line.startsWith("CPU_TYPE") -> {
-                mCpuType = line.replace("CPU_TYPE", "")
+                cpuType = line.replace("CPU_TYPE", "")
                     .replace("\"", "").trim()
             }
 
             line.startsWith("CUSTOMER") -> {
-                mCustomer = line.replace("CUSTOMER", "")
+                customer = line.replace("CUSTOMER", "")
                     .replace("\"", "").trim()
             }
 
             line.startsWith("CUSTOMER_NO") -> {
-                mCustomerNumber = line.replace("CUSTOMER_NO", "")
+                customerNumber = line.replace("CUSTOMER_NO", "")
                     .replace("\"", "").trim()
             }
 
             line.startsWith("CUSTOMER_NUMBER") -> {
-                mCustomerNumber = line.replace("CUSTOMER_NUMBER", "")
+                customerNumber = line.replace("CUSTOMER_NUMBER", "")
                     .replace("\"", "").trim()
             }
 
             line.startsWith("ECU") -> {
-                mEcu = line.replace("ECU", "")
+                ecu = line.replace("ECU", "")
                     .replace("\"", "").trim()
             }
 
             line.startsWith("ECU_CALIBRATION_OFFSET") -> {
                 val result = line.replace("ECU_CALIBRATION_OFFSET", "").trim().toULongOrNull()
                 if (result != null) {
-                    mEcuCalibrationOffset = result
-                    mEcuCalibrationOffsetSet = true
+                    ecuCalibrationOffset = result
+                    ecuCalibrationOffsetSet = true
                 }
             }
 
             line.startsWith("EPK") -> {
-                mEpk = line.replace("EPK", "")
+                epk = line.replace("EPK", "")
                     .replace("\"", "").trim()
             }
 
@@ -94,10 +98,11 @@ fun buildModPar(input: List<String>): ModPar {
                                 end = ind
                             }
                         }
-                        val mMemLayout = subList.subList(0, end).parseMemoryLayout()
-                        if (mMemLayout != MemoryLayout()) {
-                            mMemoryLayout.add(mMemLayout)
-                        }
+                        val (memLayout, error) = subList.subList(0, end).parseMemoryLayout()
+
+                        if (error.isEmpty()) {
+                            memoryLayout.add(memLayout)
+                        } else errors.addAll(error)
                     }
 
                     line.contains("MEMORY_SEGMENT") -> {
@@ -109,70 +114,93 @@ fun buildModPar(input: List<String>): ModPar {
                                 end = ind
                             }
                         }
-                        val mMemSegList = subList.subList(0, end)
-                        val mMemSeg = buildMemorySegment(mMemSegList)
-                        if (mMemSeg != MemorySegment()) {
-                            mMemorySegments[mMemSeg.name] = mMemSeg
-                        }
+                        val memSegList = subList.subList(0, end)
+                        val (memSeg, error) = buildMemorySegment(memSegList)
+
+                        if (error.isEmpty()) {
+                            memorySegments[memSeg.name] = memSeg
+                        } else errors.addAll(error)
                     }
                 }
             }
 
             line.startsWith("NO_OF_INTERFACES") -> {
-                val result = line.replace("NO_OF_INTERFACES", "").trim().toIntOrNull()
-                if (result != null) {
-                    mNoOfInterfaces = result
+                safeCall {
+                    noOfInterfaces = line.replace("NO_OF_INTERFACES", "").trim().toInt()
+                }.onFailure {
+                    errors.add(
+                        LogDataEntry(
+                            process = process,
+                            message = "Failure to add NumberOfInterfaces: ${it.message}",
+                            cause = it.cause.toString(),
+                            error = true
+                        )
+                    )
                 }
+
             }
 
             line.startsWith("PHONE_NO") -> {
-                mPhoneNumber = line.replace("PHONE_NO", "").trim()
+                phoneNumber = line.replace("PHONE_NO", "").trim()
             }
 
             line.startsWith("SUPPLIER") -> {
-                mSupplier = line.replace("SUPPLIER", "").trim()
+                supplier = line.replace("SUPPLIER", "").trim()
             }
 
             line.startsWith("USER") -> {
-                mUser = line.replace("USER", "").trim()
+                user = line.replace("USER", "").trim()
             }
 
             line.startsWith("VERSION") -> {
-                mVersion = line.replace("VERSION", "").trim()
+                version = line.replace("VERSION", "").trim()
             }
 
             // If it's a System Constant format and add it
             (line.startsWith("SYSTEM_CONSTANT")) -> {
-                val data = line.replace("SYSTEM_CONSTANT", "").trim().split(" ")
-                if (data.size >= 2) {
-                    val b = data[1].toDoubleOrNull()
-                    if (b != null) {
-                        mSystemConstants[data[0]] = SystemConstant( data[0], b )
-                    }
+                safeCall {
+                    val data = line.replace("SYSTEM_CONSTANT", "")
+                        .replace("\"", "")
+                        .trim()
+                        .split(" ")
+
+                    systemConstants[data[0]] = SystemConstant(data[0], data[1].toDouble())
+                }.onFailure {
+                    errors.add(
+                        LogDataEntry(
+                            process = process,
+                            message = "Failure to add SystemConstant!: \n $line : \n ${it.message}",
+                            cause = it.cause.toString(),
+                            error = true
+                        )
+                    )
                 }
             }
         }
     }
 
 
-    return ModPar(
-        name = input[0].replace("/begin MOD_PAR", "").replace("\"", "").trim(),
-        addrEpk = mAddrEpk,
-        calibrationMethod = mCalibrationMethod,
-        cpuType = mCpuType,
-        customer = mCustomer,
-        customerNumber = mCustomerNumber,
-        ecu = mEcu,
-        ecuCalibrationOffset = mEcuCalibrationOffset,
-        ecuCalibrationOffsetSet = mEcuCalibrationOffsetSet,
-        epk = mEpk,
-        memoryLayout = mMemoryLayout,
-        memorySegments = mMemorySegments,
-        noOfInterfaces = mNoOfInterfaces,
-        phoneNumber = mPhoneNumber,
-        supplier = mSupplier,
-        systemConstants = mSystemConstants,
-        user = mUser,
-        version = mVersion,
+    return Pair(
+        ModPar(
+            name = input[0].replace("/begin MOD_PAR", "").replace("\"", "").trim(),
+            addrEpk = addrEpk,
+            calibrationMethod = calibrationMethod,
+            cpuType = cpuType,
+            customer = customer,
+            customerNumber = customerNumber,
+            ecu = ecu,
+            ecuCalibrationOffset = ecuCalibrationOffset,
+            ecuCalibrationOffsetSet = ecuCalibrationOffsetSet,
+            epk = epk,
+            memoryLayout = memoryLayout,
+            memorySegments = memorySegments,
+            noOfInterfaces = noOfInterfaces,
+            phoneNumber = phoneNumber,
+            supplier = supplier,
+            systemConstants = systemConstants,
+            user = user,
+            version = version,
+        ),
+        errors
     )
 }

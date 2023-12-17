@@ -24,16 +24,10 @@ fun List<String>.parseBitOperation(): BitOperation {
     data.forEach {
         when {
             it.startsWith("LEFT_SHIFT") -> {
-                val result = it.replace("LEFT_SHIFT", "").trim().toULongOrNull()
-                if (result != null) {
-                    left = result
-                }
+                left = it.replace("LEFT_SHIFT", "").trim().toULong()
             }
             it.startsWith("RIGHT_SHIFT") -> {
-                val result = it.replace("LEFT_SHIFT", "").trim().toULongOrNull()
-                if (result != null) {
-                    right = result
-                }
+                right = it.replace("LEFT_SHIFT", "").trim().toULong()
             }
             it.startsWith("SIGN_EXTEND") -> sign = true
         }

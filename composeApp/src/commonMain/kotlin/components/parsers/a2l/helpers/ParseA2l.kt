@@ -39,7 +39,7 @@ import components.parsers.a2l.recordlayout.RecordLayout
 import components.parsers.a2l.recordlayout.buildRecordLayout
 import components.parsers.a2l.recordlayout.validate
 
-fun List<String>.parseA2l(): Pair<A2lData, List<LogDataEntry>> {
+fun parseA2l(input: List<String>): Pair<A2lData, List<LogDataEntry>> {
     var header = Header()
     var modPar = ModPar()
     var modCommon = ModCommon()
@@ -56,209 +56,187 @@ fun List<String>.parseA2l(): Pair<A2lData, List<LogDataEntry>> {
     var version = Float.MIN_VALUE
     val errors = mutableListOf<LogDataEntry>()
 
-    var line = this[0].trim()
+    val filteredInput = input.filter { it.isNotBlank() }.map { it.trim() }
+
+    var line = filteredInput[0]
     var lineIndex = 1
 
-    try {
-        val testInput = """.*ASAP2_VERSION.*""".toRegex()
-        val inputTestMatch = line.let { testInput.find(it) }
+    val testInput = """.*ASAP2_VERSION.*""".toRegex()
+    val inputTestMatch = line.let { testInput.find(it) }
 
-        // This is a check to mke sure were working with an actual Asap2 file
-        if (inputTestMatch.toString().isBlank()) {
-            errors.add(
-                LogDataEntry(
-                    process = "ParseA2lFile",
-                    message = "Not a valid A2l File!",
-                    cause = line,
-                    error = true
-                )
+    // This is a check to make sure were working with an actual Asap2 file
+    if (inputTestMatch.toString().isBlank()) {
+        errors.add(
+            LogDataEntry(
+                process = "ParseA2lFile",
+                message = "Not a valid A2l File!",
+                cause = line,
+                error = true
             )
+        )
 
-            return Pair(A2lData(), errors)
-        }
+        return Pair(A2lData(), errors)
+    }
 
-        while (lineIndex < this.size) {
+    while (lineIndex < filteredInput.size) {
+        if (line.startsWith("/begin")) {
             when {
-                // Skip the empty lines
-                line.isBlank() -> {
-                    line = this[lineIndex].trim()
-                    lineIndex++
-                }
-
                 // Parse and build Characteristics
                 line.startsWith("/begin CHARACTERISTIC") -> {
-                    val characList = mutableListOf<String>()
-                    characList.add(line)
+                    val segment = mutableListOf<String>()
+                    segment.add(line)
 
-                    while (lineIndex < this.size && !line.startsWith("/end CHARACTERISTIC")) {
-                        line = this[lineIndex].trim()
-                        if (line.isNotBlank()) {
-                            characList.add(line.trim())
-                        }
+                    while (lineIndex < filteredInput.size && !line.startsWith("/end CHARACTERISTIC")) {
+                        line = filteredInput[lineIndex]
+                        segment.add(line)
                         lineIndex++
                     }
 
-                    val (result, error) = buildCharacteristic(characList)
-
-                    if (result.validate()) {
-                        characteristics[result.name] = result
-                    }
-
+                    val (result, error) = buildCharacteristic(segment)
+                    if (result.validate()) characteristics[result.name] = result
                     errors.addAll(error)
                 }
 
                 // Parse and build Axis points
                 line.startsWith("/begin AXIS_PTS") -> {
-                    val axisPtsList = mutableListOf<String>()
-                    axisPtsList.add(line)
+                    val segment = mutableListOf<String>()
+                    segment.add(line)
 
-                    while (lineIndex < this.size && !line.startsWith("/end AXIS_PTS")) {
-                        line = this[lineIndex].trim()
-                        if (line.isNotBlank()) { axisPtsList.add(line.trim()) }
+                    while (lineIndex < filteredInput.size && !line.startsWith("/end AXIS_PTS")) {
+                        line = filteredInput[lineIndex]
+                        segment.add(line)
                         lineIndex++
                     }
 
-                    val (result, error) = buildAxisPts(axisPtsList)
-
-                    if (result.validate()) {
-                        axisPoints[result.name] = result
-                    }
-
+                    val (result, error) = buildAxisPts(segment)
+                    if (result.validate()) axisPoints[result.name] = result
                     errors.addAll(error)
                 }
 
                 // Parse and build Record Layouts
                 line.startsWith("/begin RECORD_LAYOUT") -> {
-                    val recordLayoutList = mutableListOf<String>()
-                    recordLayoutList.add(line)
+                    val segment = mutableListOf<String>()
+                    segment.add(line)
 
-                    while (lineIndex < this.size && !line.startsWith("/end RECORD_LAYOUT")) {
-                        line = this[lineIndex].trim()
-                        if (line.isNotBlank()) { recordLayoutList.add(line.trim()) }
+                    while (lineIndex < filteredInput.size && !line.startsWith("/end RECORD_LAYOUT")) {
+                        line = filteredInput[lineIndex]
+                        segment.add(line)
                         lineIndex++
                     }
 
-                    val result = buildRecordLayout(recordLayoutList)
-                    if (result.validate()) {
-                        recordLayouts[result.name] = result
-                    }
+                    val (result, error) = buildRecordLayout(segment)
+                    if (result.validate()) recordLayouts[result.name] = result
+                    errors.addAll(error)
                 }
 
                 // Parse and build Measurements
                 line.startsWith("/begin MEASUREMENT") -> {
-                    val measurementList = mutableListOf<String>()
-                    measurementList.add(line)
+                    val segment = mutableListOf<String>()
+                    segment.add(line)
 
-                    while (lineIndex < this.size && !line.startsWith("/end MEASUREMENT")) {
-                        line = this[lineIndex].trim()
-                        if (line.isNotBlank()) { measurementList.add(line.trim()) }
+                    while (lineIndex < filteredInput.size && !line.startsWith("/end MEASUREMENT")) {
+                        line = filteredInput[lineIndex]
+                        segment.add(line)
                         lineIndex++
                     }
 
-                    val result = buildMeasurement(measurementList)
-                    if (result.validate()) {
-                        measurements[result.name] = result
-                    }
+                    val (result, error) = buildMeasurement(segment)
+                    if (result.validate()) measurements[result.name] = result
+                    errors.addAll(error)
                 }
 
                 // Parse and build Compu Methods
                 line.startsWith("/begin COMPU_METHOD") -> {
-                    val compuMethodList = mutableListOf<String>()
-                    compuMethodList.add(line)
-                    while (lineIndex < this.size && !line.startsWith("/end COMPU_METHOD")) {
-                        line = this[lineIndex].trim()
-                        if (line.isNotBlank()) { compuMethodList.add(line.trim()) }
+                    val segment = mutableListOf<String>()
+                    segment.add(line)
+                    while (lineIndex < filteredInput.size && !line.startsWith("/end COMPU_METHOD")) {
+                        line = filteredInput[lineIndex]
+                        segment.add(line)
                         lineIndex++
                     }
 
-                    val result = buildCompuMethod(compuMethodList)
-                    if (result.validate()) {
-                        compuMethods[result.name] = result
-                    }
+                    val (result, error) = buildCompuMethod(segment)
+                    if (result.validate()) compuMethods[result.name] = result
+                    errors.addAll(error)
                 }
 
                 // Parse and build Compu V Tabs
                 line.startsWith("/begin COMPU_VTAB") -> {
-                    val compuVTabList = mutableListOf<String>()
-                    compuVTabList.add(line)
+                    val segment = mutableListOf<String>()
+                    segment.add(line)
 
-                    while (lineIndex < this.size && !line.startsWith("/end COMPU_VTAB")) {
-                        line = this[lineIndex].trim()
-                        if (line.isNotBlank()) { compuVTabList.add(line.trim()) }
+                    while (lineIndex < filteredInput.size && !line.startsWith("/end COMPU_VTAB")) {
+                        line = filteredInput[lineIndex]
+                        segment.add(line)
                         lineIndex++
                     }
 
-                    val result = buildCompuVTab(compuVTabList)
-                    if (result.validate()) {
-                        compuVTabs[result.name] = result
-                    }
+                    val (result, error) = buildCompuVTab(segment)
+                    if (result.validate()) compuVTabs[result.name] = result
+                    errors.addAll(error)
                 }
 
                 // Parse and build Compu V Tab Ranges
                 line.startsWith("/begin COMPU_VTAB_RANGE") -> {
-                    val compuVTabRangeList = mutableListOf<String>()
-                    compuVTabRangeList.add(line)
+                    val segment = mutableListOf<String>()
+                    segment.add(line)
 
-                    while (lineIndex < this.size && !line.startsWith("/end COMPU_VTAB_RANGE")) {
-                        line = this[lineIndex].trim()
-                        if (line.isNotBlank()) { compuVTabRangeList.add(line.trim()) }
+                    while (lineIndex < filteredInput.size && !line.startsWith("/end COMPU_VTAB_RANGE")) {
+                        line = filteredInput[lineIndex]
+                        segment.add(line)
                         lineIndex++
                     }
 
-                    val result = buildCompuVTabRange(compuVTabRangeList)
-                    if (result.validate()) {
-                        compuVTabRanges[result.name] = result
-                    }
+                    val (result, error) = buildCompuVTabRange(segment)
+                    if (result.validate()) compuVTabRanges[result.name] = result
+                    errors.addAll(error)
                 }
 
                 // Parse and build CompuTabs
                 line.startsWith("/begin COMPU_TAB") -> {
-                    val compuTabList = mutableListOf<String>()
-                    compuTabList.add(line)
-                    while (lineIndex < this.size && !line.startsWith("/end COMPU_TAB")) {
-                        line = this[lineIndex].trim()
-                        if (line.isNotBlank()) { compuTabList.add(line.trim()) }
+                    val segment = mutableListOf<String>()
+                    segment.add(line)
+                    while (lineIndex < filteredInput.size && !line.startsWith("/end COMPU_TAB")) {
+                        line = filteredInput[lineIndex]
+                        segment.add(line)
                         lineIndex++
                     }
 
-                    val result = buildCompuTab(compuTabList)
-                    if (result.validate()) {
-                        compuTabs[result.name] = result
-                    }
+                    val (result, error) = buildCompuTab(segment)
+                    if (result.validate()) compuTabs[result.name] = result
+                    errors.addAll(error)
                 }
 
                 // Parse and build Group
                 line.startsWith("/begin GROUP") -> {
-                    val groupList = mutableListOf<String>()
-                    groupList.add(line)
+                    val segment = mutableListOf<String>()
+                    segment.add(line)
 
-                    while (lineIndex < this.size && !line.startsWith("/end GROUP")) {
-                        line = this[lineIndex].trim()
-                        if (line.isNotBlank()) { groupList.add(line.trim()) }
+                    while (lineIndex < filteredInput.size && !line.startsWith("/end GROUP")) {
+                        line = filteredInput[lineIndex]
+                        segment.add(line)
                         lineIndex++
                     }
 
-                    val result = buildGroup(groupList)
-                    if (result.validate()) {
-                        groups[result.name] = result
-                    }
+                    val (result, error) = buildGroup(segment)
+                    if (result.validate()) groups[result.name] = result
+                    errors.addAll(error)
                 }
 
                 // Parse and build Functions
                 line.startsWith("/begin FUNCTION") -> {
-                    val functionList = mutableListOf<String>()
-                    functionList.add(line)
+                    val segment = mutableListOf<String>()
+                    segment.add(line)
 
-                    while (lineIndex < this.size && !line.startsWith("/end FUNCTION")) {
-                        line = this[lineIndex].trim()
-                        if (line.isNotBlank()) { functionList.add(line.trim()) }
+                    while (lineIndex < filteredInput.size && !line.startsWith("/end FUNCTION")) {
+                        line = filteredInput[lineIndex]
+                        segment.add(line)
                         lineIndex++
                     }
 
-                    val result = buildA2lFunction(functionList)
-                    if (result.validate()) {
-                        functions[result.name] = result
-                    }
+                    val (result, error) = buildA2lFunction(segment)
+                    if (result.validate()) functions[result.name] = result
+                    errors.addAll(error)
                 }
 
                 // Get asap2 Version
@@ -266,59 +244,61 @@ fun List<String>.parseA2l(): Pair<A2lData, List<LogDataEntry>> {
                     val result = line.replace("ASAP2_VERSION", "")
                         .trim().replace(" ", ".").toFloatOrNull()
                     if (result != null) { version = result }
-                    line = this[lineIndex].trim()
+                    line = filteredInput[lineIndex].trim()
                     lineIndex++
                 }
 
                 // Parse and build Header
                 line.startsWith("/begin HEADER") -> {
-                    val h = mutableListOf<String>()
-                    h.add(line)
+                    val segment = mutableListOf<String>()
+                    segment.add(line)
 
-                    while (lineIndex < this.size && !line.startsWith("/end HEADER")) {
-                        line = this[lineIndex].trim()
-                        if (line.isNotBlank()) { h.add(line.trim()) }
+                    while (lineIndex < filteredInput.size && !line.startsWith("/end HEADER")) {
+                        line = filteredInput[lineIndex]
+                        segment.add(line)
                         lineIndex++
                     }
 
-                    header = buildHeader(h)
+                    header = buildHeader(segment)
                 }
 
                 // Parse and build Mod Par
                 line.startsWith("/begin MOD_PAR") -> {
-                    val modParList = mutableListOf<String>()
-                    modParList.add(line)
-                    while (lineIndex < this.size && !line.startsWith("/end MOD_PAR")) {
-                        line = this[lineIndex].trim()
-                        if (line.isNotBlank()) { modParList.add(line.trim()) }
+                    val segment = mutableListOf<String>()
+                    segment.add(line)
+                    while (lineIndex < filteredInput.size && !line.startsWith("/end MOD_PAR")) {
+                        line = filteredInput[lineIndex]
+                        segment.add(line)
                         lineIndex++
                     }
 
-                    modPar = buildModPar(modParList)
+                    val (result, error) = buildModPar(segment)
+                    modPar = result
+                    errors.addAll(error)
                 }
 
                 // Parse and build Mod Common
                 line.startsWith("/begin MOD_COMMON") -> {
-                    val modCommonList = mutableListOf<String>()
-                    modCommonList.add(line)
+                    val segment = mutableListOf<String>()
+                    segment.add(line)
 
-                    while (lineIndex < this.size && !line.startsWith("/end MOD_COMMON")) {
-                        line = this[lineIndex].trim()
-                        if (line.isNotBlank()) { modCommonList.add(line.trim()) }
+                    while (lineIndex < filteredInput.size && !line.startsWith("/end MOD_COMMON")) {
+                        line = filteredInput[lineIndex]
+                        segment.add(line)
                         lineIndex++
                     }
 
-                    modCommon = buildModCommon(modCommonList)
+                    modCommon = buildModCommon(segment)
                 }
 
                 // Parse and build IfData
                 line.startsWith("/begin IF_DATA") -> {
-                    val ifDataFinds = mutableListOf<String>()
-                    ifDataFinds.add(line)
+                    val segment = mutableListOf<String>()
+                    segment.add(line)
 
-                    while (lineIndex < this.size && !line.startsWith("/end IF_DATA")) {
-                        line = this[lineIndex].trim()
-                        if (line.isNotBlank()) { ifDataFinds.add(line.trim()) }
+                    while (lineIndex < filteredInput.size && !line.startsWith("/end IF_DATA")) {
+                        line = filteredInput[lineIndex]
+                        segment.add(line)
                         lineIndex++
                     }
 
@@ -326,13 +306,14 @@ fun List<String>.parseA2l(): Pair<A2lData, List<LogDataEntry>> {
                 }
 
                 else -> {
-                    line = this[lineIndex].trim()
+                    line = filteredInput[lineIndex]
                     lineIndex++
                 }
             }
+        } else {
+            line = filteredInput[lineIndex]
+            lineIndex++
         }
-    } catch (e: Exception) {
-        e.printStackTrace()
     }
 
     // Return collection of Objects

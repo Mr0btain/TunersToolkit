@@ -1,231 +1,326 @@
 package components.parsers.a2l.ifdata
 
+import components.errorstuff.LogDataEntry
+import components.errorstuff.safeCall
 import components.parsers.a2l.ifdata.components.Raster
 import components.parsers.a2l.ifdata.components.enums.BlobTypes
 import components.parsers.a2l.ifdata.components.enums.IfDataTypes
 import components.parsers.a2l.ifdata.components.enums.InternalLocation
 import components.parsers.a2l.ifdata.components.parseAndFormatRasters
 
-fun buildIfData(input: String): components.parsers.a2l.ifdata.IfData {
-    // Multiple checks in line with functions to check size to make sure
-    // we don't throw out of bounds
+fun buildIfData(input: String): Pair<IfData, List<LogDataEntry>> {
+    val process = "BuildIfData"
+    val errors = mutableListOf<LogDataEntry>()
     val data = input.replace("/begin IF_DATA", "")
         .replace("/end IF_DATA", "").trim().split("\\s+".toRegex())
+    var type: IfDataTypes = IfDataTypes.NOT_SET
+    var blobType: BlobTypes = BlobTypes.NOT_SET
+    var addrExtension = ULong.MIN_VALUE  /* Address extension of the calibration data (only Low Byte significant) */
+    var baseAddress = ULong.MIN_VALUE
+    var mappedAddress = ULong.MIN_VALUE
+    var length = ULong.MIN_VALUE  /* Number of Bytes belonging to the calibration data  */
+    var internExtern: InternalLocation = InternalLocation.NOT_SET
+    var raster = Raster()
 
-    var mType: IfDataTypes = IfDataTypes.NOT_SET
-    var mBlobType: BlobTypes = BlobTypes.NOT_SET
-    var mAddrExtension = ULong.MIN_VALUE  /* Address extension of the calibration data (only Low Byte significant) */
-    var mBaseAddress = ULong.MIN_VALUE
-    var mMappedAddress = ULong.MIN_VALUE
-    var mLength = ULong.MIN_VALUE  /* Number of Bytes belonging to the calibration data  */
-    var mInternExtern: InternalLocation = InternalLocation.NOT_SET
-    var mRaster = Raster()
-
-    try {
-        data.forEachIndexed { index, line ->
-            when {
-                line.startsWith("/*orig_adr:*/") -> {
-                    val result = line.replace("/*orig_adr:*/", "")
-                        .trim().replace("0x", "").toULongOrNull(16)
-                    if (result != null) {
-                        mBaseAddress = result
-                    }
-
-
+    data.forEachIndexed { index, line ->
+        when {
+            line.startsWith("/*orig_adr:*/") -> {
+                safeCall {
+                    baseAddress = line.replace("/*orig_adr:*/", "")
+                        .trim().replace("0x", "").toULong(16)
+                }.onFailure {
+                    errors.add(
+                        LogDataEntry(
+                            process = process,
+                            message = "Failure to add Orig_Addr: ${it.message}",
+                            cause = it.cause.toString(),
+                            error = true
+                        )
+                    )
                 }
 
-                line.startsWith("/*mapping_adr:*/") -> {
-                    val result = line.replace("/*mapping_adr:*/", "")
-                        .trim().replace("0x", "").toULongOrNull(16)
-                    if (result != null) {
-                        mMappedAddress = result
-                    }
-                }
+            }
 
-                line.startsWith("/*length:*/") -> {
-                    val result = line.replace("/*length:*/", "")
-                        .trim().replace("0x", "").toULongOrNull(16)
-                    if (result != null) {
-                        mLength = result
-                    }
-                }
-
-                line.startsWith("DP_BLOB") -> {
-                    mBlobType = BlobTypes.DP_BLOB
-                    if (data.size >= index + 1) {
-                        when (data[index + 1].trim()) {
-                            "INTERN" -> {
-                                mInternExtern = InternalLocation.INTERN
-                                mAddrExtension = ULong.MIN_VALUE
-                            }
-                            "EXTERN" -> {
-                                mInternExtern = InternalLocation.EXTERN
-                                mAddrExtension = ULong.MIN_VALUE
-                            }
-                            else ->  {
-                                val result = data[index + 1].trim().replace("0x", "").toULongOrNull(16)
-                                if (result != null) {
-                                    mAddrExtension = result
-                                }
-                            }
-                        }
-                    }
-
-                    if (data.size >= index + 2) {
-                        when (data[index + 2].trim()) {
-                            "INTERN" -> {
-                                mInternExtern = InternalLocation.INTERN
-                                mBaseAddress = ULong.MIN_VALUE
-                            }
-                            "EXTERN" -> {
-                                mInternExtern = InternalLocation.EXTERN
-                                mBaseAddress = ULong.MIN_VALUE
-                            }
-                            else -> {
-                                val result = data[index + 2].trim().replace("0x", "").toULongOrNull(16)
-                                if (result != null) {
-                                    mBaseAddress = result
-                                }
-                            }
-                        }
-                    }
-
-                    if (data.size >= index + 3) {
-                        val result = data[index + 3].trim().replace("0x", "").toULongOrNull(16)
-                        if (result != null) {
-                            mLength = result
-                        }
-                    }
-                }
-
-                line.startsWith("TP_BLOB") -> {
-                    mBlobType = BlobTypes.TP_BLOB
-                    if (data.size >= index + 1) {
-                        when (data[index + 1].trim()) {
-                            "INTERN" -> {
-                                mInternExtern = InternalLocation.INTERN
-                                mAddrExtension = ULong.MIN_VALUE
-                            }
-                            "EXTERN" -> {
-                                mInternExtern = InternalLocation.EXTERN
-                                mAddrExtension = ULong.MIN_VALUE
-                            }
-                            else ->  {
-                                val result = data[index + 1].trim().replace("0x", "").toULongOrNull(16)
-                                if (result != null) {
-                                    mAddrExtension = result
-                                }
-                            }
-                        }
-                    }
-
-                    if (data.size >= index + 2) {
-                        when (data[index + 2].trim()) {
-                            "INTERN" -> {
-                                mInternExtern = InternalLocation.INTERN
-                                mBaseAddress = ULong.MIN_VALUE
-                            }
-                            "EXTERN" -> {
-                                mInternExtern = InternalLocation.EXTERN
-                                mBaseAddress = ULong.MIN_VALUE
-                            }
-                            else -> {
-                                val result = data[index + 2].trim().replace("0x", "").toULongOrNull(16)
-                                if (result != null) {
-                                    mBaseAddress = result
-                                }
-                            }
-                        }
-                    }
-
-                    if (data.size >= index + 3) {
-                        val result = data[index + 3].trim().replace("0x", "").toULongOrNull(16)
-                        if (result != null) {
-                            mLength = result
-                        }
-                    }
-                }
-
-                line.startsWith("KP_BLOB") -> {
-                    mBlobType = BlobTypes.KP_BLOB
-                    if (data.size >= index + 1) {
-                        when (data[index + 1].trim()) {
-                            "INTERN" -> {
-                                mInternExtern = InternalLocation.INTERN
-                                mAddrExtension = ULong.MIN_VALUE
-                            }
-                            "EXTERN" -> {
-                                mInternExtern = InternalLocation.EXTERN
-                                mAddrExtension = ULong.MIN_VALUE
-                            }
-                            else ->  {
-                                val result = data[index + 1].trim().replace("0x", "").toULongOrNull(16)
-                                if (result != null) {
-                                    mAddrExtension = result
-                                }
-                            }
-                        }
-                    }
-
-                    if (data.size >= index + 2) {
-                        when (data[index + 2].trim()) {
-                            "INTERN" -> {
-                                mInternExtern = InternalLocation.INTERN
-                                mBaseAddress = ULong.MIN_VALUE
-                            }
-                            "EXTERN" -> {
-                                mInternExtern = InternalLocation.EXTERN
-                                mBaseAddress = ULong.MIN_VALUE
-                            }
-                            else -> {
-                                val result = data[index + 2].trim().replace("0x", "").toULongOrNull(16)
-                                if (result != null) {
-                                    mBaseAddress = result
-                                }
-                            }
-                        }
-                    }
-
-                    if (data.size >= index + 3) {
-                        val result = data[index + 3].trim().replace("0x", "").toULongOrNull(16)
-                        if (result != null) {
-                            mLength = result
-                        }
-                    }
-                }
-
-                line.startsWith("ASAP1B_CCP") -> {
-                    mType = IfDataTypes.ASAP1B_CCP
-                }
-
-                line.startsWith("ASAP1B_KWP2000") -> {
-                    mType = IfDataTypes.ASAP1B_KWP2000
-                }
-
-                line.startsWith("ETK") -> {
-                    mType = IfDataTypes.ETK
-                }
-
-                line.startsWith("/begin RASTER") -> {
-                    mRaster = parseAndFormatRasters(
-                        data.subList(index, data.size).joinToString(" ")
+            line.startsWith("/*mapping_adr:*/") -> {
+                safeCall {
+                    mappedAddress = line.replace("/*mapping_adr:*/", "")
+                        .trim().replace("0x", "").toULong(16)
+                }.onFailure {
+                    errors.add(
+                        LogDataEntry(
+                            process = process,
+                            message = "Failure to add Mapping_Addr: ${it.message}",
+                            cause = it.cause.toString(),
+                            error = true
+                        )
                     )
                 }
             }
+
+            line.startsWith("/*length:*/") -> {
+                safeCall {
+                    length = line.replace("/*length:*/", "")
+                        .trim().replace("0x", "").toULong(16)
+                }.onFailure {
+                    errors.add(
+                        LogDataEntry(
+                            process = process,
+                            message = "Failure to add length: ${it.message}",
+                            cause = it.cause.toString(),
+                            error = true
+                        )
+                    )
+                }
+            }
+
+            line.startsWith("DP_BLOB") -> {
+                blobType = BlobTypes.DP_BLOB
+                if (data.size >= index + 1) {
+                    when (data[index + 1].trim()) {
+                        "INTERN" -> {
+                            internExtern = InternalLocation.INTERN
+                            addrExtension = ULong.MIN_VALUE
+                        }
+                        "EXTERN" -> {
+                            internExtern = InternalLocation.EXTERN
+                            addrExtension = ULong.MIN_VALUE
+                        }
+                        else ->  {
+                            safeCall {
+                                addrExtension = data[index + 1].trim().replace("0x", "").toULong(16)
+                            }.onFailure {
+                                errors.add(
+                                    LogDataEntry(
+                                        process = process,
+                                        message = "Failure to add Address Extension: ${it.message}",
+                                        cause = it.cause.toString(),
+                                        error = true
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (data.size >= index + 2) {
+                    when (data[index + 2].trim()) {
+                        "INTERN" -> {
+                            internExtern = InternalLocation.INTERN
+                            baseAddress = ULong.MIN_VALUE
+                        }
+                        "EXTERN" -> {
+                            internExtern = InternalLocation.EXTERN
+                            baseAddress = ULong.MIN_VALUE
+                        }
+                        else -> {
+                            safeCall {
+                                baseAddress = data[index + 2].trim().replace("0x", "").toULong(16)
+                            }.onFailure {
+                                errors.add(
+                                    LogDataEntry(
+                                        process = process,
+                                        message = "Failure to add base_Addr: ${it.message}",
+                                        cause = it.cause.toString(),
+                                        error = true
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (data.size >= index + 3) {
+                    safeCall {
+                        length = data[index + 3].trim().replace("0x", "").toULong(16)
+                    }.onFailure {
+                        errors.add(
+                            LogDataEntry(
+                                process = process,
+                                message = "Failure to add length ${it.message}",
+                                cause = it.cause.toString(),
+                                error = true
+                            )
+                        )
+                    }
+                }
+            }
+
+            line.startsWith("TP_BLOB") -> {
+                blobType = BlobTypes.TP_BLOB
+                if (data.size > index + 1) {
+                    when (data[index + 1].trim()) {
+                        "INTERN" -> {
+                            internExtern = InternalLocation.INTERN
+                            addrExtension = ULong.MIN_VALUE
+                        }
+                        "EXTERN" -> {
+                            internExtern = InternalLocation.EXTERN
+                            addrExtension = ULong.MIN_VALUE
+                        }
+                        else ->  {
+                            safeCall {
+                                addrExtension = data[index + 1].trim().replace("0x", "").toULong(16)
+                            }.onFailure {
+                                errors.add(
+                                    LogDataEntry(
+                                        process = process,
+                                        message = "Failure to add Addr_Extension: ${it.message}",
+                                        cause = it.cause.toString(),
+                                        error = true
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (data.size >= index + 2) {
+                    when (data[index + 2].trim()) {
+                        "INTERN" -> {
+                            internExtern = InternalLocation.INTERN
+                            baseAddress = ULong.MIN_VALUE
+                        }
+                        "EXTERN" -> {
+                            internExtern = InternalLocation.EXTERN
+                            baseAddress = ULong.MIN_VALUE
+                        }
+                        else -> {
+                            safeCall {
+                                baseAddress = data[index + 2].trim().replace("0x", "").toULong(16)
+                            }.onFailure {
+                                errors.add(
+                                    LogDataEntry(
+                                        process = process,
+                                        message = "Failure to add base_Addr: ${it.message}",
+                                        cause = it.cause.toString(),
+                                        error = true
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (data.size >= index + 3) {
+                    safeCall {
+                        length = data[index + 3].trim().replace("0x", "").toULong(16)
+                    }.onFailure {
+                        errors.add(
+                            LogDataEntry(
+                                process = process,
+                                message = "Failure to add length: ${it.message}",
+                                cause = it.cause.toString(),
+                                error = true
+                            )
+                        )
+                    }
+                }
+            }
+
+            line.startsWith("KP_BLOB") -> {
+                blobType = BlobTypes.KP_BLOB
+                if (data.size >= index + 1) {
+                    when (data[index + 1].trim()) {
+                        "INTERN" -> {
+                            internExtern = InternalLocation.INTERN
+                            addrExtension = ULong.MIN_VALUE
+                        }
+                        "EXTERN" -> {
+                            internExtern = InternalLocation.EXTERN
+                            addrExtension = ULong.MIN_VALUE
+                        }
+                        else ->  {
+                            safeCall {
+                                addrExtension = data[index + 1].trim().replace("0x", "").toULong(16)
+                            }.onFailure {
+                                errors.add(
+                                    LogDataEntry(
+                                        process = process,
+                                        message = "Failure to add Addr_extension: ${it.message}",
+                                        cause = it.cause.toString(),
+                                        error = true
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (data.size >= index + 2) {
+                    when (data[index + 2].trim()) {
+                        "INTERN" -> {
+                            internExtern = InternalLocation.INTERN
+                            baseAddress = ULong.MIN_VALUE
+                        }
+                        "EXTERN" -> {
+                            internExtern = InternalLocation.EXTERN
+                            baseAddress = ULong.MIN_VALUE
+                        }
+                        else -> {
+                            safeCall {
+                                baseAddress = data[index + 2].trim().replace("0x", "").toULong(16)
+                            }.onFailure {
+                                errors.add(
+                                    LogDataEntry(
+                                        process = process,
+                                        message = "Failure to add base_Addr: ${it.message}",
+                                        cause = it.cause.toString(),
+                                        error = true
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (data.size >= index + 3) {
+                    safeCall {
+                        length = data[index + 3].trim().replace("0x", "").toULong(16)
+                    }.onFailure {
+                        errors.add(
+                            LogDataEntry(
+                                process = process,
+                                message = "Failure to add Length: ${it.message}",
+                                cause = it.cause.toString(),
+                                error = true
+                            )
+                        )
+                    }
+                }
+            }
+
+            line.startsWith("ASAP1B_CCP") -> {
+                type = IfDataTypes.ASAP1B_CCP
+            }
+
+            line.startsWith("ASAP1B_KWP2000") -> {
+                type = IfDataTypes.ASAP1B_KWP2000
+            }
+
+            line.startsWith("ETK") -> {
+                type = IfDataTypes.ETK
+            }
+
+            line.startsWith("/begin RASTER") -> {
+                raster = parseAndFormatRasters(
+                    data.subList(index, data.size).joinToString(" ")
+                )
+            }
         }
-    } catch (e: Exception) {
-        e.printStackTrace()
     }
 
-    return components.parsers.a2l.ifdata.IfData(
-        name = data[0],
-        type = mType,
-        blobType = mBlobType,
-        addrExtension = mAddrExtension,
-        baseAddress = mBaseAddress,
-        mappedAddress = mMappedAddress,
-        length = mLength,
-        internExtern = mInternExtern,
-        raster = mRaster
+    return Pair(
+        IfData(
+            name = data[0],
+            type = type,
+            blobType = blobType,
+            addrExtension = addrExtension,
+            baseAddress = baseAddress,
+            mappedAddress = mappedAddress,
+            length = length,
+            internExtern = internExtern,
+            raster = raster
+        ),
+        errors
     )
 }

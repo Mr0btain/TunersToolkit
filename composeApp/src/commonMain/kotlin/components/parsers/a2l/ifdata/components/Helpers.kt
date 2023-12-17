@@ -1,8 +1,9 @@
 package components.parsers.a2l.ifdata.components
 
+import components.parsers.a2l.ifdata.IfData
 import components.parsers.a2l.ifdata.buildIfData
 
-fun List<String>.parseIfDataSection(): components.parsers.a2l.ifdata.IfData {
+fun List<String>.parseIfDataSection(): IfData {
     var found = false
     var result = ""
     this.forEachIndexed { index, line ->
@@ -13,5 +14,5 @@ fun List<String>.parseIfDataSection(): components.parsers.a2l.ifdata.IfData {
             }
         }
     }
-    return buildIfData(result)
+    return buildIfData(result).first
 }

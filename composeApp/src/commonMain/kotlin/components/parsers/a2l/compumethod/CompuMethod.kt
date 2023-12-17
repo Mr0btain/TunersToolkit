@@ -15,6 +15,7 @@ import components.parsers.a2l.computab.applyTabIntP
 import components.parsers.a2l.computab.applyTabNoIntP
 import components.parsers.a2l.objects.A2lOptional
 import components.calibrationdata.a2l.helpers.applyRatFunc
+import components.parsers.a2l.classes.data.compute
 import kotlinx.serialization.Serializable
 
 

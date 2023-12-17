@@ -1,5 +1,7 @@
 package components.parsers.a2l.memorysegment
 
+import components.errorstuff.LogDataEntry
+import components.errorstuff.safeCall
 import components.parsers.a2l.classes.data.MemoryLayoutProgramType
 import components.parsers.a2l.classes.data.parseMemLayoutPrgType
 import components.parsers.a2l.ifdata.components.parseIfDataSection
@@ -37,66 +39,107 @@ fun MemoryLayout.isNotEmpty(): Boolean {
     }
 }
 
-fun List<String>.parseMemoryLayout(): MemoryLayout {
-    // Check if size it big enough else we get index out of bounds
-    if (this.size >= 4) {
-        var mPrgType = MemoryLayoutProgramType.NOT_SET
-        val mOffset = mutableListOf<Long>()
-        val mIfData = mutableListOf<components.parsers.a2l.ifdata.IfData>()
+fun List<String>.parseMemoryLayout(): Pair<MemoryLayout, List<LogDataEntry>> {
+    val process = "ParseMemoryLayout"
+    val errors = mutableListOf<LogDataEntry>()
+    var prgType = MemoryLayoutProgramType.NOT_SET
+    val offset = mutableListOf<Long>()
+    val ifData = mutableListOf<components.parsers.a2l.ifdata.IfData>()
 
-        this.forEachIndexed {index, line ->
-            when {
-                line.startsWith("/begin MEMORY_LAYOUT") -> {
-                    val result = line.replace("/begin MEMORY_LAYOUT", "").trim()
-                    if (result.isNotBlank()) {
-                        mPrgType = result.parseMemLayoutPrgType()
-                    }
+    this.forEachIndexed {index, line ->
+        when {
+            line.startsWith("/begin MEMORY_LAYOUT") -> {
+                safeCall {
+                    prgType = line.replace("/begin MEMORY_LAYOUT", "")
+                        .trim().parseMemLayoutPrgType()
+                }.onFailure {
+                    errors.add(
+                        LogDataEntry(
+                            process = process,
+                            message = "Failure to parse Prg type!: ${it.message}",
+                            cause = it.cause.toString(),
+                            error = true
+                        )
+                    )
                 }
+            }
 
-                line.startsWith("/begin IF_DATA") -> {
-                    mIfData.add(this.subList(index, this.size).parseIfDataSection())
+            line.startsWith("/begin IF_DATA") -> {
+                safeCall {
+                    ifData.add(this.subList(index, this.size).parseIfDataSection())
+                }.onFailure {
+                    errors.add(
+                        LogDataEntry(
+                            process = process,
+                            message = "Failure to add IfData!: ${it.message}",
+                            cause = it.cause.toString(),
+                            error = true
+                        )
+                    )
                 }
             }
         }
+    }
 
-        if (mPrgType != MemoryLayoutProgramType.NOT_SET) {
+    safeCall {
+        if (prgType != MemoryLayoutProgramType.NOT_SET) {
             val result = this[3].trim().split(" ")
-            if (result.size >= 5) {
-                result.forEach {
-                    if (it.replace("0x", "").toULongOrNull(16) != null) {
-                        mOffset.add(it.toLong())
-                    }
-                }
+
+            result.forEach {
+                offset.add(it.replace("0x", "").toLong(16))
             }
         } else {
             val result = this[4].trim().split(" ")
-            if (result.size >= 5) {
-                result.forEach {
-                    if (it.replace("0x", "").toULongOrNull(16) != null) {
-                        mOffset.add(it.toLong())
-                    }
-                }
+
+            result.forEach {
+                offset.add(it.replace("0x", "").toLong(16))
             }
         }
+    }.onFailure {
+        errors.add(
+            LogDataEntry(
+                process = process,
+                message = "Failure to add Offset!: ${it.message}",
+                cause = it.cause.toString(),
+                error = true
+            )
+        )
+    }
 
-        return if (mPrgType != MemoryLayoutProgramType.NOT_SET) {
-            MemoryLayout(
-                prgType = mPrgType,
-                address = this[1].replace("0x", "").toULongOrNull(16) ?: ULong.MIN_VALUE,
-                size = this[2].replace("0x", "").toULongOrNull(16) ?: ULong.MIN_VALUE,
-                offset = mOffset,
-                ifData = mIfData
+    safeCall {
+        return if (prgType != MemoryLayoutProgramType.NOT_SET) {
+            Pair(
+                MemoryLayout(
+                    prgType = prgType,
+                    address = this[1].replace("0x", "").toULongOrNull(16) ?: ULong.MIN_VALUE,
+                    size = this[2].replace("0x", "").toULongOrNull(16) ?: ULong.MIN_VALUE,
+                    offset = offset,
+                    ifData = ifData
+                ),
+                errors
             )
         } else {
-            MemoryLayout(
-                prgType = this[1].parseMemLayoutPrgType(),
-                address = this[2].replace("0x", "").toULongOrNull(16) ?: ULong.MIN_VALUE,
-                size = this[3].replace("0x", "").toULongOrNull(16) ?: ULong.MIN_VALUE,
-                offset = mOffset,
-                ifData = mIfData
+            Pair(
+                MemoryLayout(
+                    prgType = this[1].parseMemLayoutPrgType(),
+                    address = this[2].replace("0x", "").toULongOrNull(16) ?: ULong.MIN_VALUE,
+                    size = this[3].replace("0x", "").toULongOrNull(16) ?: ULong.MIN_VALUE,
+                    offset = offset,
+                    ifData = ifData
+                ),
+                errors
             )
         }
-    } else {
-        return MemoryLayout()
+    }.onFailure {
+        errors.add(
+            LogDataEntry(
+                process = process,
+                message = "Failure to build MemoryLayout!: ${it.message}",
+                cause = it.cause.toString(),
+                error = true
+            )
+        )
     }
+
+    return Pair(MemoryLayout(), errors)
 }
