@@ -22,12 +22,12 @@ fun getSegmentId(
     position: ULong
 ): String {
     // Get length so we can make sure we don't exceed the length of the segment
-    val mLength = dataType.size
+    val length = dataType.size
 
     // Find the containing segment
     segments.forEach {
         if (it.value.baseOffset < position && it.value.endOffset > position) {
-            if (it.value.endOffset >= mLength.toULong()) {
+            if (it.value.endOffset >= length.toULong()) {
                 return it.key
             }
         }

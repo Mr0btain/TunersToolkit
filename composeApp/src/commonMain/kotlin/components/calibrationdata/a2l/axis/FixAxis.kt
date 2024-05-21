@@ -19,8 +19,9 @@ fun AxisDescr.computeFixAxis(axisType: AxisDataType): AxisDataValues {
     val fixAxisParList = getFixAxisParList()
 
     when {
-        // Fix Axis Par
+        // Check if FIX_AXIS_PAR is not empty
         fixAxisPar != FixAxisPar() -> {
+            // Process values and add to result
             for (i in 0 until fixAxisPar.numberApo.toInt()) {
                 val value = fixAxisPar.offset.toDouble() + (i shl fixAxisPar.shift.toInt())
 
@@ -35,8 +36,9 @@ fun AxisDescr.computeFixAxis(axisType: AxisDataType): AxisDataValues {
             }
         }
 
-        // Fix Axis Par Dist
+        // Check if FIX_AXIS_PAR_DIST is not empty
         fixAxisParDist != FixAxisParDist() -> {
+            // Process values and add to result
             for (i in 0 until fixAxisParDist.numberApo.toInt()) {
                 val value = fixAxisParDist.offset.toDouble() + (i * fixAxisParDist.distance)
 
@@ -51,10 +53,11 @@ fun AxisDescr.computeFixAxis(axisType: AxisDataType): AxisDataValues {
             }
         }
 
-        // Fix Axis Par List
+        // Check if FIX_AXIS_PAR_LIST is not empty
         fixAxisParList.isNotEmpty() -> {
             val list = mutableListOf<Double>()
 
+            // Process values and add to result
             for (element in fixAxisParList) {
                 val res = element.toDoubleOrNull()
                 if (res != null) {
@@ -80,6 +83,7 @@ fun AxisDescr.computeFixAxis(axisType: AxisDataType): AxisDataValues {
         }
     }
 
+    // Return the result
     return AxisDataValues(
         axisDataType = axisType,
         values = result,

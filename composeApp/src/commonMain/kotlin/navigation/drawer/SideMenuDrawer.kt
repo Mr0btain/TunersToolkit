@@ -45,64 +45,64 @@ fun SideMenuDrawer(
     windowSizeClass: WindowSizeClass,
     navigator: Navigator
 ) {
-    val mDrawerState = rememberDrawerState(DrawerValue.Closed)
-    val mScope = rememberCoroutineScope()
-    val mFilesManager = ProjectFilesManager()
-    val mSelectedItem = remember { mutableStateOf(0) }
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    val filesManager = ProjectFilesManager()
+    val selectedItem = remember { mutableStateOf(0) }
 
-    val mProjectSubItems = listOf(
+    val projectSubItems = listOf(
         SideMenuDrawerItemChildren(
             label = "Import",
             onClick = {
-                mScope.launch { mDrawerState.close() }
+                scope.launch { drawerState.close() }
                 viewModel.showImportDialog.value = true
             }
         ),
         SideMenuDrawerItemChildren(
             label = "Export",
-            onClick = { mScope.launch { mDrawerState.close() } }
+            onClick = { scope.launch { drawerState.close() } }
         )
     )
-    val mFileSubItems = listOf(
+    val fileSubItems = listOf(
         SideMenuDrawerItemChildren(
             label = "New Version",
             onClick = {
-                mScope.launch { mDrawerState.close() }
+                scope.launch { drawerState.close() }
                 viewModel.showNewVersionDialog.value = true
             }
         ),
         SideMenuDrawerItemChildren(
             label = "Open Version",
             onClick = {
-                mScope.launch { mDrawerState.close() }
+                scope.launch { drawerState.close() }
                 viewModel.showOpenVersionDialog.value = true
             }
         ),
         SideMenuDrawerItemChildren(
             label = "Open Project",
             onClick = {
-                mScope.launch { mDrawerState.close() }
+                scope.launch { drawerState.close() }
                 viewModel.showOpenProjectDialog.value = true
             }
         ),
         SideMenuDrawerItemChildren(
             label = "New Project",
             onClick = {
-                mScope.launch { mDrawerState.close() }
+                scope.launch { drawerState.close() }
                 viewModel.showNewProjectDialog.value = true
             }
         ),
         SideMenuDrawerItemChildren(
             label = "Delete Project",
             onClick = {
-                mScope.launch { mDrawerState.close() }
+                scope.launch { drawerState.close() }
                 viewModel.showDeleteProjectDialog.value = true
             }
         )
     )
-    val mEditSubItems = listOf<SideMenuDrawerItemChildren>()
+    val editSubItems = listOf<SideMenuDrawerItemChildren>()
 
-    if (mDrawerState.isClosed) mSelectedItem.value = 0
+    if (drawerState.isClosed) selectedItem.value = 0
 
     // Opening Animation
     val expandTransition = remember {
@@ -126,7 +126,7 @@ fun SideMenuDrawer(
 
     TunerToolkitTheme {
         ModalNavigationDrawer(
-            drawerState = mDrawerState,
+            drawerState = drawerState,
             drawerContent = {
                 ModalDrawerSheet(
                     drawerContentColor = MaterialTheme.colorScheme.onBackground,
@@ -134,53 +134,53 @@ fun SideMenuDrawer(
                     modifier = Modifier.clickable(
                         interactionSource = MutableInteractionSource(),
                         indication = null
-                    ) { mSelectedItem.value = 0 }
+                    ) { selectedItem.value = 0 }
                 ) {
                     Spacer(Modifier.height(12.dp))
 
                     SideMenuDrawerItem(
                         icon = painterResource("icons/assignment.png"),
                         label = "Project",
-                        isSelected = mSelectedItem.value == 1,
+                        isSelected = selectedItem.value == 1,
                         onClick = {
-                            mSelectedItem.value = if (mSelectedItem.value == 1) 0 else 1
-                            mScope.launch {
+                            selectedItem.value = if (selectedItem.value == 1) 0 else 1
+                            scope.launch {
                                 // TODO
                             }
                         },
                         enterTransition = expandTransition,
                         exitTransition = collapseTransition,
-                        items = mProjectSubItems
+                        items = projectSubItems
                     )
 
                     SideMenuDrawerItem(
                         icon = painterResource("icons/source.png"),
                         label = "File",
-                        isSelected = mSelectedItem.value == 2,
+                        isSelected = selectedItem.value == 2,
                         onClick = {
-                            mSelectedItem.value = if (mSelectedItem.value == 2) 0 else 2
-                            mScope.launch {
+                            selectedItem.value = if (selectedItem.value == 2) 0 else 2
+                            scope.launch {
                                 // TODO
                             }
                         },
                         enterTransition = expandTransition,
                         exitTransition = collapseTransition,
-                        items = mFileSubItems
+                        items = fileSubItems
                     )
 
                     SideMenuDrawerItem(
                         icon = painterResource("icons/create.png"),
                         label = "Edit",
-                        isSelected = mSelectedItem.value == 3,
+                        isSelected = selectedItem.value == 3,
                         onClick = {
-                            mSelectedItem.value = if (mSelectedItem.value == 3) 0 else 3
-                            mScope.launch {
+                            selectedItem.value = if (selectedItem.value == 3) 0 else 3
+                            scope.launch {
                                 // TODO
                             }
                         },
                         enterTransition = expandTransition,
                         exitTransition = collapseTransition,
-                        items = mEditSubItems
+                        items = editSubItems
                     )
                 }
             },
@@ -189,8 +189,8 @@ fun SideMenuDrawer(
                     NewProjectDialog(
                         viewModel = viewModel,
                         onDismissRequest = { viewModel.showNewProjectDialog.value = false },
-                        scope = mScope,
-                        filesManager = mFilesManager,
+                        scope = scope,
+                        filesManager = filesManager,
                         focusRequester = FocusRequester()
                     )
                 }
@@ -199,8 +199,8 @@ fun SideMenuDrawer(
                     OpenProjectDialog(
                         navigator = navigator,
                         onDismissRequest = { viewModel.showOpenProjectDialog.value = false },
-                        filesManager = mFilesManager,
-                        scope = mScope,
+                        filesManager = filesManager,
+                        scope = scope,
                         viewModel = viewModel
                     )
                 }
@@ -209,8 +209,8 @@ fun SideMenuDrawer(
                     DeleteProjectDialog(
                         projectName = viewModel.projectInfo.value.name,
                         onDismissRequest = { viewModel.showDeleteProjectDialog.value = false },
-                        filesManager = mFilesManager,
-                        scope = mScope,
+                        filesManager = filesManager,
+                        scope = scope,
                         viewModel = viewModel
                     )
                 }
@@ -220,8 +220,8 @@ fun SideMenuDrawer(
                         projectName = viewModel.projectInfo.value.name,
                         versionName = viewModel.projectInfo.value.projectVersion,
                         onDismissRequest = { viewModel.showDeleteVersionDialog.value = false },
-                        filesManager = mFilesManager,
-                        scope = mScope,
+                        filesManager = filesManager,
+                        scope = scope,
                         viewModel = viewModel
                     )
                 }
@@ -230,15 +230,15 @@ fun SideMenuDrawer(
                     ImportDialog(
                         onDismissRequest = { viewModel.showImportDialog.value = false },
                         viewModel = viewModel,
-                        scope = mScope,
+                        scope = scope,
                         focusRequester = FocusRequester()
                     )
                 }
 
                 AdaptiveAppBar(
                     viewModel = viewModel,
-                    drawerState = mDrawerState,
-                    scope = mScope,
+                    drawerState = drawerState,
+                    scope = scope,
                     content = {
                         NavigationManager(
                             viewModel,

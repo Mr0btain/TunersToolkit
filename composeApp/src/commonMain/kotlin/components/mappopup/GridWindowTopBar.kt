@@ -54,9 +54,9 @@ fun GridWindowTopBar(
 
         Layout(
             contents = listOf(label1, buttonBar)
-        ) { (mLabelMeasureable, mButtonBarMeasureable), constraints ->
-            val labelPlaceable = mLabelMeasureable.first().measure(constraints)
-            val buttonBarPlaceable = mButtonBarMeasureable.first().measure(constraints)
+        ) { (labelMeasureable, buttonBarMeasureable), constraints ->
+            val labelPlaceable = labelMeasureable.first().measure(constraints)
+            val buttonBarPlaceable = buttonBarMeasureable.first().measure(constraints)
 
             layout(width = size.width, height = size.height) {
                 labelPlaceable.place(

@@ -72,11 +72,11 @@ fun MapGrid(
         Layout(
             contents = listOf(xHeaderBox, yHeaderBox, gridView),
             modifier = Modifier.wrapContentSize()
-        ) { ( mXHeaderMeasurable, mYHeaderMeasurable, mGridViewMeasurable ), constraints ->
+        ) { ( xHeaderMeasurable, yHeaderMeasurable, gridViewMeasurable ), constraints ->
             // Measure Items
-            val xHeaderPlaceable = mXHeaderMeasurable[0].measure(constraints)
-            val yHeaderPlaceable = mYHeaderMeasurable[0].measure(constraints)
-            val gridViewPlaceable = mGridViewMeasurable[0].measure(constraints)
+            val xHeaderPlaceable = xHeaderMeasurable[0].measure(constraints)
+            val yHeaderPlaceable = yHeaderMeasurable[0].measure(constraints)
+            val gridViewPlaceable = gridViewMeasurable[0].measure(constraints)
 
             val width = if (axisYUnit.isNotBlank()) {
                 gridViewPlaceable.width + yHeaderPlaceable.width

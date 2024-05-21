@@ -21,7 +21,7 @@ fun saveNewProject(
         val mapDataSer = Json.encodeToString(viewModel.mapData.value)
         val hexData = Json.encodeToString(HexSegmentMap(viewModel.hexDataSegments))
         val mapList = Json.encodeToString(viewModel.mapListItems.toList())
-        //val mA2lData = Json.encodeToString(viewModel.a2lData.value)
+        //val a2lData = Json.encodeToString(viewModel.a2lData.value)
 
         if (projectName.isBlank()) {
             var nameNum = 0
@@ -77,7 +77,7 @@ fun saveNewVersion(
         val hexData = Json.encodeToString(HexSegmentMap(viewModel.hexDataSegments))
         val infoData = Json.encodeToString(viewModel.projectInfo)
         val mapList = Json.encodeToString(viewModel.mapListItems)
-        //val mA2lData = Json.encodeToString(viewModel.a2lData.value)
+        //val a2lData = Json.encodeToString(viewModel.a2lData.value)
 
         val version = viewModel.projectInfo.value.projectVersion
 

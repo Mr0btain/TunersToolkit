@@ -34,7 +34,7 @@ fun readValueCharacteristicData(
     val converted: Any
 
     // Read Characteristic values from byte segment data
-    val charHexData = getValueData(
+    val charHexDataValues = getValueData(
         a2lData = a2lData,
         segmentList = segmentData,
         position = characteristic.address,
@@ -48,41 +48,41 @@ fun readValueCharacteristicData(
      if (compuMethod.conversionType != ConversionType.TAB_VERB) {
         // If bitmask exists, apply it
         val value = if (bitMask != ULong.MIN_VALUE && bitMask != 0UL) {
-            characteristic.applyBitMask(charHexData.formattedValues.first())
-        } else charHexData.formattedValues.first()
+            characteristic.applyBitMask(charHexDataValues.formattedValues.first())
+        } else charHexDataValues.formattedValues.first()
 
         // Compute final value
         converted = compuMethod.compute(value, a2lData)
     } else {
         // If bitmask exists, apply it
         val value = if (bitMask != ULong.MIN_VALUE && bitMask != 0UL) {
-            characteristic.applyBitMask(charHexData.formattedValues.first())
-        } else charHexData.formattedValues.first()
+            characteristic.applyBitMask(charHexDataValues.formattedValues.first())
+        } else charHexDataValues.formattedValues.first()
 
         // Compute Tab Verb
         converted = compuMethod.computeTabVerb(value, a2lData)
     }
 
     // Create the data container for the value
-    val charDataValue = CharDataValues(
-        byteSegmentId = charHexData.segmentId,
-        actualStartPosition = charHexData.startPosition,
-        actualEndPosition = charHexData.endPosition,
+    val charDataValues = CharDataValues(
+        byteSegmentId = charHexDataValues.segmentId,
+        actualStartPosition = charHexDataValues.startPosition,
+        actualEndPosition = charHexDataValues.endPosition,
         dataType = dataType,
         values = mutableListOf(FormattedValue(
             originalValue = converted.toString(),
             formattedValue = if (converted is Number) { converted.toString().formatLength(format) } else converted.toString(),
             column = 0,
             row = 0,
-            hexData = charHexData.hexData.joinToString(""))
+            hexData = charHexDataValues.hexData.joinToString(""))
         ),
         format = format,
-        baseOffset = charHexData.baseOffset
+        baseOffset = charHexDataValues.baseOffset
     )
 
     return MapDataValues(
         name = characteristic.name,
         mapType = CharacteristicType.VALUE,
-        charValues = charDataValue
+        charValues = charDataValues
     )
 }

@@ -20,14 +20,14 @@ fun String.getByteLocations(digitsPer: Int, index: Int): String {
 }
 
 fun asciiOnValueChanged(newTextField: TextFieldValue, oldTextField: TextFieldValue): TextFieldValue {
-    val mNewLength = newTextField.text.length
-    val mOldLength = oldTextField.text.length
-    val mSelectionStart = newTextField.selection.start
+    val newLength = newTextField.text.length
+    val oldLength = oldTextField.text.length
+    val selectionStart = newTextField.selection.start
 
     return when {
-        mNewLength > mOldLength -> {
+        newLength > oldLength -> {
             when {
-                mSelectionStart <= mOldLength -> {
+                selectionStart <= oldLength -> {
                     val inputChar = newTextField.text[newTextField.selection.start - 1]
 
                     when {
@@ -60,7 +60,7 @@ fun asciiOnValueChanged(newTextField: TextFieldValue, oldTextField: TextFieldVal
             }
         }
 
-        mNewLength < mOldLength -> {
+        newLength < oldLength -> {
             newTextField.copy(
                 text = oldTextField.text.replaceRange(
                     newTextField.selection.start,

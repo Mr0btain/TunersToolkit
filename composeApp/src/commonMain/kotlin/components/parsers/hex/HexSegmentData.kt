@@ -28,14 +28,14 @@ data class HexSegmentData(
 
 fun String.chunkHexData(): Map<Int, String> {
     var position = 0
-    val mResult = mutableMapOf<Int, String>()
+    val result = mutableMapOf<Int, String>()
 
     this.chunked(6000).forEach {
-        mResult[position] = it
+        result[position] = it
         position += it.length
     }
 
-    return mResult
+    return result
 }
 
 /**
@@ -46,12 +46,12 @@ fun String.chunkHexData(): Map<Int, String> {
 fun ByteArray.toHexMap(): Map<Int, String> {
     var position = 0
     val hex = this.joinToString("") { it.toHexString(HexFormat.UpperCase) }.chunked(6000)
-    val mResult = mutableMapOf<Int, String>()
+    val result = mutableMapOf<Int, String>()
 
     hex.forEach { chunk ->
-        mResult[position] = chunk
+        result[position] = chunk
         position += chunk.length
     }
 
-    return mResult
+    return result
 }

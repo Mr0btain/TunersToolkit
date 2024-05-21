@@ -53,44 +53,44 @@ fun CompactEditor(
     viewModel: MainViewModel,
     modifier: Modifier = Modifier
 ) {
-    val mTextSize = viewModel.textSize
-    val mBitsPerLine = viewModel.digitsPerLine
-    val mCoroutineScope = rememberCoroutineScope()
-    val mSettings = viewModel.settings
-    val mChunkList = viewModel.hexDataSegments[viewModel.selectedHexSegment.value]?.data?.toList() ?: listOf()
-    val mMaps = viewModel.mapData
-    val mIsAnimatedTabBarVisible = remember { mutableStateOf(true) }
-    val mIsKeyboardUp = keyboardAsState()
-    val mPagerState = rememberPagerState(
+    val textSize = viewModel.textSize
+    val bitsPerLine = viewModel.digitsPerLine
+    val scope = rememberCoroutineScope()
+    val settings = viewModel.settings
+    val chunkList = viewModel.hexDataSegments[viewModel.selectedHexSegment.value]?.data?.toList() ?: listOf()
+    val mapValuesSortedMutableState = viewModel.mapData
+    val isAnimatedTabBarVisible = remember { mutableStateOf(true) }
+    val isKeyboardUp = keyboardAsState()
+    val pagerState = rememberPagerState(
         initialPage = 0,
         initialPageOffsetFraction = 0f
     ) { 3 }
-    val mColumnWidth = remember { mutableIntStateOf(0) }
-    val mScrollState = rememberScrollState()
-    val mFocusRequester = remember { FocusRequester() }
-    val mLazyColumnState = persistedLazyScrollState(viewModel)
-    var mOpenedMaps by remember { mutableStateOf(listOf<MapDataValues>()) }
-    val mVisibleMaps = remember { mutableStateOf(listOf<String>()) }
-    val mScreenSizeClass = calculateWindowSizeClass()
-    val mFocusedMapPopUp = mutableIntStateOf(0)
-    val mIsEmptySegmentsExpanded = remember { mutableStateOf(false) }
+    val columnWidth = remember { mutableIntStateOf(0) }
+    val scrollState = rememberScrollState()
+    val focusRequester = remember { FocusRequester() }
+    val lazyColumnState = persistedLazyScrollState(viewModel)
+    var openedMaps by remember { mutableStateOf(listOf<MapDataValues>()) }
+    val visibleMaps = remember { mutableStateOf(listOf<String>()) }
+    val screenSizeClass = calculateWindowSizeClass()
+    val focusedMapPopUp = mutableIntStateOf(0)
+    val isEmptySegmentsExpanded = remember { mutableStateOf(false) }
 
     LaunchedEffect(
         key1 = viewModel.selectedHexSegment.value,
-        key2 = mMaps.value.mapsSortedByChunk.size
+        key2 = mapValuesSortedMutableState.value.mapsSortedByChunk.size
     ) {
-        mIsEmptySegmentsExpanded.value = mMaps.value.segmentId != viewModel.selectedHexSegment.value || mMaps.value.mapsSortedByChunk.isEmpty()
+        isEmptySegmentsExpanded.value = mapValuesSortedMutableState.value.segmentId != viewModel.selectedHexSegment.value || mapValuesSortedMutableState.value.mapsSortedByChunk.isEmpty()
     }
 
-    LaunchedEffect(key1 = mMaps.value.mapsSortedByChunk.size) {
-        if (mMaps.value.mapsSortedByChunk.isNotEmpty()) {
-            mOpenedMaps = mMaps.value.mapsSortedByChunk.values.first().subList(0, 4)
+    LaunchedEffect(key1 = mapValuesSortedMutableState.value.mapsSortedByChunk.size) {
+        if (mapValuesSortedMutableState.value.mapsSortedByChunk.isNotEmpty()) {
+            openedMaps = mapValuesSortedMutableState.value.mapsSortedByChunk.values.first().subList(0, 4)
         }
     }
 
     // Needed to tell if we should hide the utility bar or map list
     // TODO: Needs fine tuned
-    if (mSettings.value.hidePagerOnKeyUp) { mIsAnimatedTabBarVisible.value = mIsKeyboardUp.value != Keyboard.Opened }
+    if (settings.value.hidePagerOnKeyUp) { isAnimatedTabBarVisible.value = isKeyboardUp.value != Keyboard.Opened }
 
 
     // Opening Animation
@@ -118,17 +118,17 @@ fun CompactEditor(
             modifier = modifier.fillMaxSize(),
             floatingActionButton = {
                 FloatingMapButton(
-                    selectedMaps = mOpenedMaps,
+                    selectedMaps = openedMaps,
                     onClick = { map ->
-                        mCoroutineScope.launch {
-                            if (mVisibleMaps.value.contains(map.name)) {
+                        scope.launch {
+                            if (visibleMaps.value.contains(map.name)) {
                                 // Remove our map from the list
-                                val mNewList = mVisibleMaps.value.toMutableList()
-                                mNewList.remove(map.name)
-                                mVisibleMaps.value = mNewList
+                                val newList = visibleMaps.value.toMutableList()
+                                newList.remove(map.name)
+                                visibleMaps.value = newList
                             } else {
                                 // Add our map to the list
-                                mVisibleMaps.value = mVisibleMaps.value.plus(map.name)
+                                visibleMaps.value = visibleMaps.value.plus(map.name)
                             }
                         }
                     }
@@ -140,18 +140,18 @@ fun CompactEditor(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .onSizeChanged { mColumnWidth.intValue = it.width },
+                    .onSizeChanged { columnWidth.intValue = it.width },
             ) {
                 // Check if user wants to display The Utility bar
-                if (mSettings.value.showTopUtilityTabBar) {
+                if (settings.value.showTopUtilityTabBar) {
                     AnimatedVisibility(
-                        visible = mIsAnimatedTabBarVisible.value,
+                        visible = isAnimatedTabBarVisible.value,
                         enter = expandTransition,
                         exit = collapseTransition,
                     ) {
                         CompactUtilityTabView(
-                            pagerState = mPagerState,
-                            scope = mCoroutineScope
+                            pagerState = pagerState,
+                            scope = scope
                         )
                     }
                 }
@@ -160,7 +160,7 @@ fun CompactEditor(
                 // this allows scrolling between views, use the state to change the
                 // view displayed
                 AnimatedVisibility(
-                    visible = mIsAnimatedTabBarVisible.value,
+                    visible = isAnimatedTabBarVisible.value,
                     enter = expandTransition,
                     exit = collapseTransition,
                 ) {
@@ -169,10 +169,10 @@ fun CompactEditor(
                     ) {
                         UtilityPagerView(
                             modifier = Modifier.height(200.dp),
-                            pagerState = mPagerState,
+                            pagerState = pagerState,
                             viewModel = viewModel,
-                            scrollState = mScrollState,
-                            scope = mCoroutineScope,
+                            scrollState = scrollState,
+                            scope = scope,
                             textStyle = TextStyle(
                                 fontSize = 16.sp,
                                 fontFamily = FontFamily.Monospace,
@@ -180,7 +180,7 @@ fun CompactEditor(
                                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                                 background = MaterialTheme.colorScheme.secondaryContainer
                             ),
-                            focusRequester = mFocusRequester
+                            focusRequester = focusRequester
                         )
                     }
                 }
@@ -192,8 +192,8 @@ fun CompactEditor(
                     subOnClick = {},
                     percentOnClick = {},
                     viewModel = viewModel,
-                    scope = mCoroutineScope,
-                    expanded = mIsEmptySegmentsExpanded
+                    scope = scope,
+                    expanded = isEmptySegmentsExpanded
                 )
 
                 Box(
@@ -212,47 +212,47 @@ fun CompactEditor(
                         // This is to determine the size of the screen that we have to work with
                         // and update the text size based off the width
                         // TODO: Add ability to work with desktop width and landscape
-                        ScreenSize(viewModel, mScreenSizeClass.widthSizeClass)
+                        ScreenSize(viewModel, screenSizeClass.widthSizeClass)
 
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(500.dp),
                             contentPadding = PaddingValues(0.dp),
-                            state = mLazyColumnState
+                            state = lazyColumnState
                         ) {
                             // For each item in the list, we create a section of the editor for it,
                             // This is needed for the larger files. will have to figure out how we
                             // can load maps into these sections, and possibly change the chunk size
                             // so maps don't overlap two chunks
 
-                            itemsIndexed(mChunkList) { index, chunk ->
+                            itemsIndexed(chunkList) { index, chunk ->
                                 // Get maps for overlays if chunk contains it
-                                val mMapDataInChunk by remember {
+                                val mapDataInChunk by remember {
                                     mutableStateOf(
-                                        if (mMaps.value.mapsSortedByChunk.containsKey(chunk.first)) {
-                                            mMaps.value.mapsSortedByChunk[chunk.first] ?: listOf()
+                                        if (mapValuesSortedMutableState.value.mapsSortedByChunk.containsKey(chunk.first)) {
+                                            mapValuesSortedMutableState.value.mapsSortedByChunk[chunk.first] ?: listOf()
                                         } else listOf()
                                     )
                                 }
 
-                                if (mMapDataInChunk.isNotEmpty() || mIsEmptySegmentsExpanded.value) {
+                                if (mapDataInChunk.isNotEmpty() || isEmptySegmentsExpanded.value) {
                                     // For each chunk make an EditorView
                                     EditorView(
                                         input = chunk,
-                                        charsPerLine = mBitsPerLine.value,
+                                        charsPerLine = bitsPerLine.value,
                                         unitNumber = index,
-                                        totalUnits = mChunkList.size,
-                                        mapValues = mMapDataInChunk,
+                                        totalUnits = chunkList.size,
+                                        mapValues = mapDataInChunk,
                                         textStyle = TextStyle(
-                                            fontSize = mTextSize.value,
+                                            fontSize = textSize.value,
                                             fontFamily = viewModel.JetBrainsMono,
                                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                                             textAlign = TextAlign.Center
                                         ),
                                         viewModel = viewModel,
-                                        focusRequester = mFocusRequester,
-                                        coroutineScope = mCoroutineScope,
+                                        focusRequester = focusRequester,
+                                        coroutineScope = scope,
                                         chunkId = chunk.first
                                     )
                                 }
@@ -262,18 +262,18 @@ fun CompactEditor(
                 }
             }
 
-            mOpenedMaps.forEachIndexed { index, mapDataValues ->
+            openedMaps.forEachIndexed { index, mapDataValues ->
                 GridWindow(
                     modifier = Modifier
-                        .zIndex(if (mFocusedMapPopUp.value == index) 1f else 0f)
+                        .zIndex(if (focusedMapPopUp.value == index) 1f else 0f)
                         .focusable(enabled = true)
-                        .focusRequester(mFocusRequester)
-                        .onFocusChanged { mFocusedMapPopUp.value = index },
+                        .focusRequester(focusRequester)
+                        .onFocusChanged { focusedMapPopUp.value = index },
                     mapDataValues = mapDataValues,
                     axisTextSize = 14.sp,
                     dataTextSize =12.sp,
-                    isVisible = mVisibleMaps,
-                    onClickFocus = { mFocusedMapPopUp.value = index }
+                    isVisible = visibleMaps,
+                    onClickFocus = { focusedMapPopUp.value = index }
                 )
             }
         }

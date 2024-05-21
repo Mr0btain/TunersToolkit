@@ -37,23 +37,23 @@ fun readCurveCharacteristicData(
             // FIX or Fixed axis Point
             AxisType.FIX_AXIS -> {
                 // Compute Axis values
-                val mAxisResult = axisDescription.computeFixAxis(AxisDataType.X)
+                val axisDataValues = axisDescription.computeFixAxis(AxisDataType.X)
 
                 // Read Characteristic values from byte segment data
-                val mCharResult = mAxisResult.getFixCharData(a2lData, segmentData, characteristic)
+                val charDataValues = axisDataValues.getFixCharData(a2lData, segmentData, characteristic)
 
                 MapDataValues(
                     name = characteristic.name,
                     mapType = CharacteristicType.CURVE,
-                    charValues = mCharResult,
-                    axisValues = listOf(mAxisResult)
+                    charValues = charDataValues,
+                    axisValues = listOf(axisDataValues)
                 )
             }
 
             // Standard Axis
             AxisType.STD_AXIS -> {
                 // Read Axis values from byte segment data and format them
-                val axisResult = readStdAxisValues(
+                val axisDataValues = readStdAxisValues(
                     a2lData = a2lData,
                     segmentData = segmentData,
                     axisDescr = axisDescription,
@@ -63,10 +63,10 @@ fun readCurveCharacteristicData(
                 )
 
                 // Read Characteristic values from byte segment data
-                val charResult = axisResult.second.getCharData(
+                val charDataValues = axisDataValues.second.getCharData(
                     a2lData = a2lData,
                     segmentData = segmentData,
-                    position = axisResult.first,
+                    position = axisDataValues.first,
                     characteristic = characteristic,
                     axisType = AxisType.STD_AXIS
                 )
@@ -74,8 +74,8 @@ fun readCurveCharacteristicData(
                 MapDataValues(
                     name = characteristic.name,
                     mapType = CharacteristicType.CURVE,
-                    charValues = charResult,
-                    axisValues = listOf(axisResult.second)
+                    charValues = charDataValues,
+                    axisValues = listOf(axisDataValues.second)
                 )
             }
 

@@ -38,7 +38,7 @@ fun MainUtilityBar(
     scope: CoroutineScope,
     expanded: MutableState<Boolean>
 ) {
-    val mIsDropDownExpanded = remember { mutableStateOf(false) }
+    val isDropDownExpanded = remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
@@ -89,14 +89,14 @@ fun MainUtilityBar(
             modifier = Modifier
                 .background(MaterialTheme.colorScheme.secondaryContainer),
             viewModel = viewModel,
-            expanded = mIsDropDownExpanded
+            expanded = isDropDownExpanded
         ) {
             viewModel.hexDataSegments.forEach { segment ->
                 if (segment.key != it) {
                     ExposedDropDownMenuItem(
                         label = segment.key,
                         onClick = {
-                            mIsDropDownExpanded.value = false
+                            isDropDownExpanded.value = false
                             viewModel.selectedHexSegment.value = segment.key
                         }
                     )

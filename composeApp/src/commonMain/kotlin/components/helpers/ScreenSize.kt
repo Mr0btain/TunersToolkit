@@ -21,26 +21,26 @@ import MainViewModel
  */
 @Composable
 fun ScreenSize(viewModel: MainViewModel, widthSizeClass: WindowWidthSizeClass) {
-    var size by remember { mutableStateOf(IntSize(0, 0)) }
+    var sizeResult by remember { mutableStateOf(IntSize(0, 0)) }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .onGloballyPositioned { size = it.size }
+            .onGloballyPositioned { sizeResult = it.size }
     ) {
         val firstTextSizeSet = remember { mutableStateOf(false) }
-        val screenS = viewModel.screenSize.value
+        val screenSize = viewModel.screenSize.value
         val textSizeCalculated = if (getPlatform().name == "Java") {
-            if (widthSizeClass == WindowWidthSizeClass.Compact) size.width / 90 else if (size.width / 56 >= 20) 20 else size.width / 56
-        } else { size.width / 90 }
+            if (widthSizeClass == WindowWidthSizeClass.Compact) sizeResult.width / 90 else if (sizeResult.width / 56 >= 20) 20 else sizeResult.width / 56
+        } else { sizeResult.width / 90 }
 
-        if (size.width != screenS.width) {
+        if (sizeResult.width != screenSize.width) {
             viewModel.textSize.value = textSizeCalculated.sp
         } else if (!firstTextSizeSet.value) {
             viewModel.textSize.value = textSizeCalculated.sp
             firstTextSizeSet.value = true
         }
 
-        viewModel.screenSize.value = IntSize(size.width, size.height)
+        viewModel.screenSize.value = IntSize(sizeResult.width, sizeResult.height)
     }
 }

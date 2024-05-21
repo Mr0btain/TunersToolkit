@@ -29,13 +29,13 @@ fun ProjectField(
     version: String,
     viewModel: MainViewModel
 ) {
-    val mName = remember(viewModel.projectInfo.value.name) { mutableStateOf(name) }
-    val mVersion = remember(viewModel.projectInfo.value.projectVersion) { mutableStateOf(version) }
-    val isNameChanged = derivedStateOf { viewModel.projectInfo.value.name != mName.value }
-    val isVersionChanged = derivedStateOf { viewModel.projectInfo.value.projectVersion != mVersion.value }
+    val currentName = remember(viewModel.projectInfo.value.name) { mutableStateOf(name) }
+    val currentVersion = remember(viewModel.projectInfo.value.projectVersion) { mutableStateOf(version) }
+    val isNameChanged = derivedStateOf { viewModel.projectInfo.value.name != currentName.value }
+    val isVersionChanged = derivedStateOf { viewModel.projectInfo.value.projectVersion != currentVersion.value }
 
-    if (isNameChanged.value) { viewModel.projectInfo.value = viewModel.projectInfo.value.copy(name = mName.value) }
-    if (isVersionChanged.value) { viewModel.projectInfo.value = viewModel.projectInfo.value.copy(projectVersion = mVersion.value) }
+    if (isNameChanged.value) { viewModel.projectInfo.value = viewModel.projectInfo.value.copy(name = currentName.value) }
+    if (isVersionChanged.value) { viewModel.projectInfo.value = viewModel.projectInfo.value.copy(projectVersion = currentVersion.value) }
 
     Box(
         modifier
@@ -68,15 +68,15 @@ fun ProjectField(
             ) {
                 InputTextOption(
                     label = "Name:",
-                    textFieldText = mName.value,
-                    textFieldOnChange = { mName.value = it },
+                    textFieldText = currentName.value,
+                    textFieldOnChange = { currentName.value = it },
                     textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSecondaryContainer)
                 )
 
                 InputTextOption(
                     label = "Version:",
-                    textFieldText = mVersion.value,
-                    textFieldOnChange = { mVersion.value = it },
+                    textFieldText = currentVersion.value,
+                    textFieldOnChange = { currentVersion.value = it },
                     textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSecondaryContainer)
                 )
             }

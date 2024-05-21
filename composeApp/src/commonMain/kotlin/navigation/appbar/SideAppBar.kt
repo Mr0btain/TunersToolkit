@@ -33,8 +33,8 @@ fun SideTopAppBar(
     viewModel: MainViewModel,
     navigator: Navigator
 ) {
-    val mIsLoading = viewModel.isLoading
-    val mCurrentDestination = navigator.currentEntry.collectAsState(initial = null)
+    val isLoading = viewModel.isLoading
+    val currentDestination = navigator.currentEntry.collectAsState(initial = null)
 
     Column(
         modifier = modifier
@@ -45,7 +45,7 @@ fun SideTopAppBar(
         verticalArrangement = Arrangement.Top
     ) {
         Box(modifier = Modifier.padding(4.dp)) {
-            if (mIsLoading.value) {
+            if (isLoading.value) {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center).padding(4.dp),
                     color = MaterialTheme.colorScheme.onBackground
@@ -71,7 +71,7 @@ fun SideTopAppBar(
         ) {
             IconButton(
                 onClick = {
-                    if (mCurrentDestination.value?.route?.route != "home") {
+                    if (currentDestination.value?.route?.route != "home") {
                         navigator.navigate(
                             route = "home",
                             NavOptions(launchSingleTop = true)
@@ -89,7 +89,7 @@ fun SideTopAppBar(
 
             IconButton(
                 onClick = {
-                    if (mCurrentDestination.value?.route?.route != "editor") {
+                    if (currentDestination.value?.route?.route != "editor") {
                         navigator.navigate(
                             route = "editor",
                             NavOptions(
@@ -112,7 +112,7 @@ fun SideTopAppBar(
 
             IconButton(
                 onClick = {
-                    if (mCurrentDestination.value?.route?.route != "settings") {
+                    if (currentDestination.value?.route?.route != "settings") {
                         navigator.navigate(
                             route = "settings",
                             NavOptions(launchSingleTop = true)

@@ -39,7 +39,7 @@ fun readResAxisValues(
     axisType: AxisDataType
 ): Pair<ULong, AxisDataValues> {
     val result = mutableListOf<AxisDataValue>()
-    val axisPtsRef = axisDescr.getRefAxisPoint(a2lData)
+    val refAxisPts = axisDescr.getRefAxisPoint(a2lData)
     var byteOrder = axisDescr.getByteOrder()
     val compuMethod = axisDescr.getCompuMethod(a2lData)
     var dataType = DataType.NOT_SET
@@ -47,18 +47,18 @@ fun readResAxisValues(
     var indexIncr = IndexIncrement.NOT_SET
     var numOfAxisPts = axisDescr.maxAxisPoints.toInt()
     var position = ULong.MIN_VALUE
-    val recordLayout = axisPtsRef.getRecordLayout(a2lData)
+    val recordLayout = refAxisPts.getRecordLayout(a2lData)
     var reserved = recordLayout.getReserved()
 
-    // Check Axis point reference
-    if (axisPtsRef != AxisPts()) {
+    // Check if REF_AXIS_PTS is not empty
+    if (refAxisPts != AxisPts()) {
 
         // Set Byte Order
-        byteOrder = axisPtsRef.getByteOrder()
+        byteOrder = refAxisPts.getByteOrder()
 
         // Get the address of the axis point data from reference axis point
-        if (axisPtsRef.address != ULong.MIN_VALUE) {
-            position = axisPtsRef.address
+        if (refAxisPts.address != ULong.MIN_VALUE) {
+            position = refAxisPts.address
         }
 
         // Get RecordLayout Values for AXIS_PTS
@@ -69,36 +69,37 @@ fun readResAxisValues(
 
 
         // If number of axis points hasn't been found, use it from reference axis point
-        if (numOfAxisPts == 0 && axisPtsRef.maxAxisPoints != UInt.MIN_VALUE) {
-            numOfAxisPts = axisPtsRef.maxAxisPoints.toInt()
+        if (numOfAxisPts == 0 && refAxisPts.maxAxisPoints != UInt.MIN_VALUE) {
+            numOfAxisPts = refAxisPts.maxAxisPoints.toInt()
         }
     }
 
     // Get NO_AXIS_PTS
-    val mNoAxisPts: NoAxisPts = recordLayout.getNoAxisPts(axisType)
+    val recordLayoutNoAxisPts: NoAxisPts = recordLayout.getNoAxisPts(axisType)
 
-    val mAxisPts = recordLayout.getAxisPts(axisType)
-    val mAxisPtsX = recordLayout.getAxisPtsX()
+    // Get AXIS_PTS and AXIS_PTS_X
+    val recordLayoutAxisPts = recordLayout.getAxisPts(axisType)
+    val recordLayoutAxisPtsX = recordLayout.getAxisPtsX()
 
-    // Check record layout for FncValues
-    if (mAxisPts != RecordLayoutAxisPoint()) {
+    // Check if RECORD_LAYOUT_AXIS_PTS is not empty
+    if (recordLayoutAxisPts != RecordLayoutAxisPoint()) {
         // Set index order
-        if (mAxisPts.indexIncrement != IndexIncrement.NOT_SET) {
-            indexIncr = mAxisPts.indexIncrement
-        } else if (mAxisPtsX != RecordLayoutAxisPoint()) {
-            if (mAxisPtsX.indexIncrement != IndexIncrement.NOT_SET
+        if (recordLayoutAxisPts.indexIncrement != IndexIncrement.NOT_SET) {
+            indexIncr = recordLayoutAxisPts.indexIncrement
+        } else if (recordLayoutAxisPtsX != RecordLayoutAxisPoint()) {
+            if (recordLayoutAxisPtsX.indexIncrement != IndexIncrement.NOT_SET
             ) {
                 indexIncr =
-                    mAxisPtsX.indexIncrement
+                    recordLayoutAxisPtsX.indexIncrement
             }
         }
 
-        // Check no axis pts
-        if (mNoAxisPts != NoAxisPts()) {
+        // Check if RECORD_LAYOUT_NO_AXIS_PTS is not empty
+        if (recordLayoutNoAxisPts != NoAxisPts()) {
             val data = recordLayout.getNoAxisPtsData(
                 byteOrder = byteOrder,
                 position = position,
-                dataType = mNoAxisPts.dataType,
+                dataType = recordLayoutNoAxisPts.dataType,
                 a2lData = a2lData,
                 segmentData = segmentData
             )
@@ -113,14 +114,15 @@ fun readResAxisValues(
         }
 
         // Set Data Type
-        dataType = mAxisPts.dataType
+        dataType = recordLayoutAxisPts.dataType
 
     } else {
-        val axisRescale = recordLayout.getAxisRescale(axisType)
+        // If RECORD_LAYOUT_AXIS_PTS is empty, then continue and check rescale
+        val recordLayoutAxisRescale = recordLayout.getAxisRescale(axisType)
 
-        if (axisRescale != RecordLayoutAxisRescale()) {
-            indexIncr = axisRescale.indexIncrement
-            val data = axisRescale.getAxisRescaleData(
+        if (recordLayoutAxisRescale != RecordLayoutAxisRescale()) {
+            indexIncr = recordLayoutAxisRescale.indexIncrement
+            val axisRescaleData = recordLayoutAxisRescale.getAxisRescaleData(
                 position = position,
                 segmentData = segmentData,
                 reserved = reserved,
@@ -128,15 +130,16 @@ fun readResAxisValues(
             )
 
             // Set position
-            position = data.first
+            position = axisRescaleData.first
 
             // Set number of axis points if it hasn't been already
             if (numOfAxisPts == Int.MIN_VALUE) {
-                numOfAxisPts = data.second
+                numOfAxisPts = axisRescaleData.second
             }
         }
     }
 
+    // Pull the Hex data
     val axisHexData = getValueData(
         a2lData = a2lData,
         segmentList = segmentData,
@@ -147,6 +150,7 @@ fun readResAxisValues(
         recordLayout = recordLayout
     )
 
+    // Check conversion type, compute, and sort values
     if (compuMethod.conversionType != ConversionType.TAB_VERB) {
         axisHexData.formattedValues.forEachIndexed { index, formattedValue ->
             val physUnit = compuMethod.compute(formattedValue, a2lData)
@@ -177,6 +181,7 @@ fun readResAxisValues(
         }
     }
 
+    // Return the result
     return Pair(
         position,
         AxisDataValues(

@@ -25,9 +25,9 @@ fun readMapCharacteristicData(
 ): MapDataValues {
     // TODO
     val byteOrder = characteristic.getByteOrder()
-    val charHexData: HexDataResult
+    val charHexDataValues: HexDataResult
     val axisDescriptions = characteristic.getAxisDescrMap()
-    val axisData = mutableListOf<Pair<ULong, AxisDataValues>>()
+    val axisDataValuesResult = mutableListOf<Pair<ULong, AxisDataValues>>()
     val recordLayout = characteristic.getRecordLayout(a2lData)
     val fncValues = recordLayout.getFncValues()
     val format = characteristic.getFormat()
@@ -35,11 +35,11 @@ fun readMapCharacteristicData(
     var position = characteristic.address
     var axisXDim = 0
     var axisYDim = 0
-    var axisCount = 0
+    var axisPointCount = 0
 
     // Get data for Axis Descriptions
     axisDescriptions.forEach { (type, descr) ->
-        val result = descr.getHexValues(
+        val axisDataValues = descr.getHexValues(
             a2lData = a2lData,
             segmentData = byteSegmentData,
             characteristic = characteristic,
@@ -50,17 +50,17 @@ fun readMapCharacteristicData(
         // If it contains an STD_AXIS then characteristic data begins after the Axis data,
         // so we set mPosition to the ending position of the axis data
         if (descr.type == AxisType.STD_AXIS) {
-            position = result.first
+            position = axisDataValues.first
         }
 
         // Add to our list
-        axisData.add(result)
+        axisDataValuesResult.add(axisDataValues)
 
-        axisCount++
+        axisPointCount++
     }
 
     // Get the dimension of our map, by multiplying the axis sizes by each other
-    axisData.forEach { axisValue ->
+    axisDataValuesResult.forEach { axisValue ->
         if (axisXDim == 0) {
             axisXDim = axisValue.second.values.size
         } else if (axisYDim == 0) {
@@ -69,7 +69,7 @@ fun readMapCharacteristicData(
     }
 
     // Get the Raw data from the byte segment
-    charHexData = getValueData(
+    charHexDataValues = getValueData(
         a2lData = a2lData,
         segmentList = byteSegmentData,
         byteOrder = byteOrder,
@@ -80,36 +80,36 @@ fun readMapCharacteristicData(
     )
 
     // Position the values and format them
-    val formattedValues = charHexData.formattedValues.positionValues(
+    val formattedValues = charHexDataValues.formattedValues.positionValues(
         a2lData = a2lData,
         axisXDim = axisXDim,
         axisYDim = axisYDim,
         characteristic = characteristic,
         indexMode = indexMode,
-        numOfAxisPts = axisCount,
-        hexData = charHexData.hexData,
+        numOfAxisPts = axisPointCount,
+        hexData = charHexDataValues.hexData,
         format = format
     )
 
     // Create the Data class to store all the characteristic values
-    val charDataResult = CharDataValues(
-        byteSegmentId = charHexData.segmentId,
-        actualStartPosition = charHexData.startPosition,
-        actualEndPosition = charHexData.endPosition,
+    val charDataValues = CharDataValues(
+        byteSegmentId = charHexDataValues.segmentId,
+        actualStartPosition = charHexDataValues.startPosition,
+        actualEndPosition = charHexDataValues.endPosition,
         values = formattedValues,
         dataType = fncValues.dataType,
         format = format,
-        baseOffset = charHexData.baseOffset
+        baseOffset = charHexDataValues.baseOffset
     )
 
     // Drop the first element in the pairs in the list of axis data
-    val axisDataValues = axisData.map { it.second }.toMutableList()
+    val axisDataValues = axisDataValuesResult.map { it.second }.toMutableList()
 
     // Return the results
     return MapDataValues(
         name = characteristic.name,
         mapType = CharacteristicType.MAP,
-        charValues = charDataResult,
+        charValues = charDataValues,
         axisValues = axisDataValues,
     )
 }

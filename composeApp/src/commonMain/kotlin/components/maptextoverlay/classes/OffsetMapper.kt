@@ -73,7 +73,7 @@ class OffsetMapper(private val input: String): OffsetMapping {
             }
 
             current++
-            //mResult[i] = i + transformedAmount
+            //result[i] = i + transformedAmount
         }
 
         offsetMap = result

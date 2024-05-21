@@ -63,41 +63,41 @@ fun ExpandedEditor(
     viewModel: MainViewModel,
     modifier: Modifier = Modifier
 ) {
-    val mTextSize = viewModel.textSize
-    val mBitsPerLine = viewModel.digitsPerLine
-    val mCoroutineScope = rememberCoroutineScope()
-    val mChunkList = viewModel.hexDataSegments[viewModel.selectedHexSegment.value]?.data?.toList() ?: listOf()
-    val mMaps = viewModel.mapData
-    val mRowWidth = remember { mutableIntStateOf(0) }
-    val mScrollState = rememberScrollState()
-    val mFocusRequester = remember { FocusRequester() }
-    val mLazyColumnState = persistedLazyScrollState(viewModel)
-    var mOpenedMaps by remember { mutableStateOf(listOf<MapDataValues>()) }
-    val mVisibleMaps = remember { mutableStateOf(listOf<String>()) }
-    val mScreenSizeClass = calculateWindowSizeClass()
-    val mFocusedMapPopUp = mutableIntStateOf(0)
-    var mShowEqDialog by remember { mutableStateOf(false) }
-    val mIsEmptySegmentsExpanded = remember { mutableStateOf(false) }
-    val mListScrollState = rememberScrollState()
+    val textSize = viewModel.textSize
+    val bitsPerLine = viewModel.digitsPerLine
+    val coroutineScope = rememberCoroutineScope()
+    val chunkList = viewModel.hexDataSegments[viewModel.selectedHexSegment.value]?.data?.toList() ?: listOf()
+    val mapValuesSortedMutableState = viewModel.mapData
+    val rowWidth = remember { mutableIntStateOf(0) }
+    val scrollState = rememberScrollState()
+    val focusRequester = remember { FocusRequester() }
+    val lazyColumnState = persistedLazyScrollState(viewModel)
+    var openedMaps by remember { mutableStateOf(listOf<MapDataValues>()) }
+    val visibleMaps = remember { mutableStateOf(listOf<String>()) }
+    val screenSizeClass1 = calculateWindowSizeClass()
+    val focusedMapPopUp = mutableIntStateOf(0)
+    var showEqDialog by remember { mutableStateOf(false) }
+    val isEmptySegmentsExpanded = remember { mutableStateOf(false) }
+    val listScrollState = rememberScrollState()
 
-    LaunchedEffect(key1 = mListScrollState.value) {
-        println("Scroll state position: ${mListScrollState.value}")
+    LaunchedEffect(key1 = listScrollState.value) {
+        println("Scroll state position: ${listScrollState.value}")
     }
 
-    if (mShowEqDialog) {
-        FormulaParseDialog(onDismissRequest = {mShowEqDialog = false})
+    if (showEqDialog) {
+        FormulaParseDialog(onDismissRequest = {showEqDialog = false})
     }
 
     LaunchedEffect(
         key1 = viewModel.selectedHexSegment.value,
-        key2 = mMaps.value.mapsSortedByChunk.size
+        key2 = mapValuesSortedMutableState.value.mapsSortedByChunk.size
     ) {
-        mIsEmptySegmentsExpanded.value = mMaps.value.segmentId != viewModel.selectedHexSegment.value || mMaps.value.mapsSortedByChunk.isEmpty()
+        isEmptySegmentsExpanded.value = mapValuesSortedMutableState.value.segmentId != viewModel.selectedHexSegment.value || mapValuesSortedMutableState.value.mapsSortedByChunk.isEmpty()
     }
 
-    LaunchedEffect(key1 = mMaps.value.mapsSortedByChunk.size) {
-        if (mMaps.value.mapsSortedByChunk.isNotEmpty()) {
-            mOpenedMaps = mMaps.value.mapsSortedByChunk.values.elementAt(5).subList(0,4)
+    LaunchedEffect(key1 = mapValuesSortedMutableState.value.mapsSortedByChunk.size) {
+        if (mapValuesSortedMutableState.value.mapsSortedByChunk.isNotEmpty()) {
+            openedMaps = mapValuesSortedMutableState.value.mapsSortedByChunk.values.elementAt(5).subList(0,4)
         }
     }
 
@@ -106,16 +106,16 @@ fun ExpandedEditor(
             modifier = modifier.fillMaxSize(),
             floatingActionButton = {
                 FloatingMapButton(
-                    selectedMaps = mOpenedMaps,
+                    selectedMaps = openedMaps,
                     onClick = { map ->
-                        if (mVisibleMaps.value.contains(map.name)) {
+                        if (visibleMaps.value.contains(map.name)) {
                             // Remove our map from the list
-                            val mNewList = mVisibleMaps.value.toMutableList()
-                            mNewList.remove(map.name)
-                            mVisibleMaps.value = mNewList
+                            val newList = visibleMaps.value.toMutableList()
+                            newList.remove(map.name)
+                            visibleMaps.value = newList
                         } else {
                             // Add our map to the list
-                            mVisibleMaps.value = mVisibleMaps.value.plus(map.name)
+                            visibleMaps.value = visibleMaps.value.plus(map.name)
                         }
                     }
                 )
@@ -126,16 +126,16 @@ fun ExpandedEditor(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .onSizeChanged { mRowWidth.intValue = it.width }
+                    .onSizeChanged { rowWidth.intValue = it.width }
                     .padding(8.dp)
             ) {
                 // Adaptable side bar
                 UtilityView(
                     modifier = Modifier.width(350.dp),
                     viewModel = viewModel,
-                    scope = mCoroutineScope,
-                    scrollState = mScrollState,
-                    windowHeightSizeClass = mScreenSizeClass.heightSizeClass,
+                    scope = coroutineScope,
+                    scrollState = scrollState,
+                    windowHeightSizeClass = screenSizeClass1.heightSizeClass,
                     textStyle = TextStyle(
                         fontSize = 16.sp,
                         fontFamily = FontFamily.Monospace,
@@ -143,7 +143,7 @@ fun ExpandedEditor(
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         background = MaterialTheme.colorScheme.secondaryContainer
                     ),
-                    focusRequester = mFocusRequester
+                    focusRequester = focusRequester
                 )
 
                 Spacer(modifier = Modifier.padding(4.dp))
@@ -166,16 +166,16 @@ fun ExpandedEditor(
                             percentOnClick = {},
                             // View Model
                             viewModel = viewModel,
-                            scope = mCoroutineScope,
-                            expanded = mIsEmptySegmentsExpanded
+                            scope = coroutineScope,
+                            expanded = isEmptySegmentsExpanded
                         )
                     }
-                    val mHeight = mutableIntStateOf(0)
+                    val height = mutableIntStateOf(0)
                     Box(
                         modifier = Modifier
                             .padding(8.dp)
                             .fillMaxHeight()
-                            .onGloballyPositioned { mHeight.value = it.size.height },
+                            .onGloballyPositioned { height.value = it.size.height },
                         contentAlignment = Alignment.Center
                     ) {
 
@@ -190,42 +190,42 @@ fun ExpandedEditor(
                             // This is to determine the size of the screen that we have to work with
                             // and update the text size based off the width
                             // TODO: Add ability to work with desktop width and landscape
-                            ScreenSize(viewModel, mScreenSizeClass.widthSizeClass)
-                            val screenSizeClass = calculateWindowSizeClass()
+                            ScreenSize(viewModel, screenSizeClass1.widthSizeClass)
+                            //val screenSizeClass = calculateWindowSizeClass()
 
                             LazyColumn(
                                 modifier = Modifier,
-                                state = mLazyColumnState
+                                state = lazyColumnState
                             ) {
                                 // For each item in the list, we create a section of the editor for it,
                                 // This is needed for the larger files. will have to figure out how we
                                 // can load maps into these sections, and possibly change the chunk size
                                 // so maps don't overlap two chunks
 
-                                itemsIndexed(mChunkList) { index, chunk ->
+                                itemsIndexed(chunkList) { index, chunk ->
                                     // Get maps for overlays if chunk contains it
-                                    val mMapDataInChunk =
-                                        if (mMaps.value.mapsSortedByChunk.containsKey(chunk.first)) {
-                                            mMaps.value.mapsSortedByChunk[chunk.first] ?: listOf()
+                                    val mapDataInChunk =
+                                        if (mapValuesSortedMutableState.value.mapsSortedByChunk.containsKey(chunk.first)) {
+                                            mapValuesSortedMutableState.value.mapsSortedByChunk[chunk.first] ?: listOf()
                                         } else listOf()
-                                    val mLayoutResult = remember { mutableStateOf<TextLayoutResult?>(null) }
+                                    //val layoutResult = remember { mutableStateOf<TextLayoutResult?>(null) }
 
-                                    if (mMapDataInChunk.isNotEmpty() || mIsEmptySegmentsExpanded.value) {
+                                    if (mapDataInChunk.isNotEmpty() || isEmptySegmentsExpanded.value) {
                                         // For each chunk make an EditorView
                                         EditorView(
                                             input = chunk,
-                                            charsPerLine = mBitsPerLine.value,
+                                            charsPerLine = bitsPerLine.value,
                                             unitNumber = index,
-                                            totalUnits = mChunkList.size,
-                                            mapValues = mMapDataInChunk,
+                                            totalUnits = chunkList.size,
+                                            mapValues = mapDataInChunk,
                                             textStyle = TextStyle(
-                                                fontSize = mTextSize.value,
+                                                fontSize = textSize.value,
                                                 fontFamily = viewModel.JetBrainsMono,
                                                 color = MaterialTheme.colorScheme.onSecondaryContainer
                                             ),
                                             viewModel = viewModel,
-                                            focusRequester = mFocusRequester,
-                                            coroutineScope = mCoroutineScope,
+                                            focusRequester = focusRequester,
+                                            coroutineScope = coroutineScope,
                                             chunkId = chunk.first
                                         )
                                     }
@@ -237,18 +237,18 @@ fun ExpandedEditor(
             }
         }
 
-            mOpenedMaps.forEachIndexed { index, mapDataValues ->
+            openedMaps.forEachIndexed { index, mapDataValues ->
                 GridWindow(
                     modifier = Modifier
-                        .zIndex(if (mFocusedMapPopUp.value == index) 1f else 0f)
+                        .zIndex(if (focusedMapPopUp.value == index) 1f else 0f)
                         .focusable(enabled = true)
-                        .focusRequester(mFocusRequester)
-                        .onFocusChanged { mFocusedMapPopUp.value = index },
+                        .focusRequester(focusRequester)
+                        .onFocusChanged { focusedMapPopUp.value = index },
                     mapDataValues = mapDataValues,
                     axisTextSize = 14.sp,
                     dataTextSize =12.sp,
-                    isVisible = mVisibleMaps,
-                    onClickFocus = { mFocusedMapPopUp.value = index }
+                    isVisible = visibleMaps,
+                    onClickFocus = { focusedMapPopUp.value = index }
                 )
             }
     }

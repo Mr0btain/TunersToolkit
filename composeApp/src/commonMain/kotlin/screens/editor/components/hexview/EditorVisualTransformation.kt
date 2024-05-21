@@ -28,14 +28,14 @@ class EditorVisualTransformation(
     internal class HexOffsetMapping(private val transformed: String, private val digitsPer: Int, private val originalLength: Int) : OffsetMapping {
         private var mBeforeIsSpace = false
          override fun originalToTransformed(offset: Int): Int {
-            var mShift = 0
+            var shift = 0
 
             for (i in 0..offset) {
                 if (i % 2 == 0 && i != 0) {
-                    mShift++
+                    shift++
                 }
                 if (i % (2 * digitsPer) == 0 && i != 0) {
-                    mShift++
+                    shift++
                 }
             }
 
@@ -45,15 +45,15 @@ class EditorVisualTransformation(
                 originalLength -> transformed.length
 
                 else -> {
-                    val mNewOffset = offset + mShift
-                    val mLineLnegth = transformed.lineSequence().first().length
-                    val mChar = transformed[mNewOffset]
+                    val newOffset = offset + shift
+                    //val lineLength = transformed.lineSequence().first().length
+                    //val char = transformed[newOffset]
 
-                    if (!mBeforeIsSpace && mNewOffset % 3 != 0 && offset % 2 == 0) {
-                        if (transformed[mNewOffset - 1] == '\n') {
-                            mNewOffset
-                        } else mNewOffset - 1
-                    } else mNewOffset
+                    if (!mBeforeIsSpace && newOffset % 3 != 0 && offset % 2 == 0) {
+                        if (transformed[newOffset - 1] == '\n') {
+                            newOffset
+                        } else newOffset - 1
+                    } else newOffset
                 }
             }
         }

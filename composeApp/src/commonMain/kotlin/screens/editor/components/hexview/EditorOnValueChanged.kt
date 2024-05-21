@@ -6,13 +6,13 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 
 fun EditorOnValueChanged(newTextField: TextFieldValue, oldTextField: TextFieldValue): TextFieldValue {
-    val mNewLength = newTextField.text.length
-    val mOldLength = oldTextField.text.length
+    val newLength = newTextField.text.length
+    val oldLength = oldTextField.text.length
 
     return when {
-        mNewLength > mOldLength -> {
+        newLength > oldLength -> {
             when {
-                newTextField.selection.start <= mOldLength -> {
+                newTextField.selection.start <= oldLength -> {
                     val inputChar = newTextField.text[newTextField.selection.start - 1].uppercaseChar()
 
                     when {
@@ -48,7 +48,7 @@ fun EditorOnValueChanged(newTextField: TextFieldValue, oldTextField: TextFieldVa
             }
         }
 
-        mNewLength < mOldLength -> {
+        newLength < oldLength -> {
             TextFieldValue(
                 text = oldTextField.text.replaceRange(
                     newTextField.selection.start,

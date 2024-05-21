@@ -26,11 +26,11 @@ fun List<Number>.positionValues(
 ): MutableList<FormattedValue> {
     return when (numOfAxisPts) {
         1 -> {
-            this.positionMapValues(indexMode, axisXDim, hexData, format)
+            positionMapValues(indexMode, axisXDim, hexData, format)
         }
 
         2 -> {
-            this.positionValuesInMap(a2lData, axisXDim, axisYDim, characteristic, indexMode, hexData)
+            positionValuesInMap(a2lData, axisXDim, axisYDim, characteristic, indexMode, hexData)
         }
 
         else -> {
@@ -47,12 +47,11 @@ fun List<Any>.positionMapValues(
     format: String
 ): MutableList<FormattedValue> {
     val result = mutableListOf<FormattedValue>()
+    // Column position counter
+    var column = 0
 
     // Format the data positions according to IndexMode
     if (indexMode == IndexMode.COLUMN_DIR) {
-        // Column position counter
-        var col = 0
-
         // Position the Values
         this.formatColumnOrRowDir(numberOfValues, false).forEachIndexed { index, list ->
             // The Index from this will be used as their Row Counter
@@ -61,21 +60,18 @@ fun List<Any>.positionMapValues(
                     FormattedValue(
                         originalValue = it.toString(),
                         formattedValue = if (it is Number) { it.toString().formatLength(format) } else it.toString(),
-                        column = col,
+                        column = column,
                         row = index,
                         hexData = hexData.joinToString("")
                     )
                 )
                 // Advance the colum counter with each item
-                col += 1
+                column += 1
             }
             // Reset column counter for new Row
-            col = 0
+            column = 0
         }
     } else {
-        // Column counter
-        var col = 0
-
         // Position the Values
         this.formatColumnOrRowDir(numberOfValues, true).forEachIndexed { index, list ->
             // The Index from this will be used as their Row Counter
@@ -84,16 +80,16 @@ fun List<Any>.positionMapValues(
                     FormattedValue(
                         originalValue = it.toString(),
                         formattedValue = if (it is Number) { it.toString().formatLength(format) } else it.toString(),
-                        column = col,
+                        column = column,
                         row = index,
                         hexData = hexData.joinToString("")
                     )
                 )
                 // Advance the colum counter with each item
-                col += 1
+                column += 1
             }
             // Reset column counter for new Row
-            col = 0
+            column = 0
         }
     }
 
@@ -115,22 +111,21 @@ fun List<Number>.positionValuesInMap(
 
     if (compuMethod.conversionType != ConversionType.TAB_VERB) {
         var row = 0
-        var col: Int
+        var column: Int
         this.forEachIndexed { index, value ->
             if (indexMode == IndexMode.COLUMN_DIR) {
                 if (index != 0 && index % axisYDim == 0) {
                     row += 1
                 }
 
-                col = index % axisYDim
-
+                column = index % axisYDim
                 val physValue = compuMethod.compute(value, a2lData)
 
                 result.add(
                     FormattedValue(
                         originalValue = physValue.toString(),
                         formattedValue = physValue.toString().formatLength(format),
-                        column = col,
+                        column = column,
                         row = row,
                         hexData = hexData.joinToString("")
                     )
@@ -140,8 +135,7 @@ fun List<Number>.positionValuesInMap(
                     row += 1
                 }
 
-                col = index % axisXDim
-
+                column = index % axisXDim
                 val physValue = compuMethod.compute(value, a2lData)
 
                 result.add(
@@ -149,7 +143,7 @@ fun List<Number>.positionValuesInMap(
                         originalValue = physValue.toString(),
                         formattedValue = physValue.toString().formatLength(format),
                         column = row,
-                        row = col,
+                        row = column,
                         hexData = hexData.joinToString("")
                     )
                 )
@@ -169,21 +163,22 @@ fun List<Number>.positionValuesInMap(
         }
 
         var row = 0
-        var col: Int
+        var column: Int
+
         charDataBitmask.forEachIndexed { index, value ->
             if (indexMode == IndexMode.COLUMN_DIR) {
                 if (index != 0 && index % axisYDim == 0) {
                     row += 1
                 }
-                col = index % axisYDim
 
+                column = index % axisYDim
                 val physUnit = compuMethod.computeTabVerb(value, a2lData)
 
                 result.add(
                     FormattedValue(
                         originalValue = physUnit,
                         formattedValue = physUnit,
-                        column = col,
+                        column = column,
                         row = row,
                         hexData = hexData.joinToString("")
                     )
@@ -192,8 +187,8 @@ fun List<Number>.positionValuesInMap(
                 if (index != 0 && index % axisXDim == 0) {
                     row += 1
                 }
-                col = index % axisXDim
 
+                column = index % axisXDim
                 val physUnit = compuMethod.computeTabVerb(value, a2lData)
 
                 result.add(
@@ -201,7 +196,7 @@ fun List<Number>.positionValuesInMap(
                         originalValue = physUnit,
                         formattedValue = physUnit,
                         column = row,
-                        row = col,
+                        row = column,
                         hexData = hexData.joinToString("")
                     )
                 )

@@ -29,19 +29,19 @@ class AsciiVisualTransformation(private val n: Int) : VisualTransformation {
         private val mLineLength = transformed.lineSequence().first().replace("\n", "").length
 
         override fun originalToTransformed(offset: Int): Int {
-            var mPosition = 0
-            var mShift = 0
+            var position = 0
+            var shift = 0
 
-            while (mPosition < offset) {
-                if (mPosition == 0) {
-                    mPosition += mLineLength
+            while (position < offset) {
+                if (position == 0) {
+                    position += mLineLength
                 } else {
-                    mPosition += mLineLength
-                    mShift++
+                    position += mLineLength
+                    shift++
                 }
             }
 
-            return offset + mShift
+            return offset + shift
         }
 
         override fun transformedToOriginal(offset: Int): Int {

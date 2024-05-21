@@ -26,12 +26,12 @@ fun ProjectInfoTab(
     textStyle: TextStyle = TextStyle.Default,
     viewModel: MainViewModel
 ) {
-    val mData = viewModel.projectInfo.value
+    val projectInfo = viewModel.projectInfo.value
 
     Box(modifier = modifier) {
         ProjectInfoView(
             modifier = modifier,
-            data = mData,
+            data = projectInfo,
             textStyle = textStyle,
             viewModel = viewModel
         )
@@ -45,7 +45,7 @@ fun ProjectInfoView(
     textStyle: TextStyle = TextStyle.Default,
     viewModel: MainViewModel
 ) {
-    val mScrollState = rememberScrollState()
+    val scrollState = rememberScrollState()
 
     Box(modifier = modifier) {
         Column(
@@ -54,7 +54,7 @@ fun ProjectInfoView(
                 .background(MaterialTheme.colorScheme.background)
                 .padding(4.dp)
                 .fillMaxWidth()
-                .verticalScroll(state = mScrollState)
+                .verticalScroll(state = scrollState)
         ) {
             ProjectField(
                 modifier = Modifier.padding(4.dp),

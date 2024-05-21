@@ -47,7 +47,7 @@ fun UtilityView(
         modifier = modifier
     ) {
         if (windowHeightSizeClass == WindowHeightSizeClass.Compact || windowHeightSizeClass == WindowHeightSizeClass.Medium) {
-            val mPagerState = persistedPagerState(viewModel)
+            val pagerState = persistedPagerState(viewModel)
 
             when (getPlatform().name) {
                 "Java" -> {
@@ -92,24 +92,24 @@ fun UtilityView(
                     ) {
                         CompactUtilityTabView(
                             modifier = modifier.align(Alignment.Center),
-                            pagerState = mPagerState,
+                            pagerState = pagerState,
                             scope = scope
                         )
                     }
 
                     Spacer(modifier = Modifier.padding(2.dp))
 
-                    var mPagerBoxSize = IntSize(0,0)
+                    // var pagerBoxSize = IntSize(0,0)
+                    // .onGloballyPositioned { pagerBoxSize = it.size }
 
                     Box(
                         modifier = modifier
                             .clip(RoundedCornerShape(10.dp))
                             .background(MaterialTheme.colorScheme.surface)
-                            .onGloballyPositioned { mPagerBoxSize = it.size }
                     ) {
                         UtilityPagerView(
                             modifier = modifier.height(200.dp),
-                            pagerState = mPagerState,
+                            pagerState = pagerState,
                             viewModel = viewModel,
                             scrollState = scrollState,
                             scope = scope,

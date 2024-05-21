@@ -32,23 +32,23 @@ fun EcuField(
     ecuVersion: String,
     viewModel: MainViewModel
 ) {
-    val mBrand = remember(viewModel.projectInfo.value.ecuBrand) { mutableStateOf(ecuBrand) }
-    val mModel = remember(viewModel.projectInfo.value.ecuModel) { mutableStateOf(ecuModel) }
-    val mVersion = remember(viewModel.projectInfo.value.ecuVersion) { mutableStateOf(ecuVersion) }
-    val isBrandMatch = derivedStateOf { viewModel.projectInfo.value.ecuBrand != mBrand.value }
-    val isModelMatch = derivedStateOf { viewModel.projectInfo.value.ecuModel != mModel.value }
-    val isVersionMatch = derivedStateOf { viewModel.projectInfo.value.ecuVersion != mVersion.value }
+    val brand = remember(viewModel.projectInfo.value.ecuBrand) { mutableStateOf(ecuBrand) }
+    val model = remember(viewModel.projectInfo.value.ecuModel) { mutableStateOf(ecuModel) }
+    val version = remember(viewModel.projectInfo.value.ecuVersion) { mutableStateOf(ecuVersion) }
+    val isBrandMatch = derivedStateOf { viewModel.projectInfo.value.ecuBrand != brand.value }
+    val isModelMatch = derivedStateOf { viewModel.projectInfo.value.ecuModel != model.value }
+    val isVersionMatch = derivedStateOf { viewModel.projectInfo.value.ecuVersion != version.value }
 
     if (isBrandMatch.value) {
-        viewModel.projectInfo.value = viewModel.projectInfo.value.copy(ecuBrand = mBrand.value)
+        viewModel.projectInfo.value = viewModel.projectInfo.value.copy(ecuBrand = brand.value)
     }
 
     if (isModelMatch.value) {
-        viewModel.projectInfo.value = viewModel.projectInfo.value.copy(ecuModel = mModel.value)
+        viewModel.projectInfo.value = viewModel.projectInfo.value.copy(ecuModel = model.value)
     }
 
     if (isVersionMatch.value) {
-        viewModel.projectInfo.value = viewModel.projectInfo.value.copy(ecuVersion = mVersion.value)
+        viewModel.projectInfo.value = viewModel.projectInfo.value.copy(ecuVersion = version.value)
     }
 
     Box(
@@ -82,15 +82,15 @@ fun EcuField(
             ) {
                 InputTextOption(
                     label = "Brand:",
-                    textFieldText = mBrand.value,
-                    textFieldOnChange = { mBrand.value = it },
+                    textFieldText = brand.value,
+                    textFieldOnChange = { brand.value = it },
                     textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSecondaryContainer)
                 )
 
                 InputTextOption(
                     label = "Model:",
-                    textFieldText = mModel.value,
-                    textFieldOnChange = { mModel.value = it },
+                    textFieldText = model.value,
+                    textFieldOnChange = { model.value = it },
                     textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSecondaryContainer)
                 )
             }
@@ -103,8 +103,8 @@ fun EcuField(
             ) {
                 InputTextOption(
                     label = "Version:",
-                    textFieldText = mVersion.value,
-                    textFieldOnChange = { mVersion.value = it },
+                    textFieldText = version.value,
+                    textFieldOnChange = { version.value = it },
                     textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSecondaryContainer)
                 )
             }

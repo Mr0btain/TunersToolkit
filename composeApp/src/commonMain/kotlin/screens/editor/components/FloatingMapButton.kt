@@ -27,14 +27,14 @@ fun FloatingMapButton(
     modifier: Modifier = Modifier,
     onClick: (MapDataValues) -> Unit
 ) {
-    var mIsVisible by remember { mutableStateOf(false) }
+    var isVisible by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
             .wrapContentSize()
             .zIndex(1f)
     ) {
-        AnimatedVisibility(visible = mIsVisible) {
+        AnimatedVisibility(visible = isVisible) {
             Column(
                 modifier = Modifier
                     .wrapContentSize()
@@ -43,7 +43,7 @@ fun FloatingMapButton(
                 selectedMaps.forEach {  mapValue ->
                     Button(onClick = {
                         onClick(mapValue)
-                        mIsVisible = false
+                        isVisible = false
                     }) {
                         Text(text = mapValue.name)
                     }
@@ -52,7 +52,7 @@ fun FloatingMapButton(
         }
 
         Button(
-            onClick = { mIsVisible = !mIsVisible },
+            onClick = { isVisible = !isVisible },
             modifier = Modifier.wrapContentSize()
         ) {
             Icon(Icons.Default.Menu, contentDescription = "Selected Maps")

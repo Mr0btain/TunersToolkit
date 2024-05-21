@@ -31,7 +31,7 @@ fun readValBlkCharacteristicData(
     // TODO: Needs Major testing, and add ability to handle more than 2 axis
     val byteOrder = characteristic.getByteOrder()
     val compuMethod = characteristic.getCompuMethod(a2lData)
-    val charDataFormatted = mutableListOf<FormattedValue>()
+    val charDataFormattedValues = mutableListOf<FormattedValue>()
     val dimArray = characteristic.getDimArray()
     val recordLayout = characteristic.getRecordLayout(a2lData)
     val fncValues = recordLayout.getFncValues()
@@ -41,7 +41,7 @@ fun readValBlkCharacteristicData(
 
     if (dimArray.size < 2 || dimArray[1] == 1) {
         // Get Data from Byte Segments
-        val charHexData = getValueData(
+        val charHexDataValues = getValueData(
             a2lData = a2lData,
             segmentList = segmentData,
             byteOrder = byteOrder,
@@ -51,20 +51,20 @@ fun readValBlkCharacteristicData(
             recordLayout = recordLayout
         )
 
-        charHexData.formattedValues.forEachIndexed { index, it ->
+        charHexDataValues.formattedValues.forEachIndexed { index, it ->
             // Check Computation Method
             if (compuMethod != CompuMethod()) {
                 // Check conversion type
                 if (compuMethod.conversionType != ConversionType.TAB_VERB) {
                     val physUnit = compuMethod.compute(it, a2lData)
 
-                    charDataFormatted.add(
+                    charDataFormattedValues.add(
                         FormattedValue(
                             originalValue = physUnit.toString(),
                             formattedValue = physUnit.toString().formatLength(format),
                             column = index,
                             row = 0,
-                            hexData = charHexData.hexData.joinToString("")
+                            hexData = charHexDataValues.hexData.joinToString("")
                         )
                     )
                 } else {
@@ -76,13 +76,13 @@ fun readValBlkCharacteristicData(
                     // Compute Tab Verb and add it to our result
                     val physUnit = compuMethod.computeTabVerb(charDataTabVerb, a2lData)
 
-                    charDataFormatted.add(
+                    charDataFormattedValues.add(
                         FormattedValue(
                             originalValue = physUnit,
                             formattedValue = physUnit,
                             column = index,
                             row = 0,
-                            hexData = charHexData.hexData.joinToString("")
+                            hexData = charHexDataValues.hexData.joinToString("")
                         )
                     )
                 }
@@ -90,24 +90,24 @@ fun readValBlkCharacteristicData(
         }
 
         // Set Data class for Characteristic Values
-        val charResult = CharDataValues(
-            byteSegmentId = charHexData.segmentId,
-            actualStartPosition = charHexData.startPosition,
-            actualEndPosition = charHexData.endPosition,
+        val charDataValues = CharDataValues(
+            byteSegmentId = charHexDataValues.segmentId,
+            actualStartPosition = charHexDataValues.startPosition,
+            actualEndPosition = charHexDataValues.endPosition,
             dataType = fncValues.dataType,
-            values = charDataFormatted,
+            values = charDataFormattedValues,
             format = format,
-            baseOffset = charHexData.baseOffset
+            baseOffset = charHexDataValues.baseOffset
         )
 
         return MapDataValues(
             name = characteristic.name,
             mapType = CharacteristicType.VAL_BLK,
-            charValues = charResult
+            charValues = charDataValues
         )
     } else {
         // Get Data from byte segments
-        val charHexData = getValueData(
+        val charHexDataValues = getValueData(
             a2lData = a2lData,
             segmentList = segmentData,
             byteOrder = byteOrder,
@@ -118,26 +118,26 @@ fun readValBlkCharacteristicData(
         )
 
         // Position the values and format them
-        val charDataFinal = charHexData.formattedValues.positionValues(
+        val charDataFinalized = charHexDataValues.formattedValues.positionValues(
             a2lData = a2lData,
             axisXDim = dimArray[0],
             axisYDim = dimArray[1],
             characteristic = characteristic,
             indexMode = indexMode,
             numOfAxisPts = 1,
-            hexData = charHexData.hexData,
+            hexData = charHexDataValues.hexData,
             format = format
         )
 
         // Set Data class for Characteristic Values
         val charResult = CharDataValues(
-            byteSegmentId = charHexData.segmentId,
-            actualStartPosition = charHexData.startPosition,
-            actualEndPosition = charHexData.endPosition,
+            byteSegmentId = charHexDataValues.segmentId,
+            actualStartPosition = charHexDataValues.startPosition,
+            actualEndPosition = charHexDataValues.endPosition,
             dataType = fncValues.dataType,
-            values = charDataFinal,
+            values = charDataFinalized,
             format = format,
-            baseOffset = charHexData.baseOffset
+            baseOffset = charHexDataValues.baseOffset
         )
 
         return MapDataValues(

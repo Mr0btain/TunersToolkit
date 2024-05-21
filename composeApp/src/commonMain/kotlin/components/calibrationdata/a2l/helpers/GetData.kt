@@ -72,7 +72,7 @@ fun AxisDescr.getHexValues(
     axisDataType: AxisDataType,
     position: ULong
 ): Pair<ULong, AxisDataValues> {
-    return when (this.type) {
+    return when (type) {
         AxisType.STD_AXIS -> {
             readStdAxisValues(
                 a2lData = a2lData,
@@ -94,7 +94,7 @@ fun AxisDescr.getHexValues(
         }
 
         AxisType.FIX_AXIS -> {
-            Pair(ULong.MIN_VALUE, this.computeFixAxis(axisDataType))
+            Pair(ULong.MIN_VALUE, computeFixAxis(axisDataType))
         }
 
         AxisType.CURVE_AXIS -> {
@@ -151,7 +151,7 @@ fun getValueData(
 
     for (i in 0 until numberOfValues) {
         // Get the data from the Byte Segments and add it to the list
-        val rawDataResult = getDataFromHexSegment(
+        val rawDataValues = getDataFromHexSegment(
             byteOrder = byteOrder,
             mHexData = segmentList[segmentId] ?: HexSegmentData(),
             position = position1.alignA2lAddress(recordLayout, dataType, a2lData),
@@ -160,12 +160,12 @@ fun getValueData(
 
         // Set actual start if it hasn't been already
         if (actualStart == Int.MIN_VALUE) {
-            actualStart = rawDataResult.startPosition
+            actualStart = rawDataValues.startPosition
         }
 
         // Add the Hex value to the list
         hexValues.add(
-            rawDataResult.hexData
+            rawDataValues.hexData
         )
 
         // Advance the position to the next section of data
@@ -202,20 +202,20 @@ fun RecordLayout.getNoAxisPtsData(
     segmentData: Map<String, HexSegmentData>
 ): Pair<ULong, Int> {
     // Align the address
-    var position1 = position.alignA2lAddress(this, dataType, a2lData)
+    var currentPosition = position.alignA2lAddress(this, dataType, a2lData)
     var numOfAxisPts = Int.MIN_VALUE
 
     val segmentId = getSegmentId(
         segments = segmentData,
         dataType = dataType,
-        position = position1
+        position = currentPosition
     )
 
     // Get value from segment
     val numberOfAxisPoints = getDataFromHexSegment(
         byteOrder,
         segmentData[segmentId] ?: HexSegmentData(),
-        position1,
+        currentPosition,
         dataType
     ).hexData.formatValue(dataType)
 
@@ -225,9 +225,9 @@ fun RecordLayout.getNoAxisPtsData(
     }
 
     // Advance position size of data
-    position1 += (dataType.size).toULong()
+    currentPosition += (dataType.size).toULong()
 
-    return Pair(position1, numOfAxisPts)
+    return Pair(currentPosition, numOfAxisPts)
 }
 
 /**
@@ -240,20 +240,19 @@ fun RecordLayoutAxisRescale.getAxisRescaleData(
     reserved: RecordLayoutReserved,
     byteOrder: ByteOrder
 ): Pair<ULong, Int> {
-    val dataType1 = this.dataType
-    var position1 = position
+    var currentPosition = position
     var numOfAxisPts = Int.MIN_VALUE
 
     val segmentId = getSegmentId(
         segments = segmentData,
-        dataType = dataType1,
-        position = position1
+        dataType = dataType,
+        position = currentPosition
     )
 
     val numOfAxisResult = getDataFromHexSegment(
         byteOrder,
         segmentData[segmentId] ?: HexSegmentData(),
-        position1,
+        currentPosition,
         dataType
     ).hexData.formatValue(dataType)
 
@@ -262,14 +261,14 @@ fun RecordLayoutAxisRescale.getAxisRescaleData(
         numOfAxisPts = numOfAxisResult.toInt()
     }
 
-    position1 += (this.dataType.size).toULong()
+    currentPosition += (dataType.size).toULong()
 
     // Skip reserved
     if (reserved.dataType != components.parsers.a2l.classes.enums.DataType.NOT_SET) {
-        position1 += (reserved.dataType.size).toULong()
+        currentPosition += (reserved.dataType.size).toULong()
     }
 
-    return Pair(position1, numOfAxisPts)
+    return Pair(currentPosition, numOfAxisPts)
 }
 
 fun AxisDataValues.getCharData(
@@ -279,19 +278,19 @@ fun AxisDataValues.getCharData(
     characteristic: Characteristic,
     axisType: AxisType
 ): CharDataValues {
-    var position1 = characteristic.address
+    var currentPosition = characteristic.address
 
     // Check if we should use the end position in case of Standard axis
     if (axisType == AxisType.STD_AXIS) {
-        position1 = position
+        currentPosition = position
     }
 
     // Read Characteristic values from byte segment data
     return characteristic.readDataValues(
-        axisXDim = this.values.size,
+        axisXDim = values.size,
         axisYDim = 0,
         a2lData = a2lData,
-        position = position1,
+        position = currentPosition,
         segmentData = segmentData
     )
 }
@@ -302,8 +301,8 @@ fun AxisDataValues.getFixCharData(
     characteristic: Characteristic
 ): CharDataValues {
     // Read Characteristic values from byte segment data
-    return if (this.values.isNotEmpty()) {
-        readFixCharacteristicData(this.values.size, characteristic, a2lData, segmentData)
+    return if (values.isNotEmpty()) {
+        readFixCharacteristicData(values.size, characteristic, a2lData, segmentData)
     } else if (characteristic.type == CharacteristicType.CURVE) {
         val size = characteristic.getAxisDescrX().maxAxisPoints
         readFixCharacteristicData(size.toInt(), characteristic, a2lData, segmentData)

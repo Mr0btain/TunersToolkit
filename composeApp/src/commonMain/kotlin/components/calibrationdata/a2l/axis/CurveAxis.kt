@@ -17,10 +17,13 @@ fun readCurveAxisValues(
 ): Pair<ULong, AxisDataValues> {
     val characteristic = axisDescr.getReferenceCurveAxis(a2lData)
 
+    // Check if CHARACTERISTIC is not empty
     if (characteristic != Characteristic()) {
         val refAxisDescr = characteristic.getAxisDescrX()
 
+        // Check if the reference AXIS_DESC is not empty
         if (refAxisDescr != AxisDescr()) {
+            // Get values dependent on type
             when (refAxisDescr.type) {
                 AxisType.STD_AXIS -> {
                     // Read Axis values from byte segment data and format them
@@ -64,6 +67,7 @@ fun readCurveAxisValues(
                     )
                 }
 
+                // If not type is set, return empty value
                 AxisType.NOT_SET -> {
                     return Pair(ULong.MIN_VALUE, AxisDataValues())
                 }

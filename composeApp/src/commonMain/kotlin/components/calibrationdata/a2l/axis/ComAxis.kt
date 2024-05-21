@@ -43,7 +43,7 @@ fun readComAxisValues(
 ): Pair<ULong, AxisDataValues> {
     val axisHexData: HexDataResult
     var axisPts = RecordLayoutAxisPoint()
-    val axisPtsRef = axisDescr.getRefAxisPoint(a2lData)
+    val refAxisPts = axisDescr.getRefAxisPoint(a2lData)
     val result = mutableListOf<AxisDataValue>()
     var byteOrder = axisDescr.getByteOrder()
     val compuMethod = axisDescr.getCompuMethod(a2lData)
@@ -53,19 +53,19 @@ fun readComAxisValues(
     var numOfAxisPts = axisDescr.maxAxisPoints.toInt()
     val noAxisPts: NoAxisPts
     var position = ULong.MIN_VALUE
-    val recordLayout = axisPtsRef.getRecordLayout(a2lData)
+    val recordLayout = refAxisPts.getRecordLayout(a2lData)
     var reserved = recordLayout.getReserved()
     // var mSrcAddress = SrcAddress()
 
     // Check Axis point reference
-    if (axisPtsRef != AxisPts()) {
+    if (refAxisPts != AxisPts()) {
         // Get the address of the axis point data from reference axis point
-        if (axisPtsRef.address != ULong.MIN_VALUE) {
-            position = axisPtsRef.address
+        if (refAxisPts.address != ULong.MIN_VALUE) {
+            position = refAxisPts.address
         }
 
         // Get Byte Order
-        byteOrder = axisPtsRef.getByteOrder()
+        byteOrder = refAxisPts.getByteOrder()
 
         // Get RecordLayout Values for AXIS_PTS
         if (recordLayout != RecordLayout()) {
@@ -75,20 +75,20 @@ fun readComAxisValues(
             // Get SrcAddress
             // mSrcAddress = mRecordLayout.getSrcAddrX()
 
-            val mRecordLayoutAxisPts = recordLayout.getAxisPtsX()
+            val recordLayoutAxisPts = recordLayout.getAxisPtsX()
 
-            if (mRecordLayoutAxisPts != RecordLayoutAxisPoint()) {
-                axisPts = mRecordLayoutAxisPts
+            if (recordLayoutAxisPts != RecordLayoutAxisPoint()) {
+                axisPts = recordLayoutAxisPts
             }
         }
 
         // If number of axis points hasn't been found, use it from reference axis point
-        if (numOfAxisPts == 0 && axisPtsRef.maxAxisPoints != UInt.MIN_VALUE) {
-            numOfAxisPts = axisPtsRef.maxAxisPoints.toInt()
+        if (numOfAxisPts == 0 && refAxisPts.maxAxisPoints != UInt.MIN_VALUE) {
+            numOfAxisPts = refAxisPts.maxAxisPoints.toInt()
         }
     }
 
-    // Check record layout for Values
+    // Check if AXIS_PTS is not empty
     if (axisPts != RecordLayoutAxisPoint()) {
 
         // Set index order

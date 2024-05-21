@@ -29,7 +29,7 @@ fun FormulaParseDialog(
     modifier: Modifier = Modifier,
     onDismissRequest: () -> Unit,
 ) {
-    val mFormulaText = remember { mutableStateOf(TextFieldValue()) }
+    val formulaText = remember { mutableStateOf(TextFieldValue()) }
     val result = mutableDoubleStateOf(0.0)
 
     Dialog(
@@ -52,12 +52,12 @@ fun FormulaParseDialog(
                 Spacer(modifier = Modifier.padding(6.dp))
 
                 OutlinedTextField(
-                    value = mFormulaText.value,
-                    onValueChange = { mFormulaText.value = it },
+                    value = formulaText.value,
+                    onValueChange = { formulaText.value = it },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(
-                        onDone = { result.value = ExpressionParser().parse(mFormulaText.value.text) }
+                        onDone = { result.value = ExpressionParser().parse(formulaText.value.text) }
                     )
                 )
 
@@ -70,7 +70,7 @@ fun FormulaParseDialog(
                 Row {
                     TextButton(onClick = onDismissRequest) { Text(text = "Cancel") }
 
-                    TextButton(onClick = { result.value = ExpressionParser().parse(mFormulaText.value.text) }) { Text(text = "Calculate") }
+                    TextButton(onClick = { result.value = ExpressionParser().parse(formulaText.value.text) }) { Text(text = "Calculate") }
                 }
             }
         }

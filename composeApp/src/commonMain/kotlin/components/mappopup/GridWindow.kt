@@ -67,7 +67,7 @@ fun GridWindow(
     // Test Map Popup for windows
     var offsetX by remember { mutableFloatStateOf(0f) }
     var offsetY by remember { mutableFloatStateOf(0f) }
-    val mScrollState = rememberScrollState()
+    val scrollState = rememberScrollState()
     var width by remember { mutableIntStateOf(400) }
     var height by remember { mutableIntStateOf(200) }
     val density = LocalDensity.current
@@ -126,9 +126,9 @@ fun GridWindow(
                     GridWindowButtonBar(
                         closeOnClick = {
                             // remove its name from the list of visible maps
-                            val mNewList = isVisible.value.toMutableList()
-                            mNewList.remove(mapDataValues.name)
-                            isVisible.value = mNewList
+                            val newList = isVisible.value.toMutableList()
+                            newList.remove(mapDataValues.name)
+                            isVisible.value = newList
                         },
                         modifier =  Modifier
                     )
@@ -136,7 +136,7 @@ fun GridWindow(
 
                 Row(
                     modifier = Modifier
-                        .horizontalScroll(state = mScrollState, enabled = true)
+                        .horizontalScroll(state = scrollState, enabled = true)
                         .wrapContentSize()
                         .padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = 6.dp)
                 ) {

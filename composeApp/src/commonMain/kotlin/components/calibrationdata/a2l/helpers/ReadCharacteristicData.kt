@@ -25,7 +25,7 @@ fun Characteristic.readDataValues(
     val indexMode = fncValues.indexMode
     val dataType = fncValues.dataType
     val format = getFormat()
-    // val mCompuMethod = characteristic.getCompuMethod(a2lData)
+    // val compuMethod = characteristic.getCompuMethod(a2lData)
 
     // Get Axis Points
     val numOfAxisPts = if (axisYDim != Int.MIN_VALUE && axisYDim != 0) {
@@ -76,15 +76,15 @@ fun readFixCharacteristicData(
     val byteOrder = characteristic.getByteOrder()
     val recordLayout = characteristic.getRecordLayout(a2lData)
     val fncValues = recordLayout.getFncValues()
-    // val mAddrType = mFncValues.addressType
+    // val addrType = mFncValues.addressType
     val indexMode = fncValues.indexMode
-    val charData: HexDataResult
+    val charHexDataValues: HexDataResult
     val dataType = fncValues.dataType
     val format = characteristic.getFormat()
     val compuMethod = characteristic.getCompuMethod(a2lData)
 
     // Get Characteristic values from Byte data
-    charData = getValueData(
+    charHexDataValues = getValueData(
         a2lData = a2lData,
         segmentList = segmentData,
         position = characteristic.address,
@@ -95,15 +95,15 @@ fun readFixCharacteristicData(
     )
 
     // Format the values
-    val charDataResult = charData.formatMapValues(characteristic, compuMethod, a2lData, format)
+    val charDataValuesFormatted = charHexDataValues.formatMapValues(characteristic, compuMethod, a2lData, format)
 
     return CharDataValues(
-        byteSegmentId = charData.segmentId,
-        actualStartPosition = charData.startPosition,
-        actualEndPosition = charData.endPosition,
+        byteSegmentId = charHexDataValues.segmentId,
+        actualStartPosition = charHexDataValues.startPosition,
+        actualEndPosition = charHexDataValues.endPosition,
         dataType = dataType,
-        values = charDataResult.positionMapValues(indexMode, mNumOfAxisPts, charData.hexData, format).toMutableList(),
+        values = charDataValuesFormatted.positionMapValues(indexMode, mNumOfAxisPts, charHexDataValues.hexData, format).toMutableList(),
         format = format,
-        baseOffset = charData.baseOffset
+        baseOffset = charHexDataValues.baseOffset
     )
 }

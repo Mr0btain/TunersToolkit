@@ -32,19 +32,19 @@ fun VehicleField(
     transmission: String,
     viewModel: MainViewModel
 ) {
-    val mManufacturer = remember(viewModel.projectInfo.value.manufacturer) { mutableStateOf(manufacturer) }
-    val mModel = remember(viewModel.projectInfo.value.model) { mutableStateOf(model) }
-    val mEngine = remember(viewModel.projectInfo.value.engine) { mutableStateOf(engine) }
-    val mTransmission = remember(viewModel.projectInfo.value.transmission) { mutableStateOf(transmission) }
-    val isManufacturerChanged = derivedStateOf { viewModel.projectInfo.value.manufacturer != mManufacturer.value }
-    val isModelChanged = derivedStateOf { viewModel.projectInfo.value.model != mModel.value }
-    val isEngineChanged = derivedStateOf { viewModel.projectInfo.value.engine != mEngine.value }
-    val isTransmissionChanged = derivedStateOf { viewModel.projectInfo.value.transmission != mTransmission.value }
+    val currentManufacturer = remember(viewModel.projectInfo.value.manufacturer) { mutableStateOf(manufacturer) }
+    val currentModel = remember(viewModel.projectInfo.value.model) { mutableStateOf(model) }
+    val currentEngine = remember(viewModel.projectInfo.value.engine) { mutableStateOf(engine) }
+    val currentTransmission = remember(viewModel.projectInfo.value.transmission) { mutableStateOf(transmission) }
+    val isManufacturerChanged = derivedStateOf { viewModel.projectInfo.value.manufacturer != currentManufacturer.value }
+    val isModelChanged = derivedStateOf { viewModel.projectInfo.value.model != currentModel.value }
+    val isEngineChanged = derivedStateOf { viewModel.projectInfo.value.engine != currentEngine.value }
+    val isTransmissionChanged = derivedStateOf { viewModel.projectInfo.value.transmission != currentTransmission.value }
 
-    if (isManufacturerChanged.value) { viewModel.projectInfo.value = viewModel.projectInfo.value.copy(manufacturer = mManufacturer.value) }
-    if (isModelChanged.value) { viewModel.projectInfo.value = viewModel.projectInfo.value.copy(model = mModel.value) }
-    if (isEngineChanged.value) { viewModel.projectInfo.value = viewModel.projectInfo.value.copy(engine = mEngine.value) }
-    if (isTransmissionChanged.value) { viewModel.projectInfo.value = viewModel.projectInfo.value.copy(transmission = mTransmission.value) }
+    if (isManufacturerChanged.value) { viewModel.projectInfo.value = viewModel.projectInfo.value.copy(manufacturer = currentManufacturer.value) }
+    if (isModelChanged.value) { viewModel.projectInfo.value = viewModel.projectInfo.value.copy(model = currentModel.value) }
+    if (isEngineChanged.value) { viewModel.projectInfo.value = viewModel.projectInfo.value.copy(engine = currentEngine.value) }
+    if (isTransmissionChanged.value) { viewModel.projectInfo.value = viewModel.projectInfo.value.copy(transmission = currentTransmission.value) }
 
     Box(
         modifier
@@ -77,8 +77,8 @@ fun VehicleField(
             ) {
                 InputTextOption(
                     label = "Manufacturer:",
-                    textFieldText = mManufacturer.value,
-                    textFieldOnChange = { mManufacturer.value = it },
+                    textFieldText = currentManufacturer.value,
+                    textFieldOnChange = { currentManufacturer.value = it },
                     textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSecondaryContainer)
                 )
             }
@@ -91,15 +91,15 @@ fun VehicleField(
             ) {
                 InputTextOption(
                     label = "Model:",
-                    textFieldText = mModel.value,
-                    textFieldOnChange = { mModel.value = it },
+                    textFieldText = currentModel.value,
+                    textFieldOnChange = { currentModel.value = it },
                     textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSecondaryContainer)
                 )
 
                 InputTextOption(
                     label = "Engine:",
-                    textFieldText = mEngine.value,
-                    textFieldOnChange = { mEngine.value = it },
+                    textFieldText = currentEngine.value,
+                    textFieldOnChange = { currentEngine.value = it },
                     textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSecondaryContainer)
                 )
             }
@@ -112,8 +112,8 @@ fun VehicleField(
             ) {
                 InputTextOption(
                     label = "Transmission:",
-                    textFieldText = mTransmission.value,
-                    textFieldOnChange = { mTransmission.value = it },
+                    textFieldText = currentTransmission.value,
+                    textFieldOnChange = { currentTransmission.value = it },
                     textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSecondaryContainer)
                 )
             }

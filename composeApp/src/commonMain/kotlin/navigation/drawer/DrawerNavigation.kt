@@ -42,15 +42,15 @@ fun DrawerNavigation(
     windowSizeClass: WindowSizeClass,
     navigator: Navigator
 ) {
-    val mFilesManager = ProjectFilesManager()
-    val mCurrentDestination = navigator.currentEntry.collectAsState(initial = null)
+    val filesManager = ProjectFilesManager()
+    val currentDestination = navigator.currentEntry.collectAsState(initial = null)
 
     TunerToolkitTheme {
-        val mDrawerState = rememberDrawerState(DrawerValue.Closed)
-        val mScope = rememberCoroutineScope()
+        val drawerState = rememberDrawerState(DrawerValue.Closed)
+        val scope = rememberCoroutineScope()
 
         ModalNavigationDrawer(
-            drawerState = mDrawerState,
+            drawerState = drawerState,
             drawerContent = {
                 ModalDrawerSheet(
                     drawerContentColor = MaterialTheme.colorScheme.onBackground,
@@ -61,11 +61,11 @@ fun DrawerNavigation(
                     NavigationDrawerItem(
                         icon = { Icon(painterResource("icons/home.png"), contentDescription = "Home") },
                         label = { Text("Home") },
-                        selected = mCurrentDestination.value?.route?.route == "home",
+                        selected = currentDestination.value?.route?.route == "home",
                         onClick = {
-                            mScope.launch {
-                                mDrawerState.close()
-                                if (mCurrentDestination.value?.route?.route != "home") {
+                            scope.launch {
+                                drawerState.close()
+                                if (currentDestination.value?.route?.route != "home") {
                                     navigator.navigate(
                                         route = "home",
                                         NavOptions(launchSingleTop = true)
@@ -79,11 +79,11 @@ fun DrawerNavigation(
                     NavigationDrawerItem(
                         icon = { Icon(painterResource("icons/calculate.png"), contentDescription = "Editor") },
                         label = { Text("Editor") },
-                        selected = mCurrentDestination.value?.route?.route == "editor",
+                        selected = currentDestination.value?.route?.route == "editor",
                         onClick = {
-                            mScope.launch {
-                                mDrawerState.close()
-                                if (mCurrentDestination.value?.route?.route != "editor") {
+                            scope.launch {
+                                drawerState.close()
+                                if (currentDestination.value?.route?.route != "editor") {
                                     navigator.navigate(
                                         route = "editor",
                                         NavOptions(
@@ -103,11 +103,11 @@ fun DrawerNavigation(
                     NavigationDrawerItem(
                         icon = { Icon(painterResource("icons/settings.png"), contentDescription = "Settings") },
                         label = { Text("Settings") },
-                        selected = mCurrentDestination.value?.route?.route == "settings",
+                        selected = currentDestination.value?.route?.route == "settings",
                         onClick = {
-                            mScope.launch {
-                                mDrawerState.close()
-                                if (mCurrentDestination.value?.route?.route != "settings") {
+                            scope.launch {
+                                drawerState.close()
+                                if (currentDestination.value?.route?.route != "settings") {
                                     navigator.navigate(
                                         route = "settings",
                                         NavOptions(launchSingleTop = true)
@@ -124,8 +124,8 @@ fun DrawerNavigation(
                     NewProjectDialog(
                         viewModel = viewModel,
                         onDismissRequest = { viewModel.showNewProjectDialog.value = false },
-                        scope = mScope,
-                        filesManager = mFilesManager,
+                        scope = scope,
+                        filesManager = filesManager,
                         focusRequester = FocusRequester()
                     )
                 }
@@ -134,8 +134,8 @@ fun DrawerNavigation(
                     OpenProjectDialog(
                         navigator = navigator,
                         onDismissRequest = { viewModel.showOpenProjectDialog.value = false },
-                        filesManager = mFilesManager,
-                        scope = mScope,
+                        filesManager = filesManager,
+                        scope = scope,
                         viewModel = viewModel
                     )
                 }
@@ -144,8 +144,8 @@ fun DrawerNavigation(
                     DeleteProjectDialog(
                         projectName = viewModel.projectInfo.value.name,
                         onDismissRequest = { viewModel.showDeleteProjectDialog.value = false },
-                        filesManager = mFilesManager,
-                        scope = mScope,
+                        filesManager = filesManager,
+                        scope = scope,
                         viewModel = viewModel
                     )
                 }
@@ -155,16 +155,16 @@ fun DrawerNavigation(
                         projectName = viewModel.projectInfo.value.name,
                         versionName = viewModel.projectInfo.value.projectVersion,
                         onDismissRequest = { viewModel.showDeleteVersionDialog.value = false },
-                        filesManager = mFilesManager,
-                        scope = mScope,
+                        filesManager = filesManager,
+                        scope = scope,
                         viewModel = viewModel
                     )
                 }
 
                 AdaptiveAppBar(
                     viewModel = viewModel,
-                    drawerState = mDrawerState,
-                    scope = mScope,
+                    drawerState = drawerState,
+                    scope = scope,
                     content = {
                         NavigationManager(
                             viewModel = viewModel,

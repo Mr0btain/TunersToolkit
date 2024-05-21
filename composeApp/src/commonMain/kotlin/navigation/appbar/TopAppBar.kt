@@ -24,9 +24,9 @@ fun CustomTopAppBar(
     viewModel: MainViewModel,
     navigator: Navigator
 ) {
-    val mIsLoading = viewModel.isLoading
-    val mShowDropDown = remember { mutableStateOf(false) }
-    val mCurrentDestination = navigator.currentEntry.collectAsState(initial = null)
+    val isLoading = viewModel.isLoading
+    val showDropDown = remember { mutableStateOf(false) }
+    val currentDestination = navigator.currentEntry.collectAsState(initial = null)
 
     CenterAlignedTopAppBar(
         title = { Text(viewModel.appBarTitle.value) },
@@ -38,9 +38,9 @@ fun CustomTopAppBar(
             }
         },
         actions = {
-            if (mIsLoading.value) {
+            if (isLoading.value) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.onBackground)
-            } else if (mCurrentDestination.value?.route?.route == "settings") {
+            } else if (currentDestination.value?.route?.route == "settings") {
                 IconButton(
                     onClick = { navigator.goBack() }
                 ) {
@@ -51,12 +51,12 @@ fun CustomTopAppBar(
                 }
             } else {
                     IconButton(
-                        onClick = { mShowDropDown.value = true }
+                        onClick = { showDropDown.value = true }
                     ) {
                         Icon(painterResource("icons/tool_menu.png"), "")
 
                         TopAppBarDropDown(
-                            expanded = mShowDropDown,
+                            expanded = showDropDown,
                             viewModel = viewModel
                         )
                     }

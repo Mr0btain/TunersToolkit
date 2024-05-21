@@ -63,24 +63,24 @@ fun EditorTextField(
     chunkId: Int,
     textStyle: TextStyle
 ) {
-    val mDigitsPerLine = viewModel.digitsPerLine
+    val digitsPerLine = viewModel.digitsPerLine
     // val mBitSize = viewModel.bitsPer.collectAsState()
-    val mInteraction = remember { MutableInteractionSource() }
-    val mMaxLines = hexData.value.text.length / mDigitsPerLine.value
-    val mTextLayout = remember { mutableStateOf<TextLayoutResult?>(null) }
-    val mMapper by remember { mutableStateOf(DimensionMapper()) }
+    val interaction = remember { MutableInteractionSource() }
+    val maxLines = hexData.value.text.length / digitsPerLine.value
+    val textLayoutResultMutableState = remember { mutableStateOf<TextLayoutResult?>(null) }
+    val mapper by remember { mutableStateOf(DimensionMapper()) }
     val mapPaths = remember { mutableStateListOf<Path>() }
-    val mSelectedMap by remember { mutableIntStateOf(0) }
+    val selectedMap by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(key1 = mTextLayout.value?.size) {
-        mTextLayout.value?.let { textLayout ->
-            mMapper.calculateValues(textLayout)
+    LaunchedEffect(key1 = textLayoutResultMutableState.value?.size) {
+        textLayoutResultMutableState.value?.let { textLayout ->
+            mapper.calculateValues(textLayout)
         }
 
         mapPaths.clear()
 
         mapDataValues.forEach {
-            mapPaths.add(it.getMapPath(dimensMap = mMapper, textStart = chunkId))
+            mapPaths.add(it.getMapPath(dimensMap = mapper, textStart = chunkId))
         }
     }
 
@@ -140,7 +140,7 @@ fun EditorTextField(
 
                         drawPath(
                             path = path,
-                            color = if (mSelectedMap == index + 1) {
+                            color = if (selectedMap == index + 1) {
                                 viewModel.mapSelectedOutlineColor.value
                             } else viewModel.mapOutlineColor.value,
                             style = Stroke(
@@ -154,16 +154,11 @@ fun EditorTextField(
                 imeAction = ImeAction.Done
             ),
             textStyle = textStyle.copy(textAlign = TextAlign.Center),
-            maxLines = if (mMaxLines > 0) mMaxLines else 1,
-            visualTransformation = EditorVisualTransformation(mDigitsPerLine.value),
-            onTextLayout = { mTextLayout.value = it },
+            maxLines = if (maxLines > 0) maxLines else 1,
+            visualTransformation = EditorVisualTransformation(digitsPerLine.value),
+            onTextLayout = { textLayoutResultMutableState.value = it },
             readOnly = readOnly,
-            interactionSource = mInteraction
+            interactionSource = interaction
         )
     }
-}
-
-fun DimensionMapper.getYOffset(position: Int, density: Density): Int {
-    val offset = this.getRectBoxForPosition(position).center.y
-    return ceil((offset / density.density).toDouble()).roundToInt()
 }

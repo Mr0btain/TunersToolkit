@@ -40,18 +40,18 @@ fun EditorView(
     chunkId: Int
 ) {
     val hexData = remember(input) { mutableStateOf(TextFieldValue(input.second)) }
-    val mOffsetData = remember { mutableStateOf("") }
-    val mAsciiData = remember(input) { mutableStateOf(TextFieldValue("")) }
-    val mUpdateFromOtherTextView = remember { mutableStateOf(false) }
-    var mParentSize by remember { mutableStateOf(IntSize(0,0)) }
-    var mPosition by remember { mutableStateOf(Rect(0f,0f,0f,0f)) }
-    var mParentPosition by remember { mutableStateOf(Rect(0f,0f,0f,0f)) }
+    val offsetData = remember { mutableStateOf("") }
+    val asciiData = remember(input) { mutableStateOf(TextFieldValue("")) }
+    val updateFromOtherTextView = remember { mutableStateOf(false) }
+    var parentSize by remember { mutableStateOf(IntSize(0,0)) }
+    var position by remember { mutableStateOf(Rect(0f,0f,0f,0f)) }
+    var parentPosition by remember { mutableStateOf(Rect(0f,0f,0f,0f)) }
 
     // Set Offset Values
     LaunchedEffect(
         key1 = input.second.length,
         block = {
-            mOffsetData.value = input.second.getByteLocations(
+            offsetData.value = input.second.getByteLocations(
                 charsPerLine,
                 unitNumber
             )
@@ -62,7 +62,7 @@ fun EditorView(
     LaunchedEffect(
         key1 = input.second,
         block = {
-            mAsciiData.value = TextFieldValue(hexData.value.text.hexToAscii())
+            asciiData.value = TextFieldValue(hexData.value.text.hexToAscii())
         }
     )
 
@@ -70,25 +70,25 @@ fun EditorView(
         modifier = Modifier
             .fillMaxWidth()
             .onGloballyPositioned {
-                mParentSize = it.size
+                parentSize = it.size
             }
             .wrapContentHeight()
     ) {
         // Initialize our Text views
-        val mOffsetView = @Composable {
+        val offsetView = @Composable {
             OffsetTextView(
-                value = mOffsetData.value,
+                value = offsetData.value,
                 textStyle = textStyle,
                 unitNumber = unitNumber,
                 totalUnits = totalUnits
             )
         }
 
-        val mHexView = @Composable {
+        val hexView = @Composable {
             // The main hex view
             EditorTextField(
                 hexData = hexData,
-                asciiTextFieldValue = mAsciiData,
+                asciiTextFieldValue = asciiData,
                 viewModel = viewModel,
                 readOnly = false,
                 focusRequester = focusRequester,
@@ -96,62 +96,62 @@ fun EditorView(
                 totalUnits = totalUnits,
                 unitNumber = unitNumber,
                 coroutineScope = coroutineScope,
-                isUpdateFromOther = mUpdateFromOtherTextView,
+                isUpdateFromOther = updateFromOtherTextView,
                 chunkId = chunkId,
                 textStyle = textStyle
             )
         }
 
-        val mAsciiView = @Composable {
+        val asciiView = @Composable {
             // The ascii view alongside the hex view, this displays an ASCII representation
             // of the hex data, and they update each other upon change. this will also be the
             // slot for the graphs possibly
             AsciiTextView(
-                value = mAsciiData,
+                value = asciiData,
                 textStyle = textStyle,
                 chunksPerLine = charsPerLine,
                 hexTextField = hexData,
                 unitNumber = unitNumber,
                 totalUnits = totalUnits,
                 coroutineScope = coroutineScope,
-                isUpdateFromOther = mUpdateFromOtherTextView
+                isUpdateFromOther = updateFromOtherTextView
             )
         }
 
         // Measure and layout our content
         Layout(
-            contents = listOf(mOffsetView, mHexView, mAsciiView)
-        ) { (mOffsetMeasurable, mHexMeasurable, mAsciiMeasurable), constraints ->
+            contents = listOf(offsetView, hexView, asciiView)
+        ) { (offsetMeasurable, hexMeasurable, asciiMeasurable), constraints ->
             // Measure our Placeable
-            val mOffsetPlaceable = mOffsetMeasurable.map { measurable -> measurable.measure(constraints) }
-            val mHexPlaceable = mHexMeasurable.map { measurable -> measurable.measure(constraints) }
-            val mAsciiPlaceable = mAsciiMeasurable.map { measurable -> measurable.measure(constraints) }
+            val offsetPlaceable = offsetMeasurable.map { measurable -> measurable.measure(constraints) }
+            val hexPlaceable = hexMeasurable.map { measurable -> measurable.measure(constraints) }
+            val asciiPlaceable = asciiMeasurable.map { measurable -> measurable.measure(constraints) }
 
             // Get the width of all our items, and use that to get the blank space between them
-            val mWidthOfItems = mOffsetPlaceable.first().width + mHexPlaceable.first().width + mAsciiPlaceable.first().width
-            val mSpaceBetween = (mParentSize.width - mWidthOfItems) / 4
+            val widthOfItems = offsetPlaceable.first().width + hexPlaceable.first().width + asciiPlaceable.first().width
+            val spaceBetween = (parentSize.width - widthOfItems) / 4
 
             // Keep track of our X position
-            var xPosition = mSpaceBetween
+            var xPosition = spaceBetween
 
             layout(
-                width = mParentSize.width,
-                height = mHexPlaceable.first().height
+                width = parentSize.width,
+                height = hexPlaceable.first().height
             ) {
                 // Place the first Offset view
-                mOffsetPlaceable.first().place(x = xPosition, y = 0)
+                offsetPlaceable.first().place(x = xPosition, y = 0)
 
                 // Advance our X position
-                xPosition += mOffsetPlaceable.first().width + mSpaceBetween
+                xPosition += offsetPlaceable.first().width + spaceBetween
 
                 // Place the Hex view
-                mHexPlaceable.first().place(x = xPosition, y = 0)
+                hexPlaceable.first().place(x = xPosition, y = 0)
 
                 // Advance our X position
-                xPosition += mHexPlaceable.first().width + mSpaceBetween
+                xPosition += hexPlaceable.first().width + spaceBetween
 
                 // Place the final Ascii view
-                mAsciiPlaceable.first().place(x = xPosition, y = 0)
+                asciiPlaceable.first().place(x = xPosition, y = 0)
             }
         }
     }

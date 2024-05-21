@@ -15,11 +15,11 @@ data class ByteChunk(
 )
 
 fun ByteSegmentData.chunkDataValue(): ChunkedDataValues {
-    val mResult = mutableListOf<ByteChunk>()
-    val mByteChunked = this.data.chunkByteArray(6000, this.baseOffset.toInt())
+    val result = mutableListOf<ByteChunk>()
+    val byteChunked = this.data.chunkByteArray(6000, this.baseOffset.toInt())
 
-    mByteChunked.forEach { (addr, data) ->
-        mResult.add(
+    byteChunked.forEach { (addr, data) ->
+        result.add(
             ByteChunk(
                 startingAddress = addr,
                 data = data,
@@ -28,5 +28,5 @@ fun ByteSegmentData.chunkDataValue(): ChunkedDataValues {
         )
     }
 
-    return ChunkedDataValues(mResult)
+    return ChunkedDataValues(result)
 }

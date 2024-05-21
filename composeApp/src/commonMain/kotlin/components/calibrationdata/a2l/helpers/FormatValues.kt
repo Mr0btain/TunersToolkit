@@ -15,14 +15,14 @@ import components.parsers.a2l.compumethod.compute
  * Formats a String using the format spec %5.1
  */
 fun String.formatLength(format: String): String {
-    val format1 = format.replace("\"", "").replace("%", "").split(".")
+    val actualFormat = format.replace("\"", "").replace("%", "").split(".")
     val input = this.split(".")
 
     when (input.size) {
         1 -> {
-            if (format1.size > 1) {
-                val beforeLength = format1[0].replace(".", "").toInt()
-                val afterLength = format1[1].replace(".", "").toInt()
+            if (actualFormat.size > 1) {
+                val beforeLength = actualFormat[0].replace(".", "").toInt()
+                val afterLength = actualFormat[1].replace(".", "").toInt()
                 val inputBefore = input[0]
                 val result = StringBuilder()
 
@@ -52,7 +52,7 @@ fun String.formatLength(format: String): String {
 
                 return result.toString()
             } else {
-                val beforeLength = format1[0].replace(".", "").toInt()
+                val beforeLength = actualFormat[0].replace(".", "").toInt()
                 val inputBefore = input[0]
                 val result = StringBuilder()
 
@@ -79,9 +79,9 @@ fun String.formatLength(format: String): String {
         }
 
         2 -> {
-            if (format1.size > 1) {
-                val beforeLength = format1[0].replace(".", "").toInt()
-                val afterLength = format1[1].replace(".", "").toInt()
+            if (actualFormat.size > 1) {
+                val beforeLength = actualFormat[0].replace(".", "").toInt()
+                val afterLength = actualFormat[1].replace(".", "").toInt()
                 val inputBefore = input[0]
                 val inputAfter = input[1]
                 val result = StringBuilder()
@@ -124,7 +124,7 @@ fun String.formatLength(format: String): String {
 
                 return result.toString()
             } else {
-                val beforeLength = format1[0].replace(".", "").toInt()
+                val beforeLength = actualFormat[0].replace(".", "").toInt()
                 val inputBefore = input[0]
                 val result = StringBuilder()
 

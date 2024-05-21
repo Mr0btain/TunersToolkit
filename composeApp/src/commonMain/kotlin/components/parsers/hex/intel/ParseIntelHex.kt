@@ -9,12 +9,12 @@ import components.parsers.hex.chunkHexData
  * Parses a list of Ascii data and gets the hex data, offsets, and any other data
  */
 fun List<String>.parseIntelHex(): Map<String, HexSegmentData> {
-    var mGlobalOffset = ULong.MIN_VALUE
-    var mCurrentAddress = ULong.MIN_VALUE
-    var mDuplicateIdNumber = 0
+    var currentGlobalOffset = ULong.MIN_VALUE
+    var currentAddress = ULong.MIN_VALUE
+    var duplicateIdNumber = 0
     data class IntelHexSegment(val byteCount: ULong, val globalOffset: ULong, val address: ULong, val data: String)
     val result = mutableMapOf<String, HexSegmentData>()
-    val mSegmentList = arrayListOf<IntelHexSegment>()
+    val segmentList = arrayListOf<IntelHexSegment>()
 
     // Process each line
     this.forEach { line ->
@@ -26,7 +26,7 @@ fun List<String>.parseIntelHex(): Map<String, HexSegmentData> {
             // Data record type
             IntelHexRecordType.RECORD_TYPE_DATA -> {
                 val byteCount = readByteCount(line)
-                val address = readAddress(line) + mGlobalOffset
+                val address = readAddress(line) + currentGlobalOffset
                 val data = readData(line)
                 val checksum = readChecksum(line)
                 val calcChecksum = calculateChecksum(line)
@@ -34,10 +34,10 @@ fun List<String>.parseIntelHex(): Map<String, HexSegmentData> {
                 // TODO: Add some error handling here
                 if (checksum != calcChecksum) println("Checksum Error!")
 
-                mSegmentList.add(
+                segmentList.add(
                     IntelHexSegment(
                         byteCount = byteCount,
-                        globalOffset = mGlobalOffset,
+                        globalOffset = currentGlobalOffset,
                         address = address,
                         data = data
                     )
@@ -46,7 +46,7 @@ fun List<String>.parseIntelHex(): Map<String, HexSegmentData> {
 
             // End of File
             IntelHexRecordType.RECORD_TYPE_END_OF_FILE -> {
-                val sorted = mSegmentList.sortedWith(compareBy { it.address })
+                val sorted = segmentList.sortedWith(compareBy { it.address })
                 var startingOffset = ULong.MIN_VALUE
                 var newSegment = true
                 val data = StringBuilder()
@@ -61,22 +61,22 @@ fun List<String>.parseIntelHex(): Map<String, HexSegmentData> {
                             // Check if map contains this ID already, if so append the duplicate number behind it
                             if (result.containsKey(mId)) {
                                 // Add with appended duplicate number
-                                result["$mId:$mDuplicateIdNumber"] = HexSegmentData(
+                                result["$mId:$duplicateIdNumber"] = HexSegmentData(
                                     data = data.toString().chunkHexData(),
                                     startOffset = startingOffset,
-                                    endOffset = mCurrentAddress,
+                                    endOffset = currentAddress,
                                     baseOffset = base,
                                     totalLength = data.length
                                 )
 
                                 // Advance the duplicate number for the next one
-                                mDuplicateIdNumber += 1
+                                duplicateIdNumber += 1
                             } else {
                                 // If its ID is not already in the list, just add the segment
                                 result[mId] = HexSegmentData(
                                     data = data.toString().chunkHexData(),
                                     startOffset = startingOffset,
-                                    endOffset = mCurrentAddress,
+                                    endOffset = currentAddress,
                                     baseOffset = base,
                                     totalLength = data.length
                                 )
@@ -84,7 +84,7 @@ fun List<String>.parseIntelHex(): Map<String, HexSegmentData> {
                         }
 
                         // Address matches, either the start of a file at 0000 or next item in segment
-                        item.address == mCurrentAddress -> {
+                        item.address == currentAddress -> {
                             if (newSegment) {
                                 // Append data to the segment
                                 data.append(item.data)
@@ -93,7 +93,7 @@ fun List<String>.parseIntelHex(): Map<String, HexSegmentData> {
                                     item.address - item.byteCount
                                 }
                                 // Advance address for check on next item
-                                mCurrentAddress = item.address + (item.byteCount)
+                                currentAddress = item.address + (item.byteCount)
                                 // Set new segment counter to false
                                 newSegment = false
                                 // Set the base offset
@@ -102,7 +102,7 @@ fun List<String>.parseIntelHex(): Map<String, HexSegmentData> {
                                 // Add the data to the segment
                                 data.append(item.data)
                                 // Advance the address by this items Byte count
-                                mCurrentAddress += (item.byteCount)
+                                currentAddress += (item.byteCount)
                             }
                         }
 
@@ -112,22 +112,22 @@ fun List<String>.parseIntelHex(): Map<String, HexSegmentData> {
                             // Check if map contains this ID already, if so append the duplicate number behind it
                             if (result.containsKey(mId)) {
                                 // Add with appended duplicate number
-                                result["$mId:$mDuplicateIdNumber"] = HexSegmentData(
+                                result["$mId:$duplicateIdNumber"] = HexSegmentData(
                                     data = data.toString().chunkHexData(),
                                     startOffset = startingOffset,
-                                    endOffset = mCurrentAddress,
+                                    endOffset = currentAddress,
                                     baseOffset = item.globalOffset,
                                     totalLength = data.length
                                 )
 
                                 // Advance the duplicate number for the next one
-                                mDuplicateIdNumber += 1
+                                duplicateIdNumber += 1
                             } else {
                                 // If its ID is not already in the list, just add the segment
                                 result[mId] = HexSegmentData(
                                     data = data.toString().chunkHexData(),
                                     startOffset = startingOffset,
-                                    endOffset = mCurrentAddress,
+                                    endOffset = currentAddress,
                                     baseOffset = item.globalOffset,
                                     totalLength = data.length
                                 )
@@ -139,7 +139,7 @@ fun List<String>.parseIntelHex(): Map<String, HexSegmentData> {
                             startingOffset = if (item.address < item.byteCount) { item.address } else {
                                 item.address - item.byteCount
                             }
-                            mCurrentAddress = item.address + (item.byteCount)
+                            currentAddress = item.address + (item.byteCount)
                             newSegment = true
                         }
                     }
@@ -149,7 +149,7 @@ fun List<String>.parseIntelHex(): Map<String, HexSegmentData> {
             IntelHexRecordType.RECORD_TYPE_EXTENDED_SEGMENT_ADDRESS -> {
                 val dat0 = line.substring(9, line.length - 4)
                 val dat1 = line.substring(11, line.length - 2)
-                mGlobalOffset = ((((dat0.toULong(16) and 255u) shl 8) or (dat1.toULong(16) and 255u)) shl 4)
+                currentGlobalOffset = ((((dat0.toULong(16) and 255u) shl 8) or (dat1.toULong(16) and 255u)) shl 4)
             }
 
             IntelHexRecordType.RECORD_TYPE_START_SEGMENT_ADDRESS -> {
@@ -160,7 +160,7 @@ fun List<String>.parseIntelHex(): Map<String, HexSegmentData> {
             IntelHexRecordType.RECORD_TYPE_EXTENDED_LINEAR_ADDRESS -> {
                 val dat0 = line.substring(9, line.length - 4)
                 val dat1 = line.substring(11, line.length - 2)
-                mGlobalOffset = ((((dat0.toULong(16) and 255u) shl 8) or (dat1.toULong(16) and 255u)) shl 16)
+                currentGlobalOffset = ((((dat0.toULong(16) and 255u) shl 8) or (dat1.toULong(16) and 255u)) shl 16)
             }
 
             IntelHexRecordType.RECORD_TYPE_START_LINEAR_ADDRESS -> {

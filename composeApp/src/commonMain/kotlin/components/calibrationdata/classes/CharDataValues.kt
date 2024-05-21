@@ -16,22 +16,22 @@ data class CharDataValues(
     val overlayPath: Path = Path()
 ) {
     private fun getAxisXLength(): Int {
-        var mResult = 0
+        var result = 0
 
         values.forEach {
-            if (it.column > mResult) mResult = it.column
+            if (it.column > result) result = it.column
         }
 
-        return mResult + 1
+        return result + 1
     }
 
     private fun getAxisYLength(): Int {
-        var mResult = 0
+        var result = 0
 
         values.forEach {
-            if (it.row > mResult) mResult = it.row
+            if (it.row > result) result = it.row
         }
 
-        return mResult + 1
+        return result + 1
     }
 }

@@ -3,6 +3,9 @@ package components.maptextoverlay.classes
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Density
+import kotlin.math.ceil
+import kotlin.math.roundToInt
 
 class DimensionMapper {
     private var characterHeight = 0f
@@ -24,7 +27,7 @@ class DimensionMapper {
         // Set values
         characterHeight = thirdLineStartBox.top - secondLineStartBox.top
         characterWidth = firstCharBox.width
-        // mBaseXOffset = mSecondLineStartBox.left
+        // baseXOffset = mSecondLineStartBox.left
         offsetMapper = OffsetMapper(textLayout.layoutInput.text.text)
         lineCharacterLength = textLayout.layoutInput.text.lines().first().length
 
@@ -98,4 +101,9 @@ class DimensionMapper {
         right = right + horizontalDelta,
         bottom = bottom + verticalDelta
     )
+}
+
+fun DimensionMapper.getYOffset(position: Int, density: Density): Int {
+    val offset = this.getRectBoxForPosition(position).center.y
+    return ceil((offset / density.density).toDouble()).roundToInt()
 }

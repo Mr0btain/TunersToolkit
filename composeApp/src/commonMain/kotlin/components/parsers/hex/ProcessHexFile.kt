@@ -13,32 +13,32 @@ fun processHexFile(
 
     // Only convert a small section to check if its Intel Hex, if so convert whole thing else
     // don't waste computations
-    val mAsciiData = safeCall {
+    val asciiData = safeCall {
         input.copyOfRange(0, 64).toAsciiString().split(":".toRegex()).map { ":${it.trim()}" }
     }
-    var mIntelCheck = false
+    var intelCheck = false
 
     // Check if intel hex
-    if (mAsciiData.isSuccess) {
-        mAsciiData.getOrNull()?.let {
-            mIntelCheck = checkIfIntelHex(it[1])
+    if (asciiData.isSuccess) {
+        asciiData.getOrNull()?.let {
+            intelCheck = checkIfIntelHex(it[1])
         }
     }
 
     // TODO: Add motorola hex s19
     when {
         // Run Intel Hex check
-        (mIntelCheck) -> {
+        (intelCheck) -> {
             // Read all lines of the File
-            val mResult = safeCall {
+            val fileData = safeCall {
                 input.toAsciiString()
                     .split(":".toRegex())
                     .map { ":${it.trim()}" }
                     .parseIntelHex()
             }
 
-            if (mResult.isSuccess) {
-                mResult.getOrNull()?.let { result ->
+            if (fileData.isSuccess) {
+                fileData.getOrNull()?.let { result ->
                     // Loop through segments
                     result.forEach { segment ->
                         // Check if segment starts at an offset indicating it's the data segment
@@ -63,10 +63,10 @@ fun processHexFile(
 
         // If not known type that needs processed then set the data as normal hexadecimal
         else -> {
-            val mResult = safeCall { input.toHexMap() }
+            val fileData = safeCall { input.toHexMap() }
 
-            if (mResult.isSuccess) {
-                mResult.getOrNull()?.let { result ->
+            if (fileData.isSuccess) {
+                fileData.getOrNull()?.let { result ->
                     // Update the View Model data
                     viewModel.hexDataSegments.clear()
                     viewModel.hexDataSegments["0"] = HexSegmentData(
