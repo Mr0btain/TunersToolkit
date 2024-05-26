@@ -1,0 +1,9 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"
+    android:viewportWidth="600"
+    android:viewportHeight="1520"
+    android:width="600dp"
+    android:height="1520dp">
+    <path
+        android:pathData="M40 1120l210 -370 -199 -360 104 0 113 216q9 17 18.5 36.5 9.5 19.5 15.5 30.5 5 -11 14.5 -30.5 9.5 -19.5 18.5 -36.5l115 -216 99 0 -199 354 210 376 -103 0 -125 -232q-9 -17 -18.5 -36.5 -9.5 -19.5 -14.5 -31.5 -5 12 -14.5 31 -9.5 19 -18.5 36l-126 233 -100 0z"
+        android:fillColor="#000000" />
+</vector>

@@ -1,0 +1,9 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"
+    android:viewportWidth="648.6189"
+    android:viewportHeight="1520"
+    android:width="648.6189dp"
+    android:height="1520dp">
+    <path
+        android:pathData="M270 1130q-105 0 -165 -59 -60 -59 -60 -161l90 0q0 67 35.5 103.5 35.5 36.5 99.5 36.5 64 0 99.5 -36.5 35.5 -36.5 35.5 -103.5l0 -520 90 0 0 520q0 102 -60.5 161 -60.5 59 -164.5 59z"
+        android:fillColor="#000000" />
+</vector>

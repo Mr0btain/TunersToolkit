@@ -1,7 +1,6 @@
 package screens.main
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.runtime.Composable
@@ -11,13 +10,15 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import components.hextexteditor.HexTextEditor
 
 @Composable
 fun ExpandedMain(
     modifier: Modifier = Modifier
 ) {
-    Box(
+    Column(
         modifier = modifier.fillMaxSize()
     ) {
         Text(
@@ -28,7 +29,11 @@ fun ExpandedMain(
                 fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center
             ),
-            modifier = Modifier.align(Alignment.Center)
+            modifier = Modifier.align(Alignment.CenterHorizontally)
         )
+
+        Spacer(modifier = Modifier.padding(4.dp))
+
+        HexTextEditor(input = "HexEditorTestText", Modifier)
     }
 }
