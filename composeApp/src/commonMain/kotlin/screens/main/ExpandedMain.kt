@@ -2,7 +2,6 @@ package screens.main
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
-import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +33,12 @@ fun ExpandedMain(
 
         Spacer(modifier = Modifier.padding(4.dp))
 
-        HexTextEditor(input = "HexEditorTestText", Modifier)
+        HexTextEditor(
+            modifier = Modifier,
+            input = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvXxYyZz00112233445566778899",
+            bits = 2,
+            digitsPerLine = 12,
+            textStyle = TextStyle(fontSize = 20.sp)
+        )
     }
 }
