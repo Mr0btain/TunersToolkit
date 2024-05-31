@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import components.hextexteditor.components.HexTextPositionHandler
 import components.hextexteditor.components.getTextAlignmentLine
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
@@ -52,6 +54,7 @@ fun HexTextEditor(
     val cursorPainter = painterResource("svg/i.xml")
     val cursorPosition = remember { mutableStateOf(Offset(0f,0f)) }
     val isCursorVisible = remember { mutableStateOf(false) }
+    val textPositionHandler = HexTextPositionHandler()
 
     println("Font size desired: ${textStyle.fontSize}")
     println("Font Scale as per density: $density")
@@ -70,6 +73,51 @@ fun HexTextEditor(
         val textWidth = (textHeight / 2.375).toFloat()
         val textAlignmentLine = getTextAlignmentLine(textWidth, digitsPerLine, bits, maxWidth.value)
 
+        // Set character data in position handler
+        textPositionHandler.addCharacterData(
+            characterSize = Size(width = textWidth, height = textHeight),
+            bits = bits,
+            charactersPerLine = digitsPerLine
+        )
+
+        var lineNum = 0
+        var xLinePosition = textAlignmentLine
+        var yLinePosition = 0f
+
+        // Setup Line data in position handler
+        input.forEachIndexed { index, char ->
+            // Check if we need to start a new line
+            if (index % digitsPerLine == 0 && index != 0) {
+                textPositionHandler.addLineData(
+                    lineNumber = lineNum,
+                    lineStartOffset = textAlignmentLine,
+                    lineTopOffset = yLinePosition,
+                    lineEndOffset = xLinePosition
+                )
+
+                lineNum++
+                xLinePosition = textAlignmentLine
+                yLinePosition += (textHeight + 2)
+            }
+
+            // Check if we need to add a space
+            if (index % bits == 0) {
+                xLinePosition += textWidth
+            }
+
+            if (index == input.length - 1) {
+                textPositionHandler.addLineData(
+                    lineNumber = lineNum,
+                    lineStartOffset = textAlignmentLine,
+                    lineTopOffset = yLinePosition,
+                    lineEndOffset = xLinePosition + textWidth
+                )
+            }
+
+            // advance the xPosition
+            xLinePosition += textWidth
+        }
+
         println("Font Height Calc: $textHeight")
         println("Font width calc: $textWidth")
 
@@ -83,15 +131,14 @@ fun HexTextEditor(
                             println("X Start line: $textAlignmentLine")
                             println("Text right end: ${textAlignmentLine + (textWidth * digitsPerLine)}")
 
-                            if (offset.x > textAlignmentLine && offset.x < textAlignmentLine + (digitsPerLine * textWidth)) {
-                                println("Click in bounds!")
+                            val characterPos = textPositionHandler.getCharacterRectFromOffset(offset)
 
-                                val numberOfCharsIn = (offset.x - textAlignmentLine) / textWidth
-                                val numberOfLinesDown = if (offset.y / textHeight <= 1) 0f else (offset.y / textHeight)
+                            cursorPosition.value = Offset(x = characterPos.right, y = characterPos.top)
 
-                                cursorPosition.value = Offset(x = (numberOfCharsIn * textWidth) + textAlignmentLine + textWidth, y = (numberOfLinesDown * textHeight))
-                                isCursorVisible.value = true
-                            }
+                            if (cursorPosition.value.x == 0f && cursorPosition.value.y == 0f) {
+                                isCursorVisible.value = false
+                            } else isCursorVisible.value = true
+
                         }
                     )
                 }
@@ -103,14 +150,14 @@ fun HexTextEditor(
                 println("Painting Text")
                 input.forEachIndexed { index, char ->
                     // Check if we need to start a new line
-                    if (index % digitsPerLine == 0) {
+                    if (index % digitsPerLine == 0 && index != 0) {
                         xPosition = textAlignmentLine
                         yPosition += (textHeight + 2)
                     }
 
                     // Check if we need to add a space
                     if (index % bits == 0) {
-                        xPosition += textWidth - 2
+                        xPosition += textWidth
                     }
 
                     // Paint the character on screen at the position
@@ -134,14 +181,13 @@ fun HexTextEditor(
 
             if (isCursorVisible.value) {
                 println("Painting cursor")
-                translate(top = cursorPosition.value.y, left = cursorPosition.value.x) {
-                    with(cursorPainter) {
-                        draw(
-                            size = Size(width = textWidth, height = textHeight),
-                            colorFilter = ColorFilter.tint(color = color)
-                        )
-                    }
-                }
+
+                drawLine(
+                    color = Color.Red,
+                    start = Offset(x = cursorPosition.value.x, y = cursorPosition.value.y + 3f),
+                    end =  Offset(x = cursorPosition.value.x, y = cursorPosition.value.y + textHeight - 3f),
+                    strokeWidth = 2f
+                )
             }
         }
     }
