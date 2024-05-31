@@ -18,7 +18,9 @@ kotlin {
     }
     
     jvm("desktop")
-    
+
+    // For IOS, Not tested in any shape or form
+    /*
     listOf(
         iosX64(),
         iosArm64(),
@@ -29,6 +31,7 @@ kotlin {
             isStatic = true
         }
     }
+     */
     
     sourceSets {
         val desktopMain by getting
@@ -72,6 +75,7 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.appdirs)
 
+            // Should really hard code this
             val lwjglVersion = "3.3.1"
             listOf("lwjgl", "lwjgl-tinyfd").forEach { lwjglDep ->
                 implementation("org.lwjgl:${lwjglDep}:${lwjglVersion}")
@@ -92,6 +96,7 @@ kotlin {
     }
 }
 
+// VERY loosely tested. crashes sometimes and requires a descent amount of ram
 android {
     namespace = "org.mr0btain.tunerstoolkit"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
