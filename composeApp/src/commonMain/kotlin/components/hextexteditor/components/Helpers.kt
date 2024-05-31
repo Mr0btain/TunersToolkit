@@ -2,7 +2,10 @@ package components.hextexteditor.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.Canvas
 
 fun getTextAlignmentLine(
     textWidth: Float,

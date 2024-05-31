@@ -2,7 +2,7 @@
 
 package components.hextexteditor
 
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,18 +10,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
@@ -54,9 +49,9 @@ fun HexTextEditor(
     val charactersToPull = "abcdefghijklmnopqrstuvwxyz0123456789"
     val characterPainters = mutableMapOf<Char, Painter>()
     val density = LocalDensity.current.density
-    val cursorPainter = painterResource("svg/cursor.xml")
-    val isCursorVisible = remember { mutableStateOf(false) }
+    val cursorPainter = painterResource("svg/i.xml")
     val cursorPosition = remember { mutableStateOf(Offset(0f,0f)) }
+    val isCursorVisible = remember { mutableStateOf(false) }
 
     println("Font size desired: ${textStyle.fontSize}")
     println("Font Scale as per density: $density")
@@ -75,7 +70,6 @@ fun HexTextEditor(
         val textWidth = (textHeight / 2.375).toFloat()
         val textAlignmentLine = getTextAlignmentLine(textWidth, digitsPerLine, bits, maxWidth.value)
 
-
         println("Font Height Calc: $textHeight")
         println("Font width calc: $textWidth")
 
@@ -93,9 +87,9 @@ fun HexTextEditor(
                                 println("Click in bounds!")
 
                                 val numberOfCharsIn = (offset.x - textAlignmentLine) / textWidth
-                                val numberOfLinesDown = offset.y / textHeight
+                                val numberOfLinesDown = if (offset.y / textHeight <= 1) 0f else (offset.y / textHeight)
 
-                                cursorPosition.value = Offset(x = numberOfCharsIn * textWidth, y = numberOfLinesDown * textHeight)
+                                cursorPosition.value = Offset(x = (numberOfCharsIn * textWidth) + textAlignmentLine + textWidth, y = (numberOfLinesDown * textHeight))
                                 isCursorVisible.value = true
                             }
                         }
@@ -105,36 +99,42 @@ fun HexTextEditor(
             var xPosition = textAlignmentLine
             var yPosition = 0f
 
-            input.forEachIndexed { index, char ->
-                // Check if we need to start a new line
-                if (index % digitsPerLine == 0) {
-                    xPosition = textAlignmentLine
-                    yPosition += (textHeight + 2)
-                }
+            if (input.isNotEmpty()) {
+                println("Painting Text")
+                input.forEachIndexed { index, char ->
+                    // Check if we need to start a new line
+                    if (index % digitsPerLine == 0) {
+                        xPosition = textAlignmentLine
+                        yPosition += (textHeight + 2)
+                    }
 
-                // Check if we need to add a space
-                if (index % bits == 0) { xPosition += textWidth - 2 }
+                    // Check if we need to add a space
+                    if (index % bits == 0) {
+                        xPosition += textWidth - 2
+                    }
 
-                // Paint the character on screen at the position
-                translate(top = yPosition, left = xPosition) {
-                    val objectToPaint = characterPainters[char.lowercaseChar()]
+                    // Paint the character on screen at the position
+                    translate(top = yPosition, left = xPosition) {
+                        val objectToPaint = characterPainters[char.lowercaseChar()]
 
-                    if (objectToPaint != null) {
-                        with(objectToPaint) {
-                            draw(
-                                size = Size(width = textWidth, height = textHeight),
-                                colorFilter = ColorFilter.tint(color = color)
-                            )
+                        if (objectToPaint != null) {
+                            with(objectToPaint) {
+                                draw(
+                                    size = Size(width = textWidth, height = textHeight),
+                                    colorFilter = ColorFilter.tint(color = color)
+                                )
+                            }
                         }
                     }
-                }
 
-                // advance the xPosition
-                xPosition += textWidth
+                    // advance the xPosition
+                    xPosition += textWidth
+                }
             }
 
             if (isCursorVisible.value) {
-                translate(top = cursorPosition.value.y, left = cursorPosition.value.x + textWidth) {
+                println("Painting cursor")
+                translate(top = cursorPosition.value.y, left = cursorPosition.value.x) {
                     with(cursorPainter) {
                         draw(
                             size = Size(width = textWidth, height = textHeight),
