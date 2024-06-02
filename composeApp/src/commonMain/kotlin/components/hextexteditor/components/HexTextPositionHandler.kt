@@ -19,15 +19,12 @@ class HexTextPositionHandler {
     fun getCharacterRectFromOffset(offset: Offset): Rect {
         var line = LineData(0f, 0f, 0f)
 
-        lineData.forEach { (num, data) ->
+        lineData.forEach { (_, data) ->
             // Check if our y falls inside the line
             if (offset.y >= data.lineTopOffset && offset.y <= data.lineTopOffset + characterSizeData.size.height) {
                 line = data
-                println("LineNumber: $num")
             }
         }
-
-        println("Line Data: $line")
 
         return when {
             offset.x <= line.lineStartOffset -> {
