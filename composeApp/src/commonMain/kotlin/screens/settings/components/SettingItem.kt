@@ -24,6 +24,9 @@ import androidx.compose.ui.unit.dp
 import components.custom.LargeDropdownMenu
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.arrow_downward
+import tunerstoolkit.composeapp.generated.resources.arrow_upward
 
 /**
  * A Setting item to keep everything the same without repeating all the code
@@ -106,7 +109,7 @@ fun SettingItem(
                         },
                         modifier = Modifier.padding(2.dp)
                     ) {
-                        Icon(painterResource("icons/arrow_downward.png"), "Decrease")
+                        Icon(painterResource(Res.drawable.arrow_downward), "Decrease")
                     }
 
                     Text(
@@ -123,7 +126,7 @@ fun SettingItem(
                         },
                         modifier = Modifier.padding(2.dp)
                     ) {
-                        Icon(painterResource("icons/arrow_upward.png"), "Increase")
+                        Icon(painterResource(Res.drawable.arrow_upward), "Increase")
                     }
                 }
             }

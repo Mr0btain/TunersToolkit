@@ -14,6 +14,11 @@ import kotlinx.coroutines.CoroutineScope
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import MainViewModel
+import tunerstoolkit.composeapp.generated.resources.*
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.addchart
+import tunerstoolkit.composeapp.generated.resources.assessment
+import tunerstoolkit.composeapp.generated.resources.functions
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
@@ -29,37 +34,37 @@ fun UtilityButtonBar2(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         UtilityIconButton(
-            icon = painterResource("icons/assignment.png")
+            icon = painterResource(Res.drawable.assessment)
         ) {}
 
         Spacer(modifier = Modifier.padding(4.dp))
 
         UtilityIconButton(
-            icon = painterResource("icons/addchart.png")
+            icon = painterResource(Res.drawable.addchart)
         ) {  }
 
         Spacer(modifier = Modifier.padding(4.dp))
 
         UtilityIconButton(
-            icon = painterResource("icons/functions.png")
+            icon = painterResource(Res.drawable.functions)
         ) {}
 
         Spacer(modifier = Modifier.padding(4.dp))
 
         UtilityIconButton(
-            icon = painterResource("icons/horizontal_split.png")
+            icon = painterResource(Res.drawable.horizontal_split)
         ) {}
 
         Spacer(modifier = Modifier.padding(4.dp))
 
         UtilityIconButton(
-            icon = painterResource("icons/history.png")
+            icon = painterResource(Res.drawable.history)
         ) {}
 
         Spacer(modifier = Modifier.padding(4.dp))
 
         UtilityIconButton(
-            icon = painterResource("icons/outlet.png")
+            icon = painterResource(Res.drawable.outlet)
         ) {}
     }
 }

@@ -12,6 +12,8 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import MainViewModel
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.delete
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
@@ -34,7 +36,7 @@ fun DeleteVersionDialog(
         },
         dialogTitle = "Delete Version?",
         dialogText = "Are you sure you want to delete this version: $versionName?",
-        icon = painterResource("icons/delete.png")
+        icon = painterResource(Res.drawable.delete)
     )
 }
 

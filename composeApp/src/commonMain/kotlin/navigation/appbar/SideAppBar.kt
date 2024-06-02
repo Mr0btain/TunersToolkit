@@ -24,6 +24,11 @@ import moe.tlaster.precompose.navigation.PopUpTo
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import MainViewModel
+import tunerstoolkit.composeapp.generated.resources.*
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.calculate
+import tunerstoolkit.composeapp.generated.resources.home
+import tunerstoolkit.composeapp.generated.resources.menu
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
@@ -55,7 +60,7 @@ fun SideTopAppBar(
                     onClick = menuButtonOnClick
                 ) {
                     Icon(
-                        painterResource("icons/menu.png"),
+                        painterResource(Res.drawable.menu),
                         contentDescription = "Open Nav Drawer",
                         tint = MaterialTheme.colorScheme.onBackground
                     )
@@ -81,7 +86,7 @@ fun SideTopAppBar(
                 modifier = Modifier.padding(4.dp)
             ) {
                 Icon(
-                    painterResource("icons/home.png"),
+                    painterResource(Res.drawable.home),
                     "Home",
                     tint = MaterialTheme.colorScheme.onBackground
                 )
@@ -104,7 +109,7 @@ fun SideTopAppBar(
                 modifier = Modifier.padding(4.dp)
             ) {
                 Icon(
-                    painterResource("icons/calculate.png"),
+                    painterResource(Res.drawable.calculate),
                     "Editor",
                     tint = MaterialTheme.colorScheme.onBackground
                 )
@@ -121,7 +126,7 @@ fun SideTopAppBar(
                 modifier = Modifier.padding(4.dp)
             ) {
                 Icon(
-                    painterResource("icons/settings.png"),
+                    painterResource(Res.drawable.settings),
                     "Settings",
                     tint = MaterialTheme.colorScheme.onBackground
                 )

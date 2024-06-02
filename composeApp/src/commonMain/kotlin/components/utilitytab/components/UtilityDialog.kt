@@ -32,6 +32,8 @@ import components.datastorage.components.BasicDialog
 import components.utilitytab.buttonbartab.components.UtilityIconButton
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.done_all
 import ui.theme.TunerToolkitTheme
 
 @OptIn(ExperimentalResourceApi::class)
@@ -134,7 +136,7 @@ fun UtilityDialog(
                             )
                             .height(50.dp)
                             .width(50.dp),
-                        icon = painterResource("icons/done_all.png"),
+                        icon = painterResource(Res.drawable.done_all),
                     ) { onClick(textFieldText.value.text.toDouble()) }
                 }
 

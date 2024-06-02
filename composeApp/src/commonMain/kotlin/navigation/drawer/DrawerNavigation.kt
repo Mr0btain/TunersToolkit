@@ -33,6 +33,10 @@ import screens.dialog.DeleteVersionDialog
 import screens.dialog.NewProjectDialog
 import screens.dialog.OpenProjectDialog
 import MainViewModel
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.calculate
+import tunerstoolkit.composeapp.generated.resources.home
+import tunerstoolkit.composeapp.generated.resources.settings
 import ui.theme.TunerToolkitTheme
 
 @OptIn(ExperimentalResourceApi::class)
@@ -59,7 +63,7 @@ fun DrawerNavigation(
                     Spacer(Modifier.height(12.dp))
 
                     NavigationDrawerItem(
-                        icon = { Icon(painterResource("icons/home.png"), contentDescription = "Home") },
+                        icon = { Icon(painterResource(Res.drawable.home), contentDescription = "Home") },
                         label = { Text("Home") },
                         selected = currentDestination.value?.route?.route == "home",
                         onClick = {
@@ -77,7 +81,7 @@ fun DrawerNavigation(
                     )
 
                     NavigationDrawerItem(
-                        icon = { Icon(painterResource("icons/calculate.png"), contentDescription = "Editor") },
+                        icon = { Icon(painterResource(Res.drawable.calculate), contentDescription = "Editor") },
                         label = { Text("Editor") },
                         selected = currentDestination.value?.route?.route == "editor",
                         onClick = {
@@ -101,7 +105,7 @@ fun DrawerNavigation(
                     )
 
                     NavigationDrawerItem(
-                        icon = { Icon(painterResource("icons/settings.png"), contentDescription = "Settings") },
+                        icon = { Icon(painterResource(Res.drawable.settings), contentDescription = "Settings") },
                         label = { Text("Settings") },
                         selected = currentDestination.value?.route?.route == "settings",
                         onClick = {

@@ -13,6 +13,9 @@ import androidx.compose.ui.unit.dp
 import getPlatform
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.clear
+import tunerstoolkit.composeapp.generated.resources.tool_menu
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
@@ -29,7 +32,7 @@ fun GridWindowButtonBar(
         IconButton(
             onClick = {  }
         ) { Icon(
-            painterResource("icons/tool_menu.png"),
+            painterResource(Res.drawable.tool_menu),
             contentDescription = "Menu",
             tint = MaterialTheme.colorScheme.onPrimary,
             modifier = if (getPlatform().name == "Java") Modifier.size(20.dp) else Modifier
@@ -39,7 +42,7 @@ fun GridWindowButtonBar(
         IconButton(
             onClick = closeOnClick
         ) { Icon(
-            painterResource("icons/clear.png"),
+            painterResource(Res.drawable.clear),
             contentDescription = "Close Window",
             tint = MaterialTheme.colorScheme.onPrimary,
             modifier = if (getPlatform().name == "Java") Modifier.size(20.dp) else Modifier

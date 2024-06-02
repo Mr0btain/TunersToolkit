@@ -36,6 +36,10 @@ import screens.dialog.ImportDialog
 import screens.dialog.NewProjectDialog
 import screens.dialog.OpenProjectDialog
 import MainViewModel
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.assessment
+import tunerstoolkit.composeapp.generated.resources.create
+import tunerstoolkit.composeapp.generated.resources.source
 import ui.theme.TunerToolkitTheme
 
 @OptIn(ExperimentalResourceApi::class)
@@ -139,7 +143,7 @@ fun SideMenuDrawer(
                     Spacer(Modifier.height(12.dp))
 
                     SideMenuDrawerItem(
-                        icon = painterResource("icons/assignment.png"),
+                        icon = painterResource(Res.drawable.assessment),
                         label = "Project",
                         isSelected = selectedItem.value == 1,
                         onClick = {
@@ -154,7 +158,7 @@ fun SideMenuDrawer(
                     )
 
                     SideMenuDrawerItem(
-                        icon = painterResource("icons/source.png"),
+                        icon = painterResource(Res.drawable.source),
                         label = "File",
                         isSelected = selectedItem.value == 2,
                         onClick = {
@@ -169,7 +173,7 @@ fun SideMenuDrawer(
                     )
 
                     SideMenuDrawerItem(
-                        icon = painterResource("icons/create.png"),
+                        icon = painterResource(Res.drawable.create),
                         label = "Edit",
                         isSelected = selectedItem.value == 3,
                         onClick = {

@@ -1,25 +1,25 @@
-import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsCompose)
+    alias(libs.plugins.compose.compiler)
     kotlin("plugin.serialization") version "1.9.0" apply true
 }
 
 kotlin {
     androidTarget {
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "1.8"
-            }
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
         }
     }
     
     jvm("desktop")
-
-    // For IOS, Not tested in any shape or form
+    
     /*
     listOf(
         iosX64(),
@@ -37,17 +37,16 @@ kotlin {
         val desktopMain by getting
         
         androidMain.dependencies {
-            implementation(libs.compose.ui.tooling.preview)
+            implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
         }
-
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
-            @OptIn(ExperimentalComposeLibrary::class)
             implementation(compose.components.resources)
+            implementation(compose.components.uiToolingPreview)
 
             // Context for coroutines
             implementation(libs.kotlinx.coroutines.core)
@@ -70,7 +69,6 @@ kotlin {
             // Serialization
             implementation(libs.kotlinx.serialization.json)
         }
-
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.appdirs)
@@ -96,7 +94,6 @@ kotlin {
     }
 }
 
-// VERY loosely tested. crashes sometimes and requires a descent amount of ram
 android {
     namespace = "org.mr0btain.tunerstoolkit"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -123,11 +120,14 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    buildFeatures {
+        compose = true
     }
     dependencies {
-        debugImplementation(libs.compose.ui.tooling)
+        debugImplementation(compose.uiTooling)
     }
 }
 

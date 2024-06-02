@@ -12,6 +12,8 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import MainViewModel
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.delete
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
@@ -40,7 +42,7 @@ fun DeleteProjectDialog(
         onConfirmation = { onConfirm.value = true },
         dialogTitle = "Delete Project?",
         dialogText = "Are you sure you want to delete this project: $projectName?",
-        icon = painterResource("icons/delete.png")
+        icon = painterResource(Res.drawable.delete)
     )
 }
 

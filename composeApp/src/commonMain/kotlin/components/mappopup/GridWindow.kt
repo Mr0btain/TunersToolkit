@@ -48,6 +48,8 @@ import components.calibrationdata.classes.MapDataValues
 import getPlatform
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.resize_drag
 import kotlin.math.roundToInt
 
 // TODO: Add ability to do comparisons between maps and original values
@@ -168,7 +170,7 @@ fun GridWindow(
 
             }
             Icon(
-                painterResource("icons/resize_drag.png"),
+                painterResource(Res.drawable.resize_drag),
                 "Drag to Resize",
                 modifier = Modifier
                     .padding(end = 4.dp, bottom = 4.dp)

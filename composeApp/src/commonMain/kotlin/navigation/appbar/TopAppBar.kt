@@ -16,6 +16,10 @@ import moe.tlaster.precompose.navigation.Navigator
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import MainViewModel
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.arrow_back
+import tunerstoolkit.composeapp.generated.resources.menu
+import tunerstoolkit.composeapp.generated.resources.tool_menu
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalResourceApi::class)
 @Composable
@@ -34,7 +38,7 @@ fun CustomTopAppBar(
             IconButton(
                 onClick = navButtonOnClick
             ) {
-                Icon(painterResource("icons/menu.png"), "Open Nav Drawer")
+                Icon(painterResource(Res.drawable.menu), "Open Nav Drawer")
             }
         },
         actions = {
@@ -45,7 +49,7 @@ fun CustomTopAppBar(
                     onClick = { navigator.goBack() }
                 ) {
                     Icon(
-                        painter = painterResource("icons/arrow_back.png"),
+                        painter = painterResource(Res.drawable.arrow_back),
                         "Return"
                     )
                 }
@@ -53,7 +57,7 @@ fun CustomTopAppBar(
                     IconButton(
                         onClick = { showDropDown.value = true }
                     ) {
-                        Icon(painterResource("icons/tool_menu.png"), "")
+                        Icon(painterResource(Res.drawable.tool_menu), "")
 
                         TopAppBarDropDown(
                             expanded = showDropDown,

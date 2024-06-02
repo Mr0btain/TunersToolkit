@@ -4,7 +4,10 @@ package components.hextexteditor
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,6 +22,9 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.sp
 import components.hextexteditor.components.HexTextEditorManager
 import components.hextexteditor.components.getTextAlignmentLine
 import components.hextexteditor.components.hexTextOnClick
@@ -26,6 +32,9 @@ import components.hextexteditor.components.mapLineRectData
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
+import screens.editor.components.hexview.EditorOnValueChanged
+import screens.editor.components.hexview.EditorVisualTransformation
+import tunerstoolkit.composeapp.generated.resources.*
 
 /**
  * A Custom made Hex Editor to handle large amounts of data that need to be represented in
@@ -49,7 +58,6 @@ fun HexTextEditor(
     textStyle: TextStyle,
     color: Color = MaterialTheme.colorScheme.onBackground
 ) {
-    val charactersToPull = "abcdefghijklmnopqrstuvwxyz0123456789"
     val characterPainters = remember { mutableMapOf<Char, Painter>() }
     val density = LocalDensity.current.density
     val cursorPosition = remember { mutableStateOf(Offset(0f,0f)) }
@@ -57,8 +65,8 @@ fun HexTextEditor(
     val isCursorDrawn = mutableStateOf(false)
     val manager = HexTextEditorManager()
 
-    charactersToPull.forEach {
-        characterPainters[it] = painterResource("svg/$it.xml")
+    getHexCharacterRes().forEach { (c, painter) ->
+        characterPainters[c] = painter
     }
 
     // If cursor is to be shown, this logic makes it blink
@@ -148,4 +156,73 @@ fun HexTextEditor(
             }
         }
     }
+}
+
+@Composable
+fun HexTextEditor2(
+    input: String,
+    textStyle: TextStyle
+) {
+    val testInput = input + input + input + input + input + input + input + input + input + input + input + input
+    val textValue = remember { mutableStateOf(TextFieldValue(testInput)) }
+
+    BasicTextField(
+        value = textValue.value,
+        textStyle = TextStyle(
+            fontSize = 20.sp,
+            fontFamily = FontFamily.Monospace
+        ),
+        onValueChange = { result ->
+            textValue.value = EditorOnValueChanged(result, textValue.value)
+        },
+        visualTransformation = EditorVisualTransformation(8)
+    )
+
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+
+    }
+}
+
+@Composable
+private fun getHexCharacterRes(): Map<Char, Painter> {
+    return mapOf(
+        Pair('0', painterResource(Res.drawable._0)),
+        Pair('1', painterResource(Res.drawable._1)),
+        Pair('2', painterResource(Res.drawable._2)),
+        Pair('3', painterResource(Res.drawable._3)),
+        Pair('4', painterResource(Res.drawable._4)),
+        Pair('5', painterResource(Res.drawable._5)),
+        Pair('6', painterResource(Res.drawable._6)),
+        Pair('7', painterResource(Res.drawable._7)),
+        Pair('8', painterResource(Res.drawable._8)),
+        Pair('9', painterResource(Res.drawable._9)),
+        Pair('a', painterResource(Res.drawable.a)),
+        Pair('b', painterResource(Res.drawable.b)),
+        Pair('c', painterResource(Res.drawable.c)),
+        Pair('d', painterResource(Res.drawable.d)),
+        Pair('e', painterResource(Res.drawable.e)),
+        Pair('f', painterResource(Res.drawable.f)),
+        Pair('g', painterResource(Res.drawable.g)),
+        Pair('h', painterResource(Res.drawable.h)),
+        Pair('i', painterResource(Res.drawable.i)),
+        Pair('j', painterResource(Res.drawable.j)),
+        Pair('k', painterResource(Res.drawable.k)),
+        Pair('l', painterResource(Res.drawable.l)),
+        Pair('m', painterResource(Res.drawable.m)),
+        Pair('n', painterResource(Res.drawable.n)),
+        Pair('o', painterResource(Res.drawable.o)),
+        Pair('p', painterResource(Res.drawable.p)),
+        Pair('q', painterResource(Res.drawable.q)),
+        Pair('r', painterResource(Res.drawable.r)),
+        Pair('s', painterResource(Res.drawable.s)),
+        Pair('t', painterResource(Res.drawable.t)),
+        Pair('u', painterResource(Res.drawable.u)),
+        Pair('v', painterResource(Res.drawable.v)),
+        Pair('w', painterResource(Res.drawable.w)),
+        Pair('x', painterResource(Res.drawable.x)),
+        Pair('y', painterResource(Res.drawable.y)),
+        Pair('z', painterResource(Res.drawable.z))
+    )
 }

@@ -11,6 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
+import tunerstoolkit.composeapp.generated.resources.*
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.copy
+import tunerstoolkit.composeapp.generated.resources.download
+import tunerstoolkit.composeapp.generated.resources.folder
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
@@ -22,37 +27,37 @@ fun UtilityButtonBar1() {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         UtilityIconButton(
-            icon = painterResource("icons/folder.png")
+            icon = painterResource(Res.drawable.folder)
         ) {}
 
         Spacer(modifier = Modifier.padding(4.dp))
 
         UtilityIconButton(
-            icon = painterResource("icons/file_copy.png")
+            icon = painterResource(Res.drawable.copy)
         ) {}
 
         Spacer(modifier = Modifier.padding(4.dp))
 
         UtilityIconButton(
-            icon = painterResource("icons/download.png")
+            icon = painterResource(Res.drawable.download)
         ) {}
 
         Spacer(modifier = Modifier.padding(4.dp))
 
         UtilityIconButton(
-            icon = painterResource("icons/grid_view.png")
+            icon = painterResource(Res.drawable.grid_view)
         ) {}
 
         Spacer(modifier = Modifier.padding(4.dp))
 
         UtilityIconButton(
-            icon = painterResource("icons/rule_folder.png")
+            icon = painterResource(Res.drawable.rule_folder)
         ) {}
 
         Spacer(modifier = Modifier.padding(4.dp))
 
         UtilityIconButton(
-            icon = painterResource("icons/save.png")
+            icon = painterResource(Res.drawable.save)
         ) {}
     }
 }

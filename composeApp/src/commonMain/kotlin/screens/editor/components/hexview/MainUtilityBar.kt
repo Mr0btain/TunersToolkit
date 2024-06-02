@@ -25,6 +25,11 @@ import kotlinx.coroutines.CoroutineScope
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import MainViewModel
+import tunerstoolkit.composeapp.generated.resources.*
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.add
+import tunerstoolkit.composeapp.generated.resources.copy
+import tunerstoolkit.composeapp.generated.resources.remove_done
 
 // The main Utility bar that is always shown
 @OptIn(ExperimentalResourceApi::class)
@@ -52,37 +57,37 @@ fun MainUtilityBar(
         UtilityIconButton(
             modifier = Modifier
                 .align(Alignment.CenterVertically),
-            icon = painterResource("icons/add.png")
+            icon = painterResource(Res.drawable.add)
         ) { addOnClick("Add") }
 
         UtilityIconButton(
             modifier = Modifier
                 .align(Alignment.CenterVertically),
-            icon = painterResource("icons/remove_done.png")
+            icon = painterResource(Res.drawable.remove_done)
         ) { subOnClick("Subtract") }
 
         UtilityIconButton(
             modifier = Modifier
                 .align(Alignment.CenterVertically),
-            icon = painterResource("icons/copy.png")
+            icon = painterResource(Res.drawable.copy)
         ) { percentOnClick("Percentage") }
 
         UtilityIconButton(
             modifier = Modifier
                 .align(Alignment.CenterVertically),
-            icon = painterResource("icons/search.png")
+            icon = painterResource(Res.drawable.search)
         ) {}
 
         UtilityIconButton(
             modifier = Modifier
                 .align(Alignment.CenterVertically),
-            icon = painterResource("icons/cut.png")
+            icon = painterResource(Res.drawable.cut)
         ) {}
 
         UtilityIconButton(
             modifier = Modifier
                 .align(Alignment.CenterVertically),
-            icon = if (expanded.value) painterResource("icons/compress.png") else painterResource("icons/expand.png")
+            icon = if (expanded.value) painterResource(Res.drawable.compress) else painterResource(Res.drawable.expand)
         ) { expanded.value = !expanded.value }
 
         ExposedDropDownMenu(
