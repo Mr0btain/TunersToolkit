@@ -13,11 +13,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import components.hextexteditor.HexTextEditor
 import components.hextexteditor.HexTextEditor2
+import org.jetbrains.compose.resources.Font
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.jbmono_reg
 
 @Composable
 fun ExpandedMain(
     modifier: Modifier = Modifier
 ) {
+    val textFont = FontFamily(Font(Res.font.jbmono_reg))
+
     Column(
         modifier = modifier.fillMaxSize()
     ) {
@@ -25,7 +30,7 @@ fun ExpandedMain(
             text = "Main Screen Expanded",
             style = TextStyle(
                 fontSize = 40.sp,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = textFont,
                 fontWeight = FontWeight.SemiBold,
                 textAlign = TextAlign.Center
             ),

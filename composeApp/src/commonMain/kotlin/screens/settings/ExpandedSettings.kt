@@ -7,6 +7,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import MainViewModel
+import org.jetbrains.compose.resources.Font
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.jbmono_reg
 
 // TODO setup layout for this
 @Composable
@@ -14,6 +17,8 @@ fun ExpandedSettings(
     viewModel: MainViewModel,
     modifier: Modifier = Modifier
 ) {
+    val textFont = FontFamily(Font(Res.font.jbmono_reg))
+
     SettingsScreenBase(
         settings = viewModel.settings.value,
         modifier = modifier,
@@ -52,7 +57,7 @@ fun ExpandedSettings(
             )
         },
         textStyle = TextStyle(
-            fontFamily = FontFamily.Monospace,
+            fontFamily = textFont,
             fontSize = 16.sp,
             fontWeight = FontWeight.Normal
         )

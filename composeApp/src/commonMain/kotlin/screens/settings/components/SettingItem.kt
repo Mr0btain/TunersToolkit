@@ -31,7 +31,6 @@ import tunerstoolkit.composeapp.generated.resources.arrow_upward
 /**
  * A Setting item to keep everything the same without repeating all the code
  */
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun SettingItem(
     modifier: Modifier = Modifier,

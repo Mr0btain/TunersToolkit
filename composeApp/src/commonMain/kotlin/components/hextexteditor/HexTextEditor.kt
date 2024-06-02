@@ -31,6 +31,7 @@ import components.hextexteditor.components.hexTextOnClick
 import components.hextexteditor.components.mapLineRectData
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.ExperimentalResourceApi
+import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import screens.editor.components.hexview.EditorOnValueChanged
 import screens.editor.components.hexview.EditorVisualTransformation
@@ -165,12 +166,13 @@ fun HexTextEditor2(
 ) {
     val testInput = input + input + input + input + input + input + input + input + input + input + input + input
     val textValue = remember { mutableStateOf(TextFieldValue(testInput)) }
+    val textFont = FontFamily(Font(Res.font.jbmono_reg))
 
     BasicTextField(
         value = textValue.value,
         textStyle = TextStyle(
             fontSize = 20.sp,
-            fontFamily = FontFamily.Monospace
+            fontFamily = textFont
         ),
         onValueChange = { result ->
             textValue.value = EditorOnValueChanged(result, textValue.value)
