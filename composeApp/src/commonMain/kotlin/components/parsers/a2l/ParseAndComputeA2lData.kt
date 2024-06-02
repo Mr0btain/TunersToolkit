@@ -27,18 +27,20 @@ fun parseAndComputeA2lData(
     var endOffset = 0UL
 
     val data = input.toAsciiString().split("\n")
-    val (a2lData, errors) = parseA2l(data)
+    val (a2lData, logData) = parseA2l(data)
 
     // Timed test
     testParseTime(data)
 
     val charResult = mutableListOf<MapDataValues>()
 
-    if (errors.isEmpty()) {
-        println("No Errors parsing A2l! =)")
+    if (logData.isEmpty()) {
+        viewModel.logger.addMessage(
+            message = "A2l file parsed succesfully!"
+        )
     } else {
         println("Errors while parsing A2l!")
-        errors.forEach {
+        logData.forEach {
             println(it)
         }
     }
@@ -104,7 +106,7 @@ fun parseAndComputeA2lData(
         }
     }
 
-    viewModel.logger.addAll(errors)
+    viewModel.logger.addAll(logData)
     viewModel.isLoading.value = false
 }
 

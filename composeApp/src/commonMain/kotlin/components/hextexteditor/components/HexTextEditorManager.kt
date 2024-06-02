@@ -4,7 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 
-class HexTextPositionHandler {
+class HexTextEditorManager {
     private val lineData = mutableMapOf<Int, LineData>()
     private var characterSizeData = HexCharacterData(Size.Zero, 0, 0)
 

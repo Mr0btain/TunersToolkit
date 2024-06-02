@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateListOf
 class Logger {
     private val logData = mutableStateListOf<LogDataEntry>()
 
+    // Add a message to the log
     fun addMessage(
         message: String = "",
         process: String = ""
@@ -15,8 +16,17 @@ class Logger {
                     process = process
                 )
             )
+
+        // Print to the log
+            println(
+                LogDataEntry(
+                    message = message,
+                    process = process
+                )
+            )
         }
 
+    // Add an error to the log
     fun addError(
         process: String,
         message: String,

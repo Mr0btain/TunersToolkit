@@ -2,11 +2,7 @@
 
 package components.hextexteditor
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -21,14 +17,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
-import components.hextexteditor.components.HexTextPositionHandler
+import components.hextexteditor.components.HexTextEditorManager
 import components.hextexteditor.components.getTextAlignmentLine
+import components.hextexteditor.components.hexTextOnClick
 import components.hextexteditor.components.mapLineRectData
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 
@@ -60,7 +55,7 @@ fun HexTextEditor(
     val cursorPosition = remember { mutableStateOf(Offset(0f,0f)) }
     val isCursorVisible = remember { mutableStateOf(false) }
     val isCursorDrawn = mutableStateOf(false)
-    val textPositionHandler = HexTextPositionHandler()
+    val manager = HexTextEditorManager()
 
     charactersToPull.forEach {
         characterPainters[it] = painterResource("svg/$it.xml")
@@ -74,11 +69,6 @@ fun HexTextEditor(
         }
     }
 
-    //println("Font size desired: ${textStyle.fontSize}")
-    //println("Font Scale as per density: $density")
-    //println("isCursorVisible: ${isCursorVisible.value}")
-    //println("Cursor Offset: ${cursorPosition.value}")
-
     BoxWithConstraints {
         // Calculate size to paint the text based on screen width, and density
         // using screen width this loosely gives us an auto resize text
@@ -87,9 +77,9 @@ fun HexTextEditor(
         val textAlignmentLine = getTextAlignmentLine(textWidth, digitsPerLine, bits, maxWidth.value)
 
         // Only run these when something changes with the character sizes
-        LaunchedEffect(key1 = textHeight, key2 = textWidth) {
+        LaunchedEffect(key1 = textHeight) {
             // Set character data in position handler
-            textPositionHandler.addCharacterData(
+            manager.addCharacterData(
                 characterSize = Size(width = textWidth, height = textHeight),
                 bits = bits,
                 charactersPerLine = digitsPerLine
@@ -103,52 +93,23 @@ fun HexTextEditor(
                 textAlignmentLine = textAlignmentLine,
                 digitsPerLine = digitsPerLine,
                 bits = bits,
-                textPositionHandler = textPositionHandler
+                textPositionHandler = manager
             )
         }
-
-        //println("Font Height Calc: $textHeight")
-        //println("Font width calc: $textWidth")
 
         Canvas(
             modifier = modifier
                 .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onTap = { offset ->
-                            //println("Pointer Offset: $offset")
-                            //println("X Start line: $textAlignmentLine")
-                            //println("Text right end: ${textAlignmentLine + (textWidth * digitsPerLine)}")
-
-                            val characterPos = textPositionHandler.getCharacterRectFromOffset(offset)
-                            val characterHalfPos = ((characterPos.right - characterPos.left) / 2) + characterPos.left
-
-                            //println("Char halfway point: $characterHalfPos")
-
-                            // Check whether we should position the cursor on the left or the right of the character
-                            // by checking its x position relative to the center of the character
-                            if (offset.x <= characterHalfPos) {
-                                cursorPosition.value = Offset(x = characterPos.left, y = characterPos.top)
-                            } else {
-                                cursorPosition.value = Offset(x = characterPos.right, y = characterPos.top)
-                            }
-
-                            // Check if we should display cursor if position is blank hide it
-                            if (cursorPosition.value.x == 0f && cursorPosition.value.y == 0f) {
-                                isCursorVisible.value = false
-                            } else {
-                                isCursorVisible.value = true
-                            }
-
-                        }
-                    )
-                }
+                .hexTextOnClick(
+                    manager = manager,
+                    isCursorVisible = isCursorVisible,
+                    cursorPosition = cursorPosition
+                )
         ) {
             var xPosition = textAlignmentLine
             var yPosition = 0f
 
             if (input.isNotEmpty()) {
-                println("Painting Text")
                 input.forEachIndexed { index, char ->
                     // Check if we need to start a new line or a spacer
                     if (index % digitsPerLine == 0 && index != 0) {
@@ -172,7 +133,7 @@ fun HexTextEditor(
                         }
                     }
 
-                    // advance the xPosition
+                    // Advance the xPosition
                     xPosition += textWidth
                 }
             }
