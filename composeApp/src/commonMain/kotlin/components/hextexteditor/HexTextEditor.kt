@@ -3,11 +3,16 @@
 package components.hextexteditor
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text2.BasicTextField2
+import androidx.compose.foundation.text2.input.InputTransformation
+import androidx.compose.foundation.text2.input.forEachChange
+import androidx.compose.foundation.text2.input.rememberTextFieldState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,6 +26,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
@@ -159,6 +165,7 @@ fun HexTextEditor(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HexTextEditor2(
     input: String,
@@ -167,24 +174,86 @@ fun HexTextEditor2(
     val testInput = input + input + input + input + input + input + input + input + input + input + input + input
     val textValue = remember { mutableStateOf(TextFieldValue(testInput)) }
     val textFont = FontFamily(Font(Res.font.jbmono_reg))
+    val textState = rememberTextFieldState(initialText = input)
 
-    BasicTextField(
-        value = textValue.value,
+    BasicTextField2(
+        state = textState,
         textStyle = TextStyle(
             fontSize = 20.sp,
             fontFamily = textFont
         ),
-        onValueChange = { result ->
-            textValue.value = EditorOnValueChanged(result, textValue.value)
-        },
-        visualTransformation = EditorVisualTransformation(8)
+        inputTransformation = { originalValue, valueWithChanges ->
+            valueWithChanges.changes.forEachChange { new, orig ->
+                println(orig)
+                println(new)
+
+                if (new.start == new.end) {
+                    valueWithChanges.revertAllChanges()
+                }
+            }
+
+            /*
+            when {
+                newLength > oldLength -> {
+                    when {
+                        valueWithChanges.selectionInChars.start <= oldLength -> {
+                            val input = valueWithChanges.changes.
+                        }
+
+                        newTextField.selection.start <= oldLength -> {
+                            val inputChar = newTextField.text[newTextField.selection.start - 1].uppercaseChar()
+
+                            when {
+                                inputChar.isDigit() || inputChar in setOf('A', 'B', 'C', 'D', 'E', 'F') -> {
+                                    TextFieldValue(
+                                        text = oldTextField.text.replaceRange(
+                                            newTextField.selection.start - 1,
+                                            newTextField.selection.end,
+                                            inputChar.toString()
+                                        ),
+                                        selection = newTextField.selection
+                                    )
+                                }
+
+                                else -> {
+                                    TextFieldValue(
+                                        text = oldTextField.text,
+                                        selection = TextRange(
+                                            newTextField.selection.start - 1,
+                                            newTextField.selection.end - 1
+                                        ),
+                                    )
+                                }
+                            }
+                        }
+
+                        else -> {
+                            TextFieldValue(
+                                text = oldTextField.text,
+                                selection = newTextField.selection
+                            )
+                        }
+                    }
+                }
+
+                newLength < oldLength -> {
+                    TextFieldValue(
+                        text = oldTextField.text.replaceRange(
+                            newTextField.selection.start,
+                            newTextField.selection.end + 1,
+                            "F"
+                        ),
+                        selection = newTextField.selection
+                    )
+                }
+
+                else -> {
+                    newTextField
+                }
+            }
+             */
+        }
     )
-
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-
-    }
 }
 
 @Composable
