@@ -4,18 +4,15 @@ package components.hextexteditor
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text2.BasicTextField2
-import androidx.compose.foundation.text2.input.InputTransformation
-import androidx.compose.foundation.text2.input.forEachChange
-import androidx.compose.foundation.text2.input.insert
 import androidx.compose.foundation.text2.input.rememberTextFieldState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -28,18 +25,14 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import components.hextexteditor.components.*
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.ExperimentalResourceApi
-import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
-import screens.editor.components.hexview.EditorOnValueChanged
-import screens.editor.components.hexview.EditorVisualTransformation
 import tunerstoolkit.composeapp.generated.resources.*
 
 /**
@@ -167,22 +160,50 @@ fun HexTextEditor(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HexTextEditor2(
+    modifier: Modifier,
     input: String,
-    textStyle: TextStyle
+    textStyle: TextStyle,
+    digitsPerLine: Int,
+    bits: Int
 ) {
-    val textFont = FontFamily(Font(Res.font.jbmono_reg))
-    val textState = rememberTextFieldState(initialText = input)
+    val text = input.formatHexStringForEditor(bits, digitsPerLine)
     val scrollState = rememberScrollState()
+    val textState = rememberTextFieldState(initialText = text)
+    val density = LocalDensity.current.density
 
-    BasicTextField2(
-        state = textState,
-        textStyle = TextStyle(
-            fontSize = 20.sp,
-            fontFamily = textFont
-        ),
-        inputTransformation = HexTextInputTransformation(),
-        scrollState = scrollState
-    )
+    // Use BoxWithConstraints so we can get the size of our container to properly set the font size.
+    // NOTE: you MUST specify an initial text size, don't rely on the default as it will be 0 and it WILL crash
+    BoxWithConstraints(
+        modifier = modifier.padding(4.dp).wrapContentSize()
+    ) {
+        val textSize = ((maxWidth / 440) * textStyle.fontSize.value * density).value.sp
+
+        Row(
+            horizontalArrangement = Arrangement.Center
+        ) {
+            // The Offset text box
+            Text(
+                modifier = Modifier.wrapContentWidth().scrollable(state = scrollState, orientation = Orientation.Vertical),
+                text = text.getOffsetsForHexEditor(digitsPerLine),
+                style = textStyle.copy(fontSize = textSize, textAlign = TextAlign.Center)
+            )
+
+            VerticalDivider(modifier = Modifier.padding(4.dp), thickness = 2.dp)
+
+            // The actual Hex editor
+            BasicTextField2(
+                modifier = Modifier,
+                state = textState,
+                textStyle = textStyle.copy(fontSize = textSize, textAlign = TextAlign.Center),
+                inputTransformation = HexTextInputTransformation(),
+                scrollState = scrollState
+            )
+
+            Spacer(Modifier.padding(2.dp))
+
+            // The ASCII representation/editor of the Hex
+        }
+    }
 }
 
 @Composable

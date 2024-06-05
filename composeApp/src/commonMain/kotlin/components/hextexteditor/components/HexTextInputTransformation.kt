@@ -14,9 +14,17 @@ class HexTextInputTransformation: InputTransformation {
                 (new.start == new.end) -> {
                     // Check length to make sure were not at 0, 0
                     if (originalValue.length > valueWithChanges.length) {
-                        // Insert 'F' and place cursor before it
-                        valueWithChanges.insert(new.end, "F")
-                        valueWithChanges.placeCursorBeforeCharAt(new.start)
+                        val digitDeleted = originalValue[new.start]
+
+                        // Check if the digit deleted is a space or a newline character as we don't want these deleted
+                        if (!digitDeleted.isLetterOrDigit()) {
+                            valueWithChanges.revertAllChanges()
+                            valueWithChanges.placeCursorBeforeCharAt(new.start)
+                        } else {
+                            // Insert 'F' and place cursor before it
+                            valueWithChanges.insert(new.end, "F")
+                            valueWithChanges.placeCursorBeforeCharAt(new.start)
+                        }
                     } else {
                         // Revert all changes
                         valueWithChanges.revertAllChanges()
@@ -24,19 +32,36 @@ class HexTextInputTransformation: InputTransformation {
                 }
 
                 (new.start < new.end) -> {
-                    // Get the input
+                    // Get the input and char at the old location
                     val inputChar = valueWithChanges.charAt(new.start)
+                    val oldCharInLocation = valueWithChanges.charAt(new.end)
 
-                    // Check if it's an allowed character
-                    if (inputChar.isDigit() || inputChar in allowedCharacters)  {
-                        // Revert changes, replace the character with the new one and move cursor after it
-                        valueWithChanges.revertAllChanges()
-                        valueWithChanges.replace(new.start, new.end, inputChar.toString().uppercase())
-                        valueWithChanges.placeCursorAfterCharAt(new.start)
+                    if (oldCharInLocation.isLetterOrDigit()) {
+                        // Check if it's an allowed character
+                        if (inputChar.isDigit() || inputChar in allowedCharacters)  {
+                            // Revert changes, replace the character with the new one and move cursor after it
+                            valueWithChanges.revertAllChanges()
+                            valueWithChanges.replace(new.start, new.end, inputChar.toString().uppercase())
+                            valueWithChanges.placeCursorAfterCharAt(new.start)
+                        } else {
+                            // Revert all changes
+                            valueWithChanges.revertAllChanges()
+                        }
                     } else {
-                        // Revert all changes
-                        valueWithChanges.revertAllChanges()
+                        if (inputChar.isDigit() || inputChar in allowedCharacters)  {
+                            // Revert changes, replace the character with the new one and move cursor after it
+                            valueWithChanges.revertAllChanges()
+                            valueWithChanges.replace(new.start + 1, new.end + 1, inputChar.toString().uppercase())
+                            valueWithChanges.placeCursorAfterCharAt(new.start + 1)
+                        } else {
+                            // Revert all changes
+                            valueWithChanges.revertAllChanges()
+                        }
                     }
+                }
+
+                else -> {
+                    println(valueWithChanges.changes)
                 }
             }
         }
