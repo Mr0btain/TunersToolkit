@@ -47,7 +47,6 @@ import tunerstoolkit.composeapp.generated.resources.*
  * @param color The color of the text. should be moved to textStyle
  */
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun HexTextEditor(
     modifier: Modifier,
@@ -190,7 +189,7 @@ fun HexTextEditor2(
 
             VerticalDivider(modifier = Modifier.padding(4.dp), thickness = 2.dp)
 
-            // The actual Hex editor
+            // The Hex editor box
             BasicTextField2(
                 modifier = Modifier,
                 state = textState,
@@ -199,7 +198,7 @@ fun HexTextEditor2(
                 scrollState = scrollState
             )
 
-            Spacer(Modifier.padding(2.dp))
+            VerticalDivider(modifier = Modifier.padding(4.dp), thickness = 2.dp)
 
             // The ASCII representation/editor of the Hex
         }
