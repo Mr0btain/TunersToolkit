@@ -1,5 +1,6 @@
 package screens.main
 
+import MainViewModel
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,7 +23,8 @@ import tunerstoolkit.composeapp.generated.resources.jbmono_reg
 
 @Composable
 fun ExpandedMain(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: MainViewModel
 ) {
     val textFont = FontFamily(Font(Res.font.jbmono_reg))
 
@@ -44,9 +46,8 @@ fun ExpandedMain(
 
         HexTextEditor(
             modifier = Modifier.align(Alignment.CenterHorizontally),
-            input = randomHexString(800),
-            digitsPerLine = 8,
-            bits = 2
+            input = randomHexString(400),
+            viewModel = viewModel
         )
     }
 }

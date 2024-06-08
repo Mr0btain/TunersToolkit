@@ -1,4 +1,6 @@
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.text2.input.TextFieldState
+import androidx.compose.foundation.text2.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -10,13 +12,15 @@ import androidx.compose.ui.unit.sp
 import components.datastorage.components.getSettings
 import components.datastorage.components.saveSettings
 import components.errorstuff.Logger
+import components.hextexteditor.components.*
 import components.maptextoverlay.classes.MapValuesSorted
 import components.parsers.a2l.classes.data.A2lData
 import components.parsers.hex.HexSegmentData
+import components.parsers.hex.asciiToHex
+import components.parsers.hex.hexToAscii
 import components.utilitytab.maplisttab.classes.MapDataContainer
 import components.utilitytab.projecttab.classes.ProjectInfo
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 import moe.tlaster.precompose.viewmodel.ViewModel
 import moe.tlaster.precompose.viewmodel.viewModelScope
@@ -25,16 +29,20 @@ import ui.theme.md_theme_light_error
 import ui.theme.md_theme_light_inverseSurface
 import ui.theme.md_theme_light_primary
 
+@OptIn(ExperimentalFoundationApi::class)
 @Suppress("PropertyName", "MemberVisibilityCanBePrivate")
 class MainViewModel() : ViewModel() {
     val appBarTitle = mutableStateOf("Tuners Toolkit")
     val a2lData = mutableStateOf(A2lData())
+    val hexEditorData = TextFieldState()
+    val asciiActualEditorData = mutableStateOf("")
+    val asciiEditorData = TextFieldState()
     val hexDataSegments = mutableStateMapOf<String, HexSegmentData>()
     val mapData = mutableStateOf(MapValuesSorted())
     val selectedHexSegment = mutableStateOf("")
     val isLoading = mutableStateOf(false)
     val projectInfo = mutableStateOf(ProjectInfo())
-    val bitsPer = mutableIntStateOf(2)
+    val bitEncoding = mutableStateOf(BitEncoding.EIGHT)
     val digitsPerLine = mutableIntStateOf(8)
     val textSize = mutableStateOf(18.sp)
     val screenSize = mutableStateOf(IntSize(0,0))
@@ -57,14 +65,68 @@ class MainViewModel() : ViewModel() {
     val windowSizeClass = mutableStateOf(WindowWidthSizeClass.Compact)
     val logger = Logger()
 
-    /*
-    font("JetBrains", "jbmono_reg", FontWeight.Normal, FontStyle.Normal),
-        font("JetBrains", "jbmono_med", FontWeight.Medium, FontStyle.Normal),
-        font("JetBrains", "jbmono_bold", FontWeight.Bold, FontStyle.Normal),
-        font("JetBrains", "jbmono_semibold", FontWeight.SemiBold, FontStyle.Normal),
-        font("JetBrains", "jbmono_extrabold", FontWeight.ExtraBold, FontStyle.Normal),
-        font("JetBrains", "jetbrainsmono_italic", FontWeight.Normal, FontStyle.Italic)
+    fun setAsciiInitialText(text: String) {
+        // Set the visual representation that the user sees
+        asciiEditorData.setTextAndPlaceCursorAtEnd(
+            text.convertHexToAscii().formatForAsciiEditor(digitsPerLine.intValue)
+        )
+
+        // Set the actual representation that we need to work with
+        asciiActualEditorData.value = text.hexToAscii()
+    }
+
+    fun setHexEditorInitialText(text: String) {
+        // Set the Hex data
+        hexEditorData.setTextAndPlaceCursorAtEnd(
+            text.formatHexStringForEditor(bitEncoding.value, digitsPerLine.intValue)
+        )
+    }
+
+    /**
+     * Way to handle updating Hex editor from the Ascii editor, or anywhere we may need to
      */
+
+    fun updateHexEditorText(
+        text: String,
+        range: IntRange,
+        asciiRange: Boolean
+    ) {
+        // Check if its from the Ascii editor, as every digit takes up 2 digits in hex
+        if (asciiRange) {
+            println("Updating Hex data from Ascii")
+            val start = asciiPositionToHexPosition(range.first)
+            val hex = text.asciiToHex()
+
+            hexEditorData.edit {
+                replace(start, start + hex.length, hex)
+            }
+        } else {
+            hexEditorData.edit { replace(range.first, range.first + text.length, text) }
+        }
+    }
+
+    /**
+     * Way to handle updating Ascii editor from the Hex editor, or anywhere we may need to
+     */
+
+    fun updateAsciiEditorText(
+        text: String,
+        range: IntRange,
+        hexRange: Boolean
+    ) {
+        if (hexRange) {
+            val start = range.first / 2
+            val ascii = text.hexToAscii()
+
+            asciiEditorData.text.replaceRange(
+                startIndex = start,
+                endIndex = start + ascii.length,
+                replacement = ascii
+            )
+        } else {
+            asciiEditorData.text.replaceRange(range, text)
+        }
+    }
 
     fun updateSettings(input: SettingsData) {
         settings.value = input
@@ -72,4 +134,16 @@ class MainViewModel() : ViewModel() {
     }
 
     fun toolbarNameReset() { appBarTitle.value = "Tuners Toolkit" }
+
+    private fun asciiPositionToHexPosition(position: Int): Int {
+        val positionWithoutNewLines = asciiEditorData.text.substring(0, position).replace("\n", "").length * 2
+        val spacesProceeding = positionWithoutNewLines / bitEncoding.value.number()
+        val newLinesProceeding = asciiEditorData.text.subSequence(0, position).count { it == '\n' }
+
+        println("PositionWithoutLines: $positionWithoutNewLines")
+        println("Spaces: $spacesProceeding")
+        println("newLines: $newLinesProceeding")
+
+        return positionWithoutNewLines + spacesProceeding + newLinesProceeding
+    }
 }

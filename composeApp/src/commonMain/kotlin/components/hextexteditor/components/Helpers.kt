@@ -5,14 +5,14 @@ package components.hextexteditor.components
  */
 
 fun String.formatHexStringForEditor(
-    bits: Int,
+    bitEncoding: BitEncoding,
     digitsPerLine: Int
 ): String {
-    val actualHexCharsPerLine = bits * digitsPerLine
+    val actualHexCharsPerLine = bitEncoding.number() * digitsPerLine
     val result = StringBuilder()
 
     for (i in this.indices) {
-        if (i % bits == 0 && i != 0 && i % actualHexCharsPerLine != 0) {
+        if (i % bitEncoding.number() == 0 && i != 0 && i % actualHexCharsPerLine != 0) {
             result.append(' ')
         }
         if (i % (actualHexCharsPerLine) == 0 && i != 0) {
@@ -29,14 +29,15 @@ fun String.formatHexStringForEditor(
  */
 
 @OptIn(ExperimentalStdlibApi::class)
-fun String.getOffsetsFromHex(digitsPer: Int, bits: Int): String {
-    val lines = this.length / (digitsPer * bits) // split the input string into lines
+fun String.getOffsetsFromHex(digitsPer: Int, bitEncoding: BitEncoding): String {
+    // Get the number of lines
+    val lines = this.length / (digitsPer * bitEncoding.number())
     val byteLocations = mutableListOf<String>() // create an empty list to store byte locations
     var offset = 0 // initialize the offset to 0
 
-    for (line in 0..lines) {
+    for (line in 0..lines + 1) {
         byteLocations.add(offset.toHexString(HexFormat.UpperCase).removeRange(0, 2)) //  String.format("%04X", offset) add the current offset as a string to the list
-        offset += (digitsPer * bits) // increment the offset by half the length of the line
+        offset += (digitsPer * bitEncoding.number()) // increment the offset by half the length of the line
         // (assuming each byte is represented by two characters)
     }
 
@@ -45,12 +46,13 @@ fun String.getOffsetsFromHex(digitsPer: Int, bits: Int): String {
 }
 
 /**
- *  Formats the Hexadecimal data into its Ascii representation, replacing non Ascii characters with a '.'
+ *  Formats the Hexadecimal data into its Ascii representation
  */
 
-fun String.formatHexToAscii(digitsPerLine: Int): String {
+fun String.convertHexToAscii(): String {
     val stringBuilder = StringBuilder()
     var i = 0
+
     try {
         while (i < this.length && this.length >= i+2) {
             val hex = this.substring(i, i + 2)
@@ -63,7 +65,7 @@ fun String.formatHexToAscii(digitsPerLine: Int): String {
         e.printStackTrace()
     }
 
-    return stringBuilder.toString().formatForAsciiEditor(digitsPerLine)
+    return stringBuilder.toString()
 }
 
 /**
@@ -74,9 +76,25 @@ fun String.formatForAsciiEditor(digitsPerLine: Int): String {
     val outputBuilder = StringBuilder()
 
     for ((i, c) in this.withIndex()) {
+        if (i % digitsPerLine == 0 && i < this.length && i != 0) {
+            outputBuilder.append('\n')
+        }
+
         val isAsciiLetterOrDigit = c.isLetterOrDigit() && c.code < 128
         outputBuilder.append(if (isAsciiLetterOrDigit) c else '.')
+    }
 
+    return outputBuilder.toString()
+}
+
+fun String.addLineBreaksForAsciiEditor(digitsPerLine: Int): String {
+    val outputBuilder = StringBuilder()
+
+    for ((i, c) in this.withIndex()) {
+        // Append the character
+        outputBuilder.append(c)
+
+        // Add line break if were at the end of the line
         if ((i + 1) % digitsPerLine == 0 && i < this.length - 1) {
             outputBuilder.append('\n')
         }

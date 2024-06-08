@@ -29,7 +29,7 @@ fun NavigationManager(
         ) {
             AdaptiveScreen(
                 compactContent = { CompactMain() },
-                expandedContent = { ExpandedMain() }
+                expandedContent = { ExpandedMain(viewModel = viewModel) }
             )
         }
 
