@@ -16,13 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -126,7 +120,7 @@ fun <T> LargeDropdownMenu(
                             }
 
                             if (index < items.lastIndex) {
-                                Divider(modifier = Modifier.padding(horizontal = 16.dp))
+                                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                             }
                         }
                     }

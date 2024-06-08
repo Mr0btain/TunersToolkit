@@ -8,7 +8,7 @@ typealias Stack<T> = ArrayDeque<T>
  * Pushes item to [Stack]
  * @param element Item to be pushed
  */
-inline fun <T> Stack<T>.push(element: T) = addLast(element)
+fun <T> Stack<T>.push(element: T) = addLast(element)
 
 /**
  * Pops (removes and return) last item from [Stack]

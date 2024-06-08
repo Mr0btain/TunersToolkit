@@ -14,7 +14,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import components.hextexteditor.HexTextEditor2
+import components.hextexteditor.HexTextEditor
+import components.testing.randomHexString
 import org.jetbrains.compose.resources.Font
 import tunerstoolkit.composeapp.generated.resources.Res
 import tunerstoolkit.composeapp.generated.resources.jbmono_reg
@@ -41,15 +42,9 @@ fun ExpandedMain(
 
         Spacer(modifier = Modifier.padding(4.dp))
 
-        HexTextEditor2(
+        HexTextEditor(
             modifier = Modifier.align(Alignment.CenterHorizontally),
-            input = "010101010101010202020202020202030303030303030304040404040404040505050505050060606060606060606007070707070707" +
-                    "0707008080808080808080808080808009090909090909090909001010101010101010101010202020202020202020303030303030303" +
-                    "04040404040405050505050505006060606060606070707070707070708080808080800909090090909090909090",
-            textStyle = TextStyle(
-                fontFamily = FontFamily(Font(Res.font.jbmono_reg)),
-                fontSize = 14.sp
-            ),
+            input = randomHexString(800),
             digitsPerLine = 8,
             bits = 2
         )

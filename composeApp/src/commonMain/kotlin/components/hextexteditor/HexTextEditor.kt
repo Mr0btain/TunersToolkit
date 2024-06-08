@@ -2,36 +2,23 @@
 
 package components.hextexteditor
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text2.BasicTextField2
 import androidx.compose.foundation.text2.input.rememberTextFieldState
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import components.hextexteditor.components.*
-import kotlinx.coroutines.delay
-import org.jetbrains.compose.resources.ExperimentalResourceApi
+import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import tunerstoolkit.composeapp.generated.resources.*
 
@@ -43,151 +30,48 @@ import tunerstoolkit.composeapp.generated.resources.*
  * @param input The input to display
  * @param bits The number of hex digits we should display, ex 2 4 6
  * @param digitsPerLine The max number of digits per line
- * @param textStyle How the text should be styled
- * @param color The color of the text. should be moved to textStyle
+ * @param textStyle How the text should be styled, if none requested defaults will be used
  */
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HexTextEditor(
     modifier: Modifier,
     input: String,
-    bits: Int,
-    digitsPerLine: Int,
-    textStyle: TextStyle,
-    color: Color = MaterialTheme.colorScheme.onBackground
-) {
-    val characterPainters = remember { mutableMapOf<Char, Painter>() }
-    val density = LocalDensity.current.density
-    val cursorPosition = remember { mutableStateOf(Offset(0f,0f)) }
-    val isCursorVisible = remember { mutableStateOf(false) }
-    val isCursorDrawn = mutableStateOf(false)
-    val manager = HexTextEditorManager()
-
-    getHexCharacterRes().forEach { (c, painter) ->
-        characterPainters[c] = painter
-    }
-
-    // If cursor is to be shown, this logic makes it blink
-    LaunchedEffect(isCursorVisible.value) {
-        while (isCursorVisible.value) {
-            isCursorDrawn.value = !isCursorDrawn.value
-            delay(1000)
-        }
-    }
-
-    BoxWithConstraints {
-        // Calculate size to paint the text based on screen width, and density
-        // using screen width this loosely gives us an auto resize text
-        val textHeight = ((maxWidth / 440) * textStyle.fontSize.value * density).value
-        val textWidth = (textHeight / 2.375).toFloat()
-        val textAlignmentLine = getTextAlignmentLine(textWidth, digitsPerLine, bits, maxWidth.value)
-
-        // Only run these when something changes with the character sizes
-        LaunchedEffect(key1 = textHeight) {
-            // Set character data in position handler
-            manager.addCharacterData(
-                characterSize = Size(width = textWidth, height = textHeight),
-                bits = bits,
-                charactersPerLine = digitsPerLine
-            )
-
-            // Map out line rect data
-            mapLineRectData(
-                input = input,
-                textWidth = textWidth,
-                textHeight = textHeight,
-                textAlignmentLine = textAlignmentLine,
-                digitsPerLine = digitsPerLine,
-                bits = bits,
-                textPositionHandler = manager
-            )
-        }
-
-        Canvas(
-            modifier = modifier
-                .fillMaxSize()
-                .hexTextOnClick(
-                    manager = manager,
-                    isCursorVisible = isCursorVisible,
-                    cursorPosition = cursorPosition
-                )
-        ) {
-            var xPosition = textAlignmentLine
-            var yPosition = 0f
-
-            if (input.isNotEmpty()) {
-                input.forEachIndexed { index, char ->
-                    // Check if we need to start a new line or a spacer
-                    if (index % digitsPerLine == 0 && index != 0) {
-                        xPosition = textAlignmentLine
-                        yPosition += (textHeight + 2)
-                    } else if (index % bits == 0 && xPosition != textAlignmentLine) {
-                        xPosition += textWidth
-                    }
-
-                    // Paint the character on screen at the position
-                    translate(top = yPosition, left = xPosition) {
-                        val objectToPaint = characterPainters[char.lowercaseChar()]
-
-                        if (objectToPaint != null) {
-                            with(objectToPaint) {
-                                draw(
-                                    size = Size(width = textWidth, height = textHeight),
-                                    colorFilter = ColorFilter.tint(color = color)
-                                )
-                            }
-                        }
-                    }
-
-                    // Advance the xPosition
-                    xPosition += textWidth
-                }
-            }
-
-            if (isCursorDrawn.value) {
-                drawLine(
-                    color = Color.Red,
-                    start = Offset(x = cursorPosition.value.x, y = cursorPosition.value.y + 3f),
-                    end =  Offset(x = cursorPosition.value.x, y = cursorPosition.value.y + textHeight - 3f),
-                    strokeWidth = 2f
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun HexTextEditor2(
-    modifier: Modifier,
-    input: String,
-    textStyle: TextStyle,
+    textStyle: TextStyle = TextStyle(
+        fontFamily = FontFamily(Font(Res.font.jbmono_reg)),
+        fontSize = 12.sp
+    ),
     digitsPerLine: Int,
     bits: Int
 ) {
     val text = input.formatHexStringForEditor(bits, digitsPerLine)
     val scrollState = rememberScrollState()
     val textState = rememberTextFieldState(initialText = text)
+    val asciiTextState = rememberTextFieldState(initialText = input.formatHexToAscii(digitsPerLine))
+    val offsetTextState = rememberTextFieldState(initialText = input.getOffsetsFromHex(digitsPerLine, bits))
     val density = LocalDensity.current.density
 
     // Use BoxWithConstraints so we can get the size of our container to properly set the font size.
-    // NOTE: you MUST specify an initial text size, don't rely on the default as it will be 0 and it WILL crash
+    // NOTE: you MUST specify an initial text size in textStyle, don't rely on the default as it will be 0 and it WILL crash
     BoxWithConstraints(
-        modifier = modifier.padding(4.dp).wrapContentSize()
+        modifier = modifier.wrapContentSize()
     ) {
         val textSize = ((maxWidth / 440) * textStyle.fontSize.value * density).value.sp
 
-        Row(
-            horizontalArrangement = Arrangement.Center
-        ) {
+        Row {
             // The Offset text box
-            Text(
-                modifier = Modifier.wrapContentWidth().scrollable(state = scrollState, orientation = Orientation.Vertical),
-                text = text.getOffsetsForHexEditor(digitsPerLine),
-                style = textStyle.copy(fontSize = textSize, textAlign = TextAlign.Center)
+            BasicTextField2(
+                modifier = Modifier,
+                state = offsetTextState,
+                textStyle = textStyle.copy(fontSize = textSize, textAlign = TextAlign.Right),
+                scrollState = scrollState,
+                readOnly = true
             )
 
-            VerticalDivider(modifier = Modifier.padding(4.dp), thickness = 2.dp)
+            Spacer(modifier = Modifier.padding(6.dp))
+            VerticalDivider(modifier = Modifier, thickness = 2.dp)
+            Spacer(modifier = Modifier.padding(6.dp))
 
             // The Hex editor box
             BasicTextField2(
@@ -198,51 +82,16 @@ fun HexTextEditor2(
                 scrollState = scrollState
             )
 
-            VerticalDivider(modifier = Modifier.padding(4.dp), thickness = 2.dp)
+            Spacer(modifier = Modifier.padding(6.dp))
+            VerticalDivider(modifier = Modifier, thickness = 2.dp)
 
             // The ASCII representation/editor of the Hex
+            BasicTextField2(
+                modifier = Modifier,
+                state = asciiTextState,
+                textStyle = textStyle.copy(fontSize = textSize, textAlign = TextAlign.Center),
+                scrollState = scrollState
+            )
         }
     }
-}
-
-@Composable
-private fun getHexCharacterRes(): Map<Char, Painter> {
-    return mapOf(
-        Pair('0', painterResource(Res.drawable._0)),
-        Pair('1', painterResource(Res.drawable._1)),
-        Pair('2', painterResource(Res.drawable._2)),
-        Pair('3', painterResource(Res.drawable._3)),
-        Pair('4', painterResource(Res.drawable._4)),
-        Pair('5', painterResource(Res.drawable._5)),
-        Pair('6', painterResource(Res.drawable._6)),
-        Pair('7', painterResource(Res.drawable._7)),
-        Pair('8', painterResource(Res.drawable._8)),
-        Pair('9', painterResource(Res.drawable._9)),
-        Pair('a', painterResource(Res.drawable.a)),
-        Pair('b', painterResource(Res.drawable.b)),
-        Pair('c', painterResource(Res.drawable.c)),
-        Pair('d', painterResource(Res.drawable.d)),
-        Pair('e', painterResource(Res.drawable.e)),
-        Pair('f', painterResource(Res.drawable.f)),
-        Pair('g', painterResource(Res.drawable.g)),
-        Pair('h', painterResource(Res.drawable.h)),
-        Pair('i', painterResource(Res.drawable.i)),
-        Pair('j', painterResource(Res.drawable.j)),
-        Pair('k', painterResource(Res.drawable.k)),
-        Pair('l', painterResource(Res.drawable.l)),
-        Pair('m', painterResource(Res.drawable.m)),
-        Pair('n', painterResource(Res.drawable.n)),
-        Pair('o', painterResource(Res.drawable.o)),
-        Pair('p', painterResource(Res.drawable.p)),
-        Pair('q', painterResource(Res.drawable.q)),
-        Pair('r', painterResource(Res.drawable.r)),
-        Pair('s', painterResource(Res.drawable.s)),
-        Pair('t', painterResource(Res.drawable.t)),
-        Pair('u', painterResource(Res.drawable.u)),
-        Pair('v', painterResource(Res.drawable.v)),
-        Pair('w', painterResource(Res.drawable.w)),
-        Pair('x', painterResource(Res.drawable.x)),
-        Pair('y', painterResource(Res.drawable.y)),
-        Pair('z', painterResource(Res.drawable.z))
-    )
 }

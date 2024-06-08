@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
@@ -100,7 +102,7 @@ fun MapValuesToGrid(
 
         val rowGridLine = @Composable {
             repeat(rowCount + 2) {
-                Divider(
+                VerticalDivider(
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     thickness = 1.dp,
                     modifier = Modifier.fillMaxWidth()
@@ -110,7 +112,7 @@ fun MapValuesToGrid(
 
         val columLine = @Composable {
             repeat(columnCount + 1) {
-                Divider(
+                HorizontalDivider(
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     modifier = Modifier
                         .fillMaxHeight()

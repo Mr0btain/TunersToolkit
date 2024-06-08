@@ -3,6 +3,13 @@ package components.hextexteditor.components
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.text2.input.*
 
+/**
+ * The Input Transformation for the Hex Editor TextField that takes the users typed input and
+ * depending on what character or action it was, will overwrite the char in its place with either
+ * the char or F if backspace is pressed. Also routes actions around our spaces and line breaks to
+ * preserve the positions.
+ */
+
 @OptIn(ExperimentalFoundationApi::class)
 class HexTextInputTransformation: InputTransformation {
     private val allowedCharacters = setOf('A', 'B', 'C', 'D', 'E', 'F', 'a', 'b', 'c', 'd', 'e', 'f')

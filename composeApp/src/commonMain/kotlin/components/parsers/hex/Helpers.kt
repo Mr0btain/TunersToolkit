@@ -37,7 +37,7 @@ fun String.asciiToHex(): String {
     val result = StringBuilder(this.length * 2)
 
     for (char in this) {
-        val asciiValue = char.toInt()
+        val asciiValue = char.code
         val firstHexDigit = hexChars[asciiValue ushr 4]
         val secondHexDigit = hexChars[asciiValue and 0x0F]
         result.append(firstHexDigit)
@@ -52,19 +52,6 @@ fun String.asciiToHex(): String {
     }
     return stringBuilder.toString()
      */
-}
-
-fun randomHexString(numDigits: Int): String {
-    val hexChars = "0123456789ABCDEF"
-    val random = Random
-    val sb = StringBuilder()
-
-    repeat(numDigits) {
-        val hexDigit = hexChars[random.nextInt(16)]
-        sb.append(hexDigit)
-    }
-
-    return sb.toString()
 }
 
 @OptIn(ExperimentalStdlibApi::class)

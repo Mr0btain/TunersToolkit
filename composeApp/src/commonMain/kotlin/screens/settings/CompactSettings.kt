@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import MainViewModel
+import androidx.compose.material3.HorizontalDivider
 import screens.settings.classes.SettingsData
 import screens.settings.components.SettingItem
 import screens.settings.components.SettingType
@@ -134,7 +135,7 @@ fun SettingsScreenBase(
                 onCheckChange = onHidePagerChange
             )
 
-            Divider(modifier = Modifier.padding(4.dp), thickness = 1.dp)
+            HorizontalDivider(modifier = Modifier.padding(4.dp), thickness = 1.dp)
 
             Text(
                 text = "Hex",
