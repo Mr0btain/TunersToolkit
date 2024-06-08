@@ -6,8 +6,6 @@ import MainViewModel
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text2.BasicTextField2
-import androidx.compose.foundation.text2.input.*
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,11 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import components.hextexteditor.components.*
-import components.parsers.hex.hexToAscii
 import org.jetbrains.compose.resources.Font
 import tunerstoolkit.composeapp.generated.resources.*
 
@@ -32,9 +28,8 @@ import tunerstoolkit.composeapp.generated.resources.*
  * @param viewModel The view model where the data is hoisted
  */
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun HexTextEditor(
+fun HexEditor(
     modifier: Modifier,
     input: String,
     textStyle: TextStyle = TextStyle(
@@ -75,11 +70,9 @@ fun HexTextEditor(
             Spacer(modifier = Modifier.padding(6.dp))
 
             // The Hex editor box
-            BasicTextField2(
-                modifier = Modifier,
-                state = viewModel.hexEditorData,
-                textStyle = textStyle.copy(fontSize = textSize, textAlign = TextAlign.Center),
-                inputTransformation = HexTextInputTransformation(),
+            HexTextEditor(
+                viewModel = viewModel,
+                textStyle = textStyle.copy(fontSize = textSize),
                 scrollState = scrollState
             )
 

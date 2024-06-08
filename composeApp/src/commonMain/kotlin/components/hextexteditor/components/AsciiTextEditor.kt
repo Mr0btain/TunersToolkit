@@ -27,8 +27,6 @@ fun AsciiTextEditor(
         scrollState = scrollState,
         inputTransformation = { originalValue, valueWithChanges ->
             valueWithChanges.changes.forEachChange { new, orig ->
-                val digitInserted = valueWithChanges.charAt(new.start)
-
                 when {
                     // Backspace
                     new.start == new.end -> {
@@ -63,12 +61,14 @@ fun AsciiTextEditor(
                     }
 
                     // Character input
-                    (new.start < new.end) -> {
+                    (new.start < new.end && new.start != originalValue.length) -> {
                         val inputChar = valueWithChanges.charAt(new.start)
                         val oldCharInLocation = valueWithChanges.charAt(new.end)
 
                         // Make sure were not hitting a newline char
                         if (oldCharInLocation != '\n') {
+                            val digitInserted = valueWithChanges.charAt(new.start)
+
                             // If it's a letter or digit, straight up add it
                             if (digitInserted.isLetterOrDigit() && digitInserted.code < 128) {
                                 val actualAsciiRange = new.start - (new.start / viewModel.digitsPerLine.intValue)
@@ -123,6 +123,8 @@ fun AsciiTextEditor(
                             valueWithChanges.placeCursorAfterCharAt(new.start + 1)
                         }
                     }
+
+                    else -> { valueWithChanges.revertAllChanges() }
                 }
             }
         }

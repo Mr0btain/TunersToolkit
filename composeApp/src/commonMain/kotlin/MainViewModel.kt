@@ -93,7 +93,6 @@ class MainViewModel() : ViewModel() {
     ) {
         // Check if its from the Ascii editor, as every digit takes up 2 digits in hex
         if (asciiRange) {
-            println("Updating Hex data from Ascii")
             val start = asciiPositionToHexPosition(range.first)
             val hex = text.asciiToHex()
 
@@ -115,16 +114,16 @@ class MainViewModel() : ViewModel() {
         hexRange: Boolean
     ) {
         if (hexRange) {
-            val start = range.first / 2
+            val (actualStart, editorStart) = hexPositionToAsciiPosition(range.first)
             val ascii = text.hexToAscii()
 
-            asciiEditorData.text.replaceRange(
-                startIndex = start,
-                endIndex = start + ascii.length,
-                replacement = ascii
-            )
+            asciiEditorData.edit { replace(editorStart, editorStart + 1, getAsciiEditorCharacters(ascii)) }
+            asciiActualEditorData.value.replaceRange(actualStart, actualStart + 1, ascii)
         } else {
-            asciiEditorData.text.replaceRange(range, text)
+            val newlineCharCount = asciiEditorData.text.substring(0, range.first).count { it == '\n' }
+
+            asciiEditorData.edit { replace(range.first, range.last, getAsciiEditorCharacters(text)) }
+            asciiActualEditorData.value.replaceRange(range.first - newlineCharCount, range.last - newlineCharCount, text)
         }
     }
 
@@ -137,13 +136,30 @@ class MainViewModel() : ViewModel() {
 
     private fun asciiPositionToHexPosition(position: Int): Int {
         val positionWithoutNewLines = asciiEditorData.text.substring(0, position).replace("\n", "").length * 2
-        val spacesProceeding = positionWithoutNewLines / bitEncoding.value.number()
         val newLinesProceeding = asciiEditorData.text.subSequence(0, position).count { it == '\n' }
-
-        println("PositionWithoutLines: $positionWithoutNewLines")
-        println("Spaces: $spacesProceeding")
-        println("newLines: $newLinesProceeding")
+        val spacesProceeding = positionWithoutNewLines / bitEncoding.value.number() - newLinesProceeding
 
         return positionWithoutNewLines + spacesProceeding + newLinesProceeding
+    }
+
+    private fun hexPositionToAsciiPosition(position: Int): Pair<Int, Int> {
+        val newLineChars = hexEditorData.text.substring(0, position).count { it == '\n' }
+        val actualPos = hexEditorData.text.substring(0, position)
+            .replace(" ", "")
+            .replace("\n", "").length / bitEncoding.value.number()
+
+        return Pair(actualPos, actualPos + newLineChars)
+    }
+
+    private fun getAsciiEditorCharacters(input: String): String {
+        val builder = StringBuilder()
+
+        for (char in input) {
+            if (char.isLetterOrDigit() && char.code < 128) {
+                builder.append(char)
+            } else builder.append('.')
+        }
+
+        return builder.toString()
     }
 }

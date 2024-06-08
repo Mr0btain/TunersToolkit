@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import components.hextexteditor.HexTextEditor
+import components.hextexteditor.HexEditor
 import components.testing.randomHexString
 import org.jetbrains.compose.resources.Font
 import tunerstoolkit.composeapp.generated.resources.Res
@@ -44,7 +44,7 @@ fun ExpandedMain(
 
         Spacer(modifier = Modifier.padding(4.dp))
 
-        HexTextEditor(
+        HexEditor(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             input = randomHexString(400),
             viewModel = viewModel
