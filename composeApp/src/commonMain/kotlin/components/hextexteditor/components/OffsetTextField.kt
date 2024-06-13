@@ -24,7 +24,7 @@ fun OffsetTextField(
     BasicTextField2(
         modifier = Modifier,
         state = offsetTextState,
-        textStyle = textStyle.copy(fontSize = viewModel.textSize.value, textAlign = TextAlign.Right),
+        textStyle = textStyle.copy(textAlign = TextAlign.Right),
         scrollState = scrollState,
         readOnly = true
     )

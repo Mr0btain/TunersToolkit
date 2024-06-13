@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
@@ -40,13 +41,33 @@ fun HexEditor(
 ) {
     val scrollState = rememberScrollState()
     val density = LocalDensity.current.density
+    val currentInput = mutableStateOf("")
+    val lineCount = 8000 / viewModel.digitsPerLine.intValue
+    var scrollPerLine = 0
 
-    LaunchedEffect(input) {
+    LaunchedEffect(Unit) {
+        // Get a section of the data to start with
+        currentInput.value = input.substring(0, 8000)
+    }
+
+    LaunchedEffect(scrollState.value) {
+        println("Scroll Value: ${scrollState.value}")
+        println("Max Value: ${scrollState.maxValue}")
+        println("Line Count: $lineCount")
+        println("Scroll Per Line: ${scrollState.maxValue / lineCount}")
+
+        if (scrollState.value > scrollState.maxValue - ((scrollState.maxValue / lineCount) * 60)) {
+            println("Updated Hex Values!!!!!!!!!!!")
+            currentInput.value = input.substring(6000, 14000)
+        }
+    }
+
+    LaunchedEffect(currentInput.value) {
         // Set Hex editor text in the hoisted state
-        viewModel.setHexEditorInitialText(input)
+        viewModel.setHexEditorInitialText(currentInput.value)
 
         // Set ascii editor text in the hoisted state
-        viewModel.setAsciiInitialText(input)
+        viewModel.setAsciiInitialText(currentInput.value)
     }
 
     // Use BoxWithConstraints so we can get the size of our container to properly set the font size.
