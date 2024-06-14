@@ -65,6 +65,9 @@ class MainViewModel() : ViewModel() {
     val windowSizeClass = mutableStateOf(WindowWidthSizeClass.Compact)
     val logger = Logger()
 
+    // TODO: Remove these test options
+    val show07kTest = mutableStateOf(false)
+
     fun setAsciiInitialText(text: String) {
         // Set the visual representation that the user sees
         asciiEditorData.setTextAndPlaceCursorAtEnd(

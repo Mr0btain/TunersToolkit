@@ -16,8 +16,6 @@ actual class ProjectFilesManager actual constructor() {
         File("${directoryResolver.getUserDataDir("TunersToolkit", false)}/projects")
 
     actual fun getProjectList(): List<String> {
-        println("Directory Resolver:")
-        println(directoryResolver.getUserDataDir("", false))
         return projectDirectory.list()?.toList() ?: listOf()
     }
 

@@ -1,6 +1,5 @@
 package components.calibrationdata.classes
 
-import androidx.compose.ui.graphics.Path
 import components.parsers.a2l.classes.enums.DataType
 import kotlinx.serialization.Serializable
 
@@ -15,7 +14,6 @@ data class AxisDataValues(
     val format: String = "",
     val upperLimit: Double = Double.NaN,
     val lowerLimit: Double = Double.NaN,
-    val overlayPath: Path = Path(),
     val unit: String = ""
 ) {
     fun changeAxisValue(input: String, axis: AxisDataType, position: Int) {

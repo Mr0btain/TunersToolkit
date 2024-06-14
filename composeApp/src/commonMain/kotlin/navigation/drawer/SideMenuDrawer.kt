@@ -1,3 +1,5 @@
+@file:Suppress("FunctionName")
+
 package navigation.drawer
 
 import androidx.compose.animation.core.tween
@@ -36,13 +38,13 @@ import screens.dialog.ImportDialog
 import screens.dialog.NewProjectDialog
 import screens.dialog.OpenProjectDialog
 import MainViewModel
+import components.testing.Open07kTestProject
 import tunerstoolkit.composeapp.generated.resources.Res
 import tunerstoolkit.composeapp.generated.resources.assessment
 import tunerstoolkit.composeapp.generated.resources.create
 import tunerstoolkit.composeapp.generated.resources.source
 import ui.theme.TunerToolkitTheme
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun SideMenuDrawer(
     viewModel: MainViewModel,
@@ -68,6 +70,7 @@ fun SideMenuDrawer(
         )
     )
     val fileSubItems = listOf(
+        // New Version Tab
         SideMenuDrawerItemChildren(
             label = "New Version",
             onClick = {
@@ -75,6 +78,8 @@ fun SideMenuDrawer(
                 viewModel.showNewVersionDialog.value = true
             }
         ),
+
+        // Open Version Tab Should only be shown if a project is currently open?
         SideMenuDrawerItemChildren(
             label = "Open Version",
             onClick = {
@@ -82,6 +87,8 @@ fun SideMenuDrawer(
                 viewModel.showOpenVersionDialog.value = true
             }
         ),
+
+        // Open Project tab
         SideMenuDrawerItemChildren(
             label = "Open Project",
             onClick = {
@@ -89,6 +96,8 @@ fun SideMenuDrawer(
                 viewModel.showOpenProjectDialog.value = true
             }
         ),
+
+        // Start a new project
         SideMenuDrawerItemChildren(
             label = "New Project",
             onClick = {
@@ -96,13 +105,27 @@ fun SideMenuDrawer(
                 viewModel.showNewProjectDialog.value = true
             }
         ),
+
+        // TODO Flesh this out
+        // Delete a project? not sure where this should be. maybe add Manage projects item?
         SideMenuDrawerItemChildren(
             label = "Delete Project",
             onClick = {
                 scope.launch { drawerState.close() }
                 viewModel.showDeleteProjectDialog.value = true
             }
+        ),
+
+        // TODO: Remove when not needed
+        // Open 07K Test hex and a2l
+        SideMenuDrawerItemChildren(
+            label = "Open 07K Test",
+            onClick = {
+                scope.launch { drawerState.close() }
+                viewModel.show07kTest.value = true
+            }
         )
+
     )
     val editSubItems = listOf<SideMenuDrawerItemChildren>()
 

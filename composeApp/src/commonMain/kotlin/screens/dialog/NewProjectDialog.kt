@@ -1,3 +1,5 @@
+@file:Suppress("FunctionName")
+
 package screens.dialog
 
 import androidx.compose.foundation.layout.Arrangement
@@ -60,12 +62,18 @@ fun NewProjectDialog(
     val showHexFilePicker = remember { mutableStateOf(false) }
     val showA2lFilePicker = remember { mutableStateOf(false) }
 
+    // TODO: Figure out a reasonable way to make sure the hex and a2l files are opened in order
+    // maybe a dialog that pops when you click a2l and hex file isn't open?
+    val hexFileAlreadyOpened = remember { mutableStateOf(false) }
+    val a2lFileAlreadyOpened = remember { mutableStateOf(false) }
+
     if (showHexFilePicker.value) {
         FilePicker(
             fileType = FileType.ALL,
             fileAction = {
                 scope.launch(Dispatchers.IO) {
                     processHexFile(it, viewModel)
+                    hexFileAlreadyOpened.value = true
                 }
             },
             filePickCloser = showHexFilePicker,
@@ -80,6 +88,7 @@ fun NewProjectDialog(
             fileAction = {
                 scope.launch {
                     parseAndComputeA2lData(it, viewModel)
+                    a2lFileAlreadyOpened.value = true
                 }
                          },
             filePickCloser = showA2lFilePicker,
@@ -113,11 +122,13 @@ fun NewProjectDialog(
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
                     TextButton(
-                        onClick = { showA2lFilePicker.value = true }
+                        onClick = { showA2lFilePicker.value = true },
+                        enabled = hexFileAlreadyOpened.value && !a2lFileAlreadyOpened.value
                     ) { Text("A2L File") }
 
                     TextButton(
-                        onClick = { showHexFilePicker.value = true }
+                        onClick = { showHexFilePicker.value = true },
+                        enabled = !hexFileAlreadyOpened.value
                     ) { Text("Hex File") }
                 }
 

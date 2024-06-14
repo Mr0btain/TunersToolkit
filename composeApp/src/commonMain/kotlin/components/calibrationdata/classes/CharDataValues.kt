@@ -12,8 +12,7 @@ data class CharDataValues(
     val actualStartPosition: Int = Int.MIN_VALUE,
     val actualEndPosition: Int = Int.MIN_VALUE,
     val dataType: DataType = DataType.NOT_SET,
-    val format: String = "",
-    val overlayPath: Path = Path()
+    val format: String = ""
 ) {
     private fun getAxisXLength(): Int {
         var result = 0

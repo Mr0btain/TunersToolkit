@@ -33,6 +33,7 @@ import screens.dialog.DeleteVersionDialog
 import screens.dialog.NewProjectDialog
 import screens.dialog.OpenProjectDialog
 import MainViewModel
+import components.testing.Open07kTestProject
 import tunerstoolkit.composeapp.generated.resources.Res
 import tunerstoolkit.composeapp.generated.resources.calculate
 import tunerstoolkit.composeapp.generated.resources.home
@@ -124,6 +125,11 @@ fun DrawerNavigation(
                 }
             },
             content = {
+                //TODO: Remove this test when not needed
+                if (viewModel.show07kTest.value) {
+                    Open07kTestProject(navigator, viewModel, scope)
+                }
+
                 if (viewModel.showNewProjectDialog.value) {
                     NewProjectDialog(
                         viewModel = viewModel,
