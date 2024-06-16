@@ -47,14 +47,16 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+            implementation("org.jetbrains.androidx.navigation:navigation-compose:2.7.0-alpha07")
+
 
             // Context for coroutines
             implementation(libs.kotlinx.coroutines.core)
 
             // For ViewModel and Koin Implementation
-            api(libs.precompose)
-            api(libs.precompose.viewmodel)
-            api(libs.precompose.koin)
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
 
             // File picker seems to not work for android
             implementation(libs.calf.file.picker)
@@ -128,6 +130,7 @@ android {
     }
     dependencies {
         debugImplementation(compose.uiTooling)
+        implementation(libs.koin.android)
     }
 }
 

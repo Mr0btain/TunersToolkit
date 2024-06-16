@@ -30,22 +30,21 @@ import components.maptextoverlay.classes.MapValuesSorted
 import components.utilitytab.projecttab.classes.ProjectInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import moe.tlaster.precompose.navigation.NavOptions
-import moe.tlaster.precompose.navigation.Navigator
-import moe.tlaster.precompose.navigation.PopUpTo
 import MainViewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.NavOptions
 
 @Composable
 fun OpenProjectDialog(
     modifier: Modifier = Modifier,
-    navigator: Navigator,
+    navHostController: NavHostController,
     onDismissRequest: () -> Unit,
     filesManager: ProjectFilesManager,
     viewModel: MainViewModel,
     scope: CoroutineScope
 ) {
     val projects = filesManager.getProjectList()
-    val currentScreen = navigator.currentEntry.collectAsState(initial = null)
+    val currentScreen = navHostController.currentDestination?.route ?: ""
 
     Dialog(
         onDismissRequest = onDismissRequest
@@ -79,16 +78,8 @@ fun OpenProjectDialog(
                                         val versions = filesManager.getProjectVersionsList(it)
                                         filesManager.processFileData(it, versions.last(), viewModel)
                                         viewModel.isLoading.value = false
-                                        if (currentScreen.value?.route?.route != "editor") {
-                                            navigator.navigate(
-                                                route = "editor",
-                                                NavOptions(
-                                                    popUpTo = PopUpTo(
-                                                        route = "editor",
-                                                        inclusive = true
-                                                    )
-                                                )
-                                            )
+                                        if (currentScreen != "EDITOR") {
+                                            navHostController.navigate(route = "EDITOR")
                                         }
                                     }
                                 }

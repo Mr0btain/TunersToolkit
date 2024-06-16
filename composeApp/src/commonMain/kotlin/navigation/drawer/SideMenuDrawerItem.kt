@@ -1,3 +1,5 @@
+@file:Suppress("FunctionName")
+
 package navigation.drawer
 
 import androidx.compose.animation.AnimatedVisibility

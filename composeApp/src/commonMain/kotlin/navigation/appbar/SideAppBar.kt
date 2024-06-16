@@ -1,45 +1,33 @@
+@file:Suppress("FunctionName")
+
 package navigation.appbar
 
+import MainViewModel
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import moe.tlaster.precompose.navigation.NavOptions
-import moe.tlaster.precompose.navigation.Navigator
-import moe.tlaster.precompose.navigation.PopUpTo
-import org.jetbrains.compose.resources.ExperimentalResourceApi
+import androidx.navigation.NavHostController
 import org.jetbrains.compose.resources.painterResource
-import MainViewModel
 import tunerstoolkit.composeapp.generated.resources.*
-import tunerstoolkit.composeapp.generated.resources.Res
-import tunerstoolkit.composeapp.generated.resources.calculate
-import tunerstoolkit.composeapp.generated.resources.home
-import tunerstoolkit.composeapp.generated.resources.menu
 
-@OptIn(ExperimentalResourceApi::class)
+
 @Composable
 fun SideTopAppBar(
     modifier: Modifier = Modifier,
     menuButtonOnClick: () -> Unit,
     viewModel: MainViewModel,
-    navigator: Navigator
+    navigator: NavHostController
 ) {
     val isLoading = viewModel.isLoading
-    val currentDestination = navigator.currentEntry.collectAsState(initial = null)
+    val currentDestination = navigator.currentDestination?.route ?: ""
 
     Column(
         modifier = modifier
@@ -76,11 +64,8 @@ fun SideTopAppBar(
         ) {
             IconButton(
                 onClick = {
-                    if (currentDestination.value?.route?.route != "home") {
-                        navigator.navigate(
-                            route = "home",
-                            NavOptions(launchSingleTop = true)
-                        )
+                    if (currentDestination != "MAIN") {
+                        navigator.navigate(route = "MAIN")
                     }
                           },
                 modifier = Modifier.padding(4.dp)
@@ -94,17 +79,8 @@ fun SideTopAppBar(
 
             IconButton(
                 onClick = {
-                    if (currentDestination.value?.route?.route != "editor") {
-                        navigator.navigate(
-                            route = "editor",
-                            NavOptions(
-                                launchSingleTop = true,
-                                popUpTo = PopUpTo(
-                                    route = "home",
-                                    inclusive = true
-                                )
-                            )
-                        )
+                    if (currentDestination != "EDITOR") {
+                        navigator.navigate(route = "EDITOR")
                     } },
                 modifier = Modifier.padding(4.dp)
             ) {
@@ -117,11 +93,8 @@ fun SideTopAppBar(
 
             IconButton(
                 onClick = {
-                    if (currentDestination.value?.route?.route != "settings") {
-                        navigator.navigate(
-                            route = "settings",
-                            NavOptions(launchSingleTop = true)
-                        )
+                    if (currentDestination != "SETTINGS") {
+                        navigator.navigate(route = "SETTINGS")
                     } },
                 modifier = Modifier.padding(4.dp)
             ) {

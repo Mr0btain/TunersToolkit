@@ -43,6 +43,7 @@ window-size-multiplatform = { module = "dev.chrisbanes.material3:material3-windo
 precompose = { module = "moe.tlaster:precompose", version.ref = "precomposeVersion" }
 precompose-koin = { module = "moe.tlaster:precompose-koin", version.ref = "precomposeVersion" }
 precompose-viewmodel = { module = "moe.tlaster:precompose-viewmodel", version.ref = "precomposeVersion" }
+koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinCore" }
 
 
 [plugins]

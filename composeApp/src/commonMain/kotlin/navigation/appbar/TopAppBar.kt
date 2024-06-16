@@ -1,36 +1,31 @@
+@file:Suppress("FunctionName")
+
 package navigation.appbar
 
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import MainViewModel
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.navigation.NavHostController
 import components.menus.TopAppBarDropDown
-import moe.tlaster.precompose.navigation.Navigator
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
-import MainViewModel
 import tunerstoolkit.composeapp.generated.resources.Res
 import tunerstoolkit.composeapp.generated.resources.arrow_back
 import tunerstoolkit.composeapp.generated.resources.menu
 import tunerstoolkit.composeapp.generated.resources.tool_menu
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalResourceApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomTopAppBar(
     navButtonOnClick: () -> Unit,
     viewModel: MainViewModel,
-    navigator: Navigator
+    navHostController: NavHostController
 ) {
     val isLoading = viewModel.isLoading
     val showDropDown = remember { mutableStateOf(false) }
-    val currentDestination = navigator.currentEntry.collectAsState(initial = null)
+    val currentDestination = navHostController.currentDestination?.route ?: ""
 
     CenterAlignedTopAppBar(
         title = { Text(viewModel.appBarTitle.value) },
@@ -44,9 +39,9 @@ fun CustomTopAppBar(
         actions = {
             if (isLoading.value) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.onBackground)
-            } else if (currentDestination.value?.route?.route == "settings") {
+            } else if (currentDestination == "SETTINGS") {
                 IconButton(
-                    onClick = { navigator.goBack() }
+                    onClick = { navHostController.popBackStack() }
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.arrow_back),

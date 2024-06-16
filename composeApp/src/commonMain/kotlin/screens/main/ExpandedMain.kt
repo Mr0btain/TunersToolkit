@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import components.hextexteditor.HexEditor
 import components.testing.randomHexString
+import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.Font
 import tunerstoolkit.composeapp.generated.resources.Res
 import tunerstoolkit.composeapp.generated.resources.jbmono_reg

@@ -2,7 +2,7 @@ package components.testing
 
 import MainViewModel
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.navigation.NavHostController
 import components.maptextoverlay.classes.MapValuesSorted
 import components.parsers.a2l.classes.data.A2lData
 import components.parsers.a2l.parseAndComputeA2lData
@@ -11,9 +11,6 @@ import components.utilitytab.projecttab.classes.ProjectInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import moe.tlaster.precompose.navigation.NavOptions
-import moe.tlaster.precompose.navigation.Navigator
-import moe.tlaster.precompose.navigation.PopUpTo
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import tunerstoolkit.composeapp.generated.resources.Res
 
@@ -25,13 +22,13 @@ import tunerstoolkit.composeapp.generated.resources.Res
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun Open07kTestProject(
-    navigator: Navigator,
+    navigator: NavHostController,
     viewModel: MainViewModel,
     scope: CoroutineScope
 ) {
     // Get our current screen
     println("Get current screen")
-    val currentScreen = navigator.currentEntry.collectAsState(initial = null)
+    val currentScreen = navigator.currentDestination
 
     // Clear all the project data currently set
     println("Clear current project data")
@@ -66,15 +63,7 @@ fun Open07kTestProject(
     )
 
     println("Navigate to Editor")
-    if (currentScreen.value?.route?.route != "editor") {
-        navigator.navigate(
-            route = "editor",
-            NavOptions(
-                popUpTo = PopUpTo(
-                    route = "editor",
-                    inclusive = true
-                )
-            )
-        )
+    if (currentScreen?.route != "EDITOR") {
+        navigator.navigate(route = "EDITOR",)
     }
 }

@@ -1,3 +1,5 @@
+@file:Suppress("FunctionName")
+
 package navigation.drawer
 
 import androidx.compose.foundation.layout.Spacer
@@ -14,41 +16,36 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
 import components.datastorage.ProjectFilesManager
 import kotlinx.coroutines.launch
-import moe.tlaster.precompose.navigation.NavOptions
-import moe.tlaster.precompose.navigation.Navigator
-import moe.tlaster.precompose.navigation.PopUpTo
-import navigation.NavigationManager
 import navigation.appbar.AdaptiveAppBar
-import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import screens.dialog.DeleteProjectDialog
 import screens.dialog.DeleteVersionDialog
 import screens.dialog.NewProjectDialog
 import screens.dialog.OpenProjectDialog
 import MainViewModel
+import androidx.navigation.NavHostController
 import components.testing.Open07kTestProject
+import navigation.components.NavigationHost
 import tunerstoolkit.composeapp.generated.resources.Res
 import tunerstoolkit.composeapp.generated.resources.calculate
 import tunerstoolkit.composeapp.generated.resources.home
 import tunerstoolkit.composeapp.generated.resources.settings
 import ui.theme.TunerToolkitTheme
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun DrawerNavigation(
     viewModel: MainViewModel,
     windowSizeClass: WindowSizeClass,
-    navigator: Navigator
+    navHostController: NavHostController
 ) {
     val filesManager = ProjectFilesManager()
-    val currentDestination = navigator.currentEntry.collectAsState(initial = null)
+    val currentDestination = navHostController.currentDestination?.route ?: ""
 
     TunerToolkitTheme {
         val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -64,17 +61,14 @@ fun DrawerNavigation(
                     Spacer(Modifier.height(12.dp))
 
                     NavigationDrawerItem(
-                        icon = { Icon(painterResource(Res.drawable.home), contentDescription = "Home") },
-                        label = { Text("Home") },
-                        selected = currentDestination.value?.route?.route == "home",
+                        icon = { Icon(painterResource(Res.drawable.home), contentDescription = "Main") },
+                        label = { Text("Main") },
+                        selected = currentDestination == "MAIN",
                         onClick = {
                             scope.launch {
                                 drawerState.close()
-                                if (currentDestination.value?.route?.route != "home") {
-                                    navigator.navigate(
-                                        route = "home",
-                                        NavOptions(launchSingleTop = true)
-                                    )
+                                if (currentDestination != "MAIN") {
+                                    navHostController.navigate(route = "MAIN")
                                 }
                             }
                         },
@@ -84,21 +78,12 @@ fun DrawerNavigation(
                     NavigationDrawerItem(
                         icon = { Icon(painterResource(Res.drawable.calculate), contentDescription = "Editor") },
                         label = { Text("Editor") },
-                        selected = currentDestination.value?.route?.route == "editor",
+                        selected = currentDestination == "EDITOR",
                         onClick = {
                             scope.launch {
                                 drawerState.close()
-                                if (currentDestination.value?.route?.route != "editor") {
-                                    navigator.navigate(
-                                        route = "editor",
-                                        NavOptions(
-                                            launchSingleTop = true,
-                                            popUpTo = PopUpTo(
-                                                route = "home",
-                                                inclusive = true
-                                            )
-                                        )
-                                    )
+                                if (currentDestination != "EDITOR") {
+                                    navHostController.navigate(route = "EDITOR")
                                 }
                             }
                         },
@@ -108,15 +93,12 @@ fun DrawerNavigation(
                     NavigationDrawerItem(
                         icon = { Icon(painterResource(Res.drawable.settings), contentDescription = "Settings") },
                         label = { Text("Settings") },
-                        selected = currentDestination.value?.route?.route == "settings",
+                        selected = currentDestination == "SETTINGS",
                         onClick = {
                             scope.launch {
                                 drawerState.close()
-                                if (currentDestination.value?.route?.route != "settings") {
-                                    navigator.navigate(
-                                        route = "settings",
-                                        NavOptions(launchSingleTop = true)
-                                    )
+                                if (currentDestination != "SETTINGS") {
+                                    navHostController.navigate(route = "SETTINGS")
                                 }
                             }
                         },
@@ -127,7 +109,7 @@ fun DrawerNavigation(
             content = {
                 //TODO: Remove this test when not needed
                 if (viewModel.show07kTest.value) {
-                    Open07kTestProject(navigator, viewModel, scope)
+                    Open07kTestProject(navHostController, viewModel, scope)
                 }
 
                 if (viewModel.showNewProjectDialog.value) {
@@ -142,7 +124,7 @@ fun DrawerNavigation(
 
                 if (viewModel.showOpenProjectDialog.value) {
                     OpenProjectDialog(
-                        navigator = navigator,
+                        navHostController = navHostController,
                         onDismissRequest = { viewModel.showOpenProjectDialog.value = false },
                         filesManager = filesManager,
                         scope = scope,
@@ -176,14 +158,13 @@ fun DrawerNavigation(
                     drawerState = drawerState,
                     scope = scope,
                     content = {
-                        NavigationManager(
+                        NavigationHost(
                             viewModel = viewModel,
-                            initialRoute = "home",
-                            navigator = navigator
+                            navHostController = navHostController
                         )
                     },
                     windowSizeClass = windowSizeClass,
-                    navigator = navigator
+                    navHostController = navHostController
                 )
             }
         )

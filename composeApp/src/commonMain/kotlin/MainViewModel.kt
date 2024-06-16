@@ -9,6 +9,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import components.datastorage.components.getSettings
 import components.datastorage.components.saveSettings
 import components.errorstuff.Logger
@@ -22,8 +24,6 @@ import components.utilitytab.maplisttab.classes.MapDataContainer
 import components.utilitytab.projecttab.classes.ProjectInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import moe.tlaster.precompose.viewmodel.ViewModel
-import moe.tlaster.precompose.viewmodel.viewModelScope
 import screens.settings.classes.SettingsData
 import ui.theme.md_theme_light_error
 import ui.theme.md_theme_light_inverseSurface

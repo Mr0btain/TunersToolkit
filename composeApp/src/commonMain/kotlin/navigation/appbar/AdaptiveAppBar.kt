@@ -1,3 +1,5 @@
+@file:Suppress("FunctionName")
+
 package navigation.appbar
 
 import androidx.compose.foundation.layout.Box
@@ -14,8 +16,8 @@ import androidx.compose.ui.unit.dp
 import getPlatform
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import moe.tlaster.precompose.navigation.Navigator
 import MainViewModel
+import androidx.navigation.NavHostController
 
 @Composable
 fun AdaptiveAppBar(
@@ -25,7 +27,7 @@ fun AdaptiveAppBar(
     drawerState: DrawerState,
     content: @Composable () -> Unit,
     windowSizeClass: WindowSizeClass,
-    navigator: Navigator
+    navHostController: NavHostController
 ) {
     val platform = remember { getPlatform() }
 
@@ -40,7 +42,7 @@ fun AdaptiveAppBar(
                         }
                     },
                     viewModel = viewModel,
-                    navigator = navigator
+                    navigator = navHostController
                 )
             }
         ) {
@@ -57,7 +59,7 @@ fun AdaptiveAppBar(
                         CustomTopAppBar(
                             navButtonOnClick = { scope.launch { drawerState.open() } },
                             viewModel = viewModel,
-                            navigator = navigator
+                            navHostController = navHostController
                         )
                     }
                 ) {
@@ -74,7 +76,7 @@ fun AdaptiveAppBar(
                         SideTopAppBar(
                             menuButtonOnClick = { scope.launch { drawerState.open() } },
                             viewModel = viewModel,
-                            navigator = navigator
+                            navigator = navHostController
                         )
                     }
                 ) {

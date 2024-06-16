@@ -2,6 +2,7 @@
 
 package navigation.drawer
 
+import MainViewModel
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -11,11 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -25,20 +22,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import components.datastorage.ProjectFilesManager
 import kotlinx.coroutines.launch
-import moe.tlaster.precompose.navigation.Navigator
-import navigation.NavigationManager
 import navigation.appbar.AdaptiveAppBar
-import org.jetbrains.compose.resources.ExperimentalResourceApi
+import navigation.components.NavigationHost
 import org.jetbrains.compose.resources.painterResource
-import screens.dialog.DeleteProjectDialog
-import screens.dialog.DeleteVersionDialog
-import screens.dialog.ImportDialog
-import screens.dialog.NewProjectDialog
-import screens.dialog.OpenProjectDialog
-import MainViewModel
-import components.testing.Open07kTestProject
+import screens.dialog.*
 import tunerstoolkit.composeapp.generated.resources.Res
 import tunerstoolkit.composeapp.generated.resources.assessment
 import tunerstoolkit.composeapp.generated.resources.create
@@ -49,7 +39,7 @@ import ui.theme.TunerToolkitTheme
 fun SideMenuDrawer(
     viewModel: MainViewModel,
     windowSizeClass: WindowSizeClass,
-    navigator: Navigator
+    navHostController: NavHostController
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -224,7 +214,7 @@ fun SideMenuDrawer(
 
                 if (viewModel.showOpenProjectDialog.value) {
                     OpenProjectDialog(
-                        navigator = navigator,
+                        navHostController = navHostController,
                         onDismissRequest = { viewModel.showOpenProjectDialog.value = false },
                         filesManager = filesManager,
                         scope = scope,
@@ -267,14 +257,13 @@ fun SideMenuDrawer(
                     drawerState = drawerState,
                     scope = scope,
                     content = {
-                        NavigationManager(
-                            viewModel,
-                            initialRoute = "home",
-                            navigator = navigator
+                        NavigationHost(
+                            viewModel = viewModel,
+                            navHostController = navHostController
                         )
                     },
                     windowSizeClass = windowSizeClass,
-                    navigator = navigator
+                    navHostController = navHostController
                 )
             }
         )
