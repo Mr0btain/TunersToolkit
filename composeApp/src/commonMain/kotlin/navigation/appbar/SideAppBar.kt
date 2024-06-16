@@ -28,6 +28,7 @@ fun SideTopAppBar(
 ) {
     val isLoading = viewModel.isLoading
     val currentDestination = navigator.currentDestination?.route ?: ""
+    val oldDestination =  navigator.currentDestination?.route ?: ""
 
     Column(
         modifier = modifier
@@ -93,9 +94,12 @@ fun SideTopAppBar(
 
             IconButton(
                 onClick = {
-                    if (currentDestination != "SETTINGS") {
+                    if ((navigator.currentDestination?.route ?: "") != "SETTINGS") {
                         navigator.navigate(route = "SETTINGS")
-                    } },
+                    } else {
+                        navigator.navigate(oldDestination)
+                    }
+                          },
                 modifier = Modifier.padding(4.dp)
             ) {
                 Icon(
