@@ -4,13 +4,17 @@ package components.hextexteditor
 
 import MainViewModel
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -35,7 +39,8 @@ fun HexEditor(
     input: String,
     textStyle: TextStyle = TextStyle(
         fontFamily = FontFamily(Font(Res.font.jbmono_reg)),
-        fontSize = 12.sp
+        fontSize = 12.sp,
+        color = MaterialTheme.colorScheme.onBackground
     ),
     viewModel: MainViewModel
 ) {
@@ -73,11 +78,17 @@ fun HexEditor(
     // Use BoxWithConstraints so we can get the size of our container to properly set the font size.
     // NOTE: you MUST specify an initial text size in textStyle, don't rely on the default as it will be 0 and it WILL crash
     BoxWithConstraints(
-        modifier = modifier.wrapContentSize()
+        modifier = modifier
+            .clip(RoundedCornerShape(10.dp))
+            .wrapContentSize()
+            .background(MaterialTheme.colorScheme.secondaryContainer)
     ) {
         val textSize = ((maxWidth / 440) * textStyle.fontSize.value * density).value.sp
 
-        Row {
+        Row(
+            modifier = Modifier.padding(top = 6.dp, end = 4.dp, bottom = 4.dp),
+            horizontalArrangement = Arrangement.SpaceAround
+        ) {
             // The Offset text box
             OffsetTextField(
                 input = input,
@@ -86,9 +97,8 @@ fun HexEditor(
                 scrollState = scrollState
             )
 
-            Spacer(modifier = Modifier.padding(6.dp))
-            VerticalDivider(modifier = Modifier, thickness = 2.dp)
-            Spacer(modifier = Modifier.padding(6.dp))
+            VerticalDivider(modifier = Modifier.padding(2.dp), thickness = 2.dp, color = textStyle.color)
+            Spacer(Modifier.padding(4.dp))
 
             // The Hex editor box
             HexTextEditor(
@@ -97,8 +107,8 @@ fun HexEditor(
                 scrollState = scrollState
             )
 
-            Spacer(modifier = Modifier.padding(6.dp))
-            VerticalDivider(modifier = Modifier, thickness = 2.dp)
+            Spacer(Modifier.padding(4.dp))
+            VerticalDivider(modifier = Modifier.padding(2.dp), thickness = 2.dp, color = textStyle.color)
 
             // The ASCII representation/editor of the Hex
             AsciiTextEditor(

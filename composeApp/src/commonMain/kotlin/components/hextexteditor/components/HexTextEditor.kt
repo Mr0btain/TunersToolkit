@@ -4,10 +4,12 @@ import MainViewModel
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.text2.BasicTextField2
+import androidx.compose.foundation.text2.TextFieldDecorator
 import androidx.compose.foundation.text2.input.forEachChange
 import androidx.compose.foundation.text2.input.insert
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 

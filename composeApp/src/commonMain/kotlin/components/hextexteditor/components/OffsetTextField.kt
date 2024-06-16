@@ -3,6 +3,7 @@ package components.hextexteditor.components
 import MainViewModel
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.text2.BasicTextField2
 import androidx.compose.foundation.text2.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
@@ -22,9 +23,9 @@ fun OffsetTextField(
     val offsetTextState = rememberTextFieldState(initialText = input.getOffsetsFromHex(viewModel.digitsPerLine.intValue, viewModel.bitEncoding.value))
 
     BasicTextField2(
-        modifier = Modifier,
+        modifier = Modifier.wrapContentSize(),
         state = offsetTextState,
-        textStyle = textStyle.copy(textAlign = TextAlign.Right),
+        textStyle = textStyle.copy(textAlign = TextAlign.Center),
         scrollState = scrollState,
         readOnly = true
     )
