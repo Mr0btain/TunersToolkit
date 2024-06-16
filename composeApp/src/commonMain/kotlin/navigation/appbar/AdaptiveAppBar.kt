@@ -42,7 +42,7 @@ fun AdaptiveAppBar(
                         }
                     },
                     viewModel = viewModel,
-                    navigator = navHostController
+                    navHostController = navHostController
                 )
             }
         ) {
@@ -76,7 +76,7 @@ fun AdaptiveAppBar(
                         SideTopAppBar(
                             menuButtonOnClick = { scope.launch { drawerState.open() } },
                             viewModel = viewModel,
-                            navigator = navHostController
+                            navHostController = navHostController
                         )
                     }
                 ) {

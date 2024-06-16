@@ -39,6 +39,7 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.koin.android)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -47,23 +48,18 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
-            implementation("org.jetbrains.androidx.navigation:navigation-compose:2.7.0-alpha07")
-
+            implementation(libs.compose.viewmodel)
+            implementation(libs.compose.navigation)
 
             // Context for coroutines
             implementation(libs.kotlinx.coroutines.core)
 
-            // For ViewModel and Koin Implementation
+            // For Koin Implementation
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
-            implementation("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
 
             // File picker seems to not work for android
             implementation(libs.calf.file.picker)
-
-            // Koin for Dependency injection
-            implementation(libs.koin.core)
-            implementation(libs.koin.compose)
 
             // Window Size class
             implementation(libs.window.size.multiplatform)
@@ -73,7 +69,9 @@ kotlin {
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
-            implementation(libs.appdirs)
+
+            // JNA Java Native Access for use with getting OS specific directories in desktop
+            implementation(libs.jna)
 
             // Should really hard code this
             val lwjglVersion = "3.3.1"
@@ -130,7 +128,6 @@ android {
     }
     dependencies {
         debugImplementation(compose.uiTooling)
-        implementation(libs.koin.android)
     }
 }
 

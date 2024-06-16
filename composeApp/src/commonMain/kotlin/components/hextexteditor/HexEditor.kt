@@ -20,6 +20,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import components.calibrationdata.classes.MapDataValues
 import components.hextexteditor.components.*
 import org.jetbrains.compose.resources.Font
 import tunerstoolkit.composeapp.generated.resources.*
@@ -42,7 +43,8 @@ fun HexEditor(
         fontSize = 12.sp,
         color = MaterialTheme.colorScheme.onBackground
     ),
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    mapDataValues: List<MapDataValues> = listOf()
 ) {
     val scrollState = rememberScrollState()
     val density = LocalDensity.current.density
@@ -104,7 +106,8 @@ fun HexEditor(
             HexTextEditor(
                 viewModel = viewModel,
                 textStyle = textStyle.copy(fontSize = textSize),
-                scrollState = scrollState
+                scrollState = scrollState,
+                mapDataValues = mapDataValues
             )
 
             Spacer(Modifier.padding(4.dp))

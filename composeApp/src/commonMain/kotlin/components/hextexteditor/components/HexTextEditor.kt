@@ -1,29 +1,80 @@
+@file:Suppress("FunctionName")
+
 package components.hextexteditor.components
 
 import MainViewModel
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.text2.BasicTextField2
-import androidx.compose.foundation.text2.TextFieldDecorator
 import androidx.compose.foundation.text2.input.forEachChange
 import androidx.compose.foundation.text2.input.insert
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import components.calibrationdata.classes.MapDataValues
+import components.maptextoverlay.classes.DimensionMapper
+import components.maptextoverlay.components.getMapPath
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HexTextEditor(
     viewModel: MainViewModel,
     textStyle: TextStyle,
-    scrollState: ScrollState
+    scrollState: ScrollState,
+    mapDataValues: List<MapDataValues> = listOf(),
 ) {
     val allowedCharacters = setOf('A', 'B', 'C', 'D', 'E', 'F', 'a', 'b', 'c', 'd', 'e', 'f')
+    val layoutResultMutableState = remember { mutableStateOf<TextLayoutResult?>(null) }
+    val dimensionMapper by remember { mutableStateOf(DimensionMapper()) }
+    val mapDataPaths = remember { mutableStateListOf<Path>() }
+    val currentSelectedMap by remember { mutableIntStateOf(0) }
+
+    // Update the Paths to draw for each map when the layout changes
+    LaunchedEffect(key1 = layoutResultMutableState.value?.size) {
+        // Check if we even have any maps to work with
+        if (mapDataValues.isNotEmpty()) {
+            // Calculate the dimensions needed to calculate the Paths for each map
+            layoutResultMutableState.value?.let { textLayout ->
+                dimensionMapper.calculateValues(textLayout)
+            }
+
+            mapDataPaths.clear()
+
+            mapDataValues.forEach {
+                mapDataPaths.add(it.getMapPath(dimensMap = dimensionMapper, textStart = 0))
+            }
+        }
+    }
 
     BasicTextField2(
-        modifier = Modifier,
+        modifier = Modifier.drawBehind {
+            mapDataPaths.forEachIndexed { index, path ->
+                drawPath(
+                    path = path,
+                    color = viewModel.mapFillColor.value,
+                    alpha = 0.2f
+                )
+
+                drawPath(
+                    path = path,
+                    color = if (currentSelectedMap == index + 1) {
+                        viewModel.mapSelectedOutlineColor.value
+                    } else viewModel.mapOutlineColor.value,
+                    style = Stroke(
+                        width = 2.dp.toPx(),
+                        pathEffect = PathEffect.cornerPathEffect(2.dp.toPx()),
+                    )
+                )
+            }
+        },
         state = viewModel.hexEditorData,
         textStyle = textStyle.copy(textAlign = TextAlign.Center),
         inputTransformation = { originalValue, valueWithChanges ->
@@ -121,6 +172,8 @@ fun HexTextEditor(
                 }
             }
         },
-        scrollState = scrollState
+        scrollState = scrollState,
+        onTextLayout = { layoutResultMutableState.value = it.invoke() },
+        cursorBrush = textStyle.brush ?: Brush.verticalGradient(colors = listOf(textStyle.color, textStyle.color))
     )
 }

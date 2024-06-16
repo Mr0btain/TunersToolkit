@@ -45,7 +45,6 @@ fun DrawerNavigation(
     navHostController: NavHostController
 ) {
     val filesManager = ProjectFilesManager()
-    val currentDestination = navHostController.currentDestination?.route ?: ""
 
     TunerToolkitTheme {
         val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -63,11 +62,11 @@ fun DrawerNavigation(
                     NavigationDrawerItem(
                         icon = { Icon(painterResource(Res.drawable.home), contentDescription = "Main") },
                         label = { Text("Main") },
-                        selected = currentDestination == "MAIN",
+                        selected = (navHostController.currentDestination?.route ?: "") == "MAIN",
                         onClick = {
                             scope.launch {
                                 drawerState.close()
-                                if (currentDestination != "MAIN") {
+                                if ((navHostController.currentDestination?.route ?: "") != "MAIN") {
                                     navHostController.navigate(route = "MAIN")
                                 }
                             }
@@ -78,11 +77,11 @@ fun DrawerNavigation(
                     NavigationDrawerItem(
                         icon = { Icon(painterResource(Res.drawable.calculate), contentDescription = "Editor") },
                         label = { Text("Editor") },
-                        selected = currentDestination == "EDITOR",
+                        selected = (navHostController.currentDestination?.route ?: "") == "EDITOR",
                         onClick = {
                             scope.launch {
                                 drawerState.close()
-                                if (currentDestination != "EDITOR") {
+                                if ((navHostController.currentDestination?.route ?: "") != "EDITOR") {
                                     navHostController.navigate(route = "EDITOR")
                                 }
                             }
@@ -93,11 +92,11 @@ fun DrawerNavigation(
                     NavigationDrawerItem(
                         icon = { Icon(painterResource(Res.drawable.settings), contentDescription = "Settings") },
                         label = { Text("Settings") },
-                        selected = currentDestination == "SETTINGS",
+                        selected = (navHostController.currentDestination?.route ?: "") == "SETTINGS",
                         onClick = {
                             scope.launch {
                                 drawerState.close()
-                                if (currentDestination != "SETTINGS") {
+                                if ((navHostController.currentDestination?.route ?: "") != "SETTINGS") {
                                     navHostController.navigate(route = "SETTINGS")
                                 }
                             }

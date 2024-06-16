@@ -170,6 +170,8 @@ fun SideMenuDrawer(
                         items = projectSubItems
                     )
 
+                    Spacer(Modifier.height(6.dp))
+
                     SideMenuDrawerItem(
                         icon = painterResource(Res.drawable.source),
                         label = "File",
@@ -184,6 +186,8 @@ fun SideMenuDrawer(
                         exitTransition = collapseTransition,
                         items = fileSubItems
                     )
+
+                    Spacer(Modifier.height(6.dp))
 
                     SideMenuDrawerItem(
                         icon = painterResource(Res.drawable.create),

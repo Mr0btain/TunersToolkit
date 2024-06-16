@@ -24,11 +24,10 @@ fun SideTopAppBar(
     modifier: Modifier = Modifier,
     menuButtonOnClick: () -> Unit,
     viewModel: MainViewModel,
-    navigator: NavHostController
+    navHostController: NavHostController
 ) {
     val isLoading = viewModel.isLoading
-    val currentDestination = navigator.currentDestination?.route ?: ""
-    val oldDestination =  navigator.currentDestination?.route ?: ""
+    val oldDestination =  navHostController.currentDestination?.route ?: ""
 
     Column(
         modifier = modifier
@@ -65,8 +64,8 @@ fun SideTopAppBar(
         ) {
             IconButton(
                 onClick = {
-                    if (currentDestination != "MAIN") {
-                        navigator.navigate(route = "MAIN")
+                    if ((navHostController.currentDestination?.route ?: "") != "MAIN") {
+                        navHostController.navigate(route = "MAIN")
                     }
                           },
                 modifier = Modifier.padding(4.dp)
@@ -80,8 +79,8 @@ fun SideTopAppBar(
 
             IconButton(
                 onClick = {
-                    if (currentDestination != "EDITOR") {
-                        navigator.navigate(route = "EDITOR")
+                    if ((navHostController.currentDestination?.route ?: "") != "EDITOR") {
+                        navHostController.navigate(route = "EDITOR")
                     } },
                 modifier = Modifier.padding(4.dp)
             ) {
@@ -94,10 +93,10 @@ fun SideTopAppBar(
 
             IconButton(
                 onClick = {
-                    if ((navigator.currentDestination?.route ?: "") != "SETTINGS") {
-                        navigator.navigate(route = "SETTINGS")
+                    if ((navHostController.currentDestination?.route ?: "") != "SETTINGS") {
+                        navHostController.navigate(route = "SETTINGS")
                     } else {
-                        navigator.navigate(oldDestination)
+                        navHostController.navigate(oldDestination)
                     }
                           },
                 modifier = Modifier.padding(4.dp)
