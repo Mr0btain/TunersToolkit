@@ -29,7 +29,7 @@ import org.mr0btain.tunerstoolkit.screens.dialog.NewProjectDialog
 import org.mr0btain.tunerstoolkit.screens.dialog.OpenProjectDialog
 import org.mr0btain.tunerstoolkit.MainViewModel
 import androidx.navigation.NavHostController
-import org.mr0btain.tunerstoolkit.components.testing.Open07kTestProject
+import org.mr0btain.tunerstoolkit.components.testing.OpenDemoProject
 import org.mr0btain.tunerstoolkit.navigation.components.NavigationHost
 import tunerstoolkit.composeapp.generated.resources.Res
 import tunerstoolkit.composeapp.generated.resources.calculate
@@ -106,8 +106,8 @@ fun DrawerNavigation(
             },
             content = {
                 //TODO: Remove this test when not needed
-                if (viewModel.show07kTest.value) {
-                    Open07kTestProject(navHostController, viewModel, scope)
+                if (viewModel.showDemoProject.value) {
+                    OpenDemoProject(navHostController, viewModel, scope)
                 }
 
                 if (viewModel.showNewProjectDialog.value) {

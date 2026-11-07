@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Kept byte for byte: DemoFilesTest compares them with what DemoEcu makes
+testdata/demo/*.hex -text
+testdata/demo/*.a2l -text

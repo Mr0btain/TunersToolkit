@@ -106,12 +106,12 @@ fun SideMenuDrawer(
         ),
 
         // TODO: Remove when not needed
-        // Open 07K Test hex and a2l
+        // Open the demo project's hex and A2L
         SideMenuDrawerItemChildren(
-            label = "Open 07K Test",
+            label = "Open demo project",
             onClick = {
                 scope.launch { drawerState.close() }
-                viewModel.show07kTest.value = true
+                viewModel.showDemoProject.value = true
             }
         )
 

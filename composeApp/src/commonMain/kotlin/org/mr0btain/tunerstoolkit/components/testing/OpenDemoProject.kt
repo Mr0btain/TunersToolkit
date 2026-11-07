@@ -13,14 +13,15 @@ import kotlinx.coroutines.launch
 import org.mr0btain.applogger.AppLogger
 
 /**
- * Test for opening files into the editor
+ * Opens the TT-DEMO-1 demo project (testdata/demo, made by core's DemoEcu) in the editor, for trying the app
+ * without a real ECU file. Desktop only for now: it reads the files from the checkout
  */
 
-private const val TAG = "Open07kTestProject"
+private const val TAG = "OpenDemoProject"
 
 @Suppress("FunctionName")
 @Composable
-fun Open07kTestProject(
+fun OpenDemoProject(
     navigator: NavHostController,
     viewModel: MainViewModel,
     scope: CoroutineScope
@@ -35,11 +36,10 @@ fun Open07kTestProject(
     viewModel.a2lData.value = A2lData()
     viewModel.mapData.value = MapValuesSorted()
 
-    // The 07K files are real OEM files, so they're not in git. Put them in testdata/local/07k/ to use this
-    val hexFile = readLocalTestFile("07k/07K906032BR_5703.hex")
-    val a2lFile = readLocalTestFile("07k/07K906032BR_5703.A2L")
+    val hexFile = readTestDataFile("demo/tt-demo-1.hex")
+    val a2lFile = readTestDataFile("demo/tt-demo-1.a2l")
     if (hexFile == null || a2lFile == null) {
-        AppLogger.w("$TAG:Open", "07K test files not found in testdata/local/07k, see docs/testing.md")
+        AppLogger.w("$TAG:Open", "The demo files aren't in testdata/demo, or this platform can't read them")
         return
     }
 
@@ -53,14 +53,14 @@ fun Open07kTestProject(
         parseAndComputeA2lData(a2lFile, viewModel)
     }
     viewModel.projectInfo.value = ProjectInfo(
-        name = "07K Test",
+        name = "TT-DEMO-1",
         projectVersion = "Original",
-        manufacturer = "Volkswagen",
-        model = "Jetta",
-        engine = "2.5L",
+        manufacturer = "Demo",
+        model = "Test car",
+        engine = "2.0L turbo",
         transmission = "Manual",
-        ecuBrand = "Bosch",
-        ecuVersion = "07K906032BR_5703"
+        ecuBrand = "Tuners Toolkit",
+        ecuVersion = "TTDEMO1 0.1"
     )
     if (currentScreen?.route != "EDITOR") {
         navigator.navigate(route = "EDITOR",)

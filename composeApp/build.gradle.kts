@@ -142,9 +142,9 @@ compose.desktop {
             }
         }
 
-        // Where Open07kTestProject finds the real ECU files kept out of git
+        // Where readTestDataFile finds testdata/ (the demo project, and real ECU files kept out of git)
         tasks.withType<JavaExec>().configureEach {
-            systemProperty("tunerstoolkit.testdata", rootProject.file("testdata/local").path)
+            systemProperty("tunerstoolkit.testdata", rootProject.file("testdata").path)
         }
     }
 }

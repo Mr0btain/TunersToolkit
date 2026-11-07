@@ -71,3 +71,8 @@ kotlin {
         }
     }
 }
+
+// DemoFilesTest rewrites testdata/demo with -DregenerateDemo=true
+tasks.withType<Test>().configureEach {
+    providers.systemProperty("regenerateDemo").orNull?.let { systemProperty("regenerateDemo", it) }
+}
