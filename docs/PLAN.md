@@ -345,9 +345,10 @@ Each phase ends with green CI and a usable app.
 - [ ] Left for later phases: moving the existing `println`s and silent `safeCall` failures onto `AppLogger` and `Diagnostics` (Phase 1/3), replacing the JNA directory code with FileKit (Phase 2, once projects can be migrated), and saving web projects (Phase 2, OPFS).
 
 **Phase 1: Core data and binary formats**
-- [ ] `MemoryImage` with typed read/write, endianness, and patches/undo.
-- [ ] Intel HEX, S-record and BIN readers and writers, format sniffing, and tests (including fuzz tests).
-- [ ] Synthetic fixture generator.
+- [x] `MemoryImage` with typed read/write, endianness, and patches/undo (`core/.../image/`).
+- [x] Intel HEX, S-record and BIN readers and writers, format sniffing, and tests (including fuzz tests) (`core/.../formats/binary/`).
+- [x] Synthetic fixture generator (`core/src/commonTest/.../testing/Fixtures.kt`).
+- [ ] Left for Phase 2: the app still uses the old Intel HEX parser and hex-string segments. It moves to `BinaryImport` and `MemoryImage` together with the new hex view. The old parser records each segment's start as its first record's address minus its length; check whether the old A2L decode depends on that before swapping.
 
 **Phase 2: Shared UI kit and the new hex view**
 - [x] Create the `Tm-UI-Kit` and `Tm-AppLogger` repos and move the generic kit and the logger out of TicketMan (Section 4.1). TicketMan's move is on its `shared-ui-kit` branch.
