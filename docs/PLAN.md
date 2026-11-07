@@ -117,20 +117,15 @@ ui-kit/
 - The kit's gallery takes extra sections from the app (`KitGallery(extraSections = ...)`), so each app's own components appear next to the shared ones.
 - Compose resources are published with the library (`compose.resources { publicResClass = true; packageOfResClass = "org.mr0btain.uikit.resources" }`), so the fonts ship inside the artifact.
 
-**How it's consumed: published artifact, with source mode for local work**
-- **Normal builds and CI**: a versioned Maven artifact, `org.mr0btain:uikit:<version>` (plus `uikit-images` and `uikit-rules`), pinned in each app's `libs.versions.toml`.
-- **Working on the kit and an app together**: a Gradle **composite build**. If `../ui-kit` exists next to the app's checkout, `settings.gradle.kts` runs `includeBuild("../ui-kit")` (turned off with `-PuseKitArtifact`). Gradle then swaps the artifact for the live source automatically, so a kit change shows up in the app immediately with no publishing step.
-  ```kotlin
-  // settings.gradle.kts (both apps)
-  val kitDir = file("../ui-kit")
-  if (kitDir.exists() && !providers.gradleProperty("useKitArtifact").isPresent) includeBuild(kitDir)
-  ```
-- **Where it's published**: Gitea's Maven package registry (anonymous reads for a public owner, and both CI systems can reach it if the Gitea is public). If it isn't public, publish to Maven Central under `io.github.mr0btain` instead. GitHub Packages isn't a good fit: it requires a token even to read public packages.
-- **iOS klibs can only be built on macOS**, so the full publish (every target) runs on GitHub's `macos-latest` runner and pushes to the registry. Gitea's CI only runs tests.
-- **Versioning**: semver with a `CHANGELOG.md`. Renaming or removing a public component is a major bump. Each app updates on its own schedule. A release workflow also writes the gallery PNGs, so you can see visual changes before upgrading.
+**How it's consumed: from source, at a pinned tag** (as built, 2026-11-07)
+- Both libraries live in their own repos: `Tm-AppLogger` and `Tm-UI-Kit` (Gitea, with public mirrors at `github.com/Mr0btain/<name>`). The kit's modules are `tm-ui-kit` (package `org.mr0btain.uikit`) and `tm-ui-kit-rules` (`KitRules`, for each app's `UiKitRulesTest`), plus a `:gallery` desktop app. The logger is `tm-applogger` (package `org.mr0btain.applogger`), and the kit depends on it for `TmLogTerminal`.
+- Each app's `settings.gradle.kts` `includeBuild`s each library from the first of: `<sharedLibsDir>/<name>` (a Gradle property, for checkouts kept elsewhere), `../<name>`, or `.deps/<name>`, cloned from the GitHub mirror at the tag pinned in `settings.gradle.kts` on the first build. Gradle swaps in the source for the `org.mr0btain:*` coordinates in `libs.versions.toml`.
+- Why not Maven: Gitea's registry needs a login even to read, and so does GitHub Packages. A release published from Linux would also have no iOS klibs. Building from source needs no credentials, works on every target (iOS on any Mac), and a local checkout's changes show up immediately. Maven Central (`io.github.mr0btain`) is still possible later, if release builds get slow.
+- **Releasing a library**: bump its version in `gradle.properties` and push a matching `v*` tag (its CI checks they match). Then each app changes the tag in `settings.gradle.kts` and the version in `libs.versions.toml`.
 
 **Considered and rejected**
-- *Git submodule*: simpler, with no registry. But both CI systems need submodule access, the pinned commit is easy to forget, and it gives neither versions nor a changelog.
+- *Git submodule*: close to what we do, but the pinned commit is easy to forget and every clone needs `--recursive`. A tag in `settings.gradle.kts` reads better and clones itself.
+- *A Maven registry*: see above.
 - *Copying the kit*: two sources that drift apart. This is the problem we're solving.
 - *Monorepo with both apps*: their release cycles and server code don't belong together.
 
@@ -355,8 +350,9 @@ Each phase ends with green CI and a usable app.
 - [ ] Synthetic fixture generator.
 
 **Phase 2: Shared UI kit and the new hex view**
-- [ ] Create the `ui-kit` repo, move the generic kit out of TicketMan, publish `0.1.0`, and move TicketMan onto it (Section 4.1).
-- [ ] Tuners Toolkit uses `uikit` (composite build locally), the shared app shell, `kit-rules` and render tests.
+- [x] Create the `Tm-UI-Kit` and `Tm-AppLogger` repos and move the generic kit and the logger out of TicketMan (Section 4.1). TicketMan's move is on its `shared-ui-kit` branch.
+- [ ] Tag `v0.1.0` of both libraries and push them to the GitHub mirrors, so builds without a local checkout can clone them.
+- [ ] Tuners Toolkit's screens on the kit (`TmTheme`, the shared app shell, `KitRules` in `UiKitRulesTest`, render tests). The app shell is still TicketMan's own; move it into the kit first.
 - [ ] `TmHexView`: virtualized rows, Canvas drawing, address-based selection and editing, go-to address, find, data width modes, proportional scrollbar, and minimap.
 - [ ] Projects screen plus open file (FileKit) on all three platforms, and storage (files on desktop/Android, OPFS on web).
 

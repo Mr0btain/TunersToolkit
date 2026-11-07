@@ -17,3 +17,6 @@ xcuserdata/
 
 # Real ECU files (often OEM copyrighted) for local testing only, never committed. See docs/testing.md
 testdata/local/
+
+# Shared libraries cloned by settings.gradle.kts
+.deps/

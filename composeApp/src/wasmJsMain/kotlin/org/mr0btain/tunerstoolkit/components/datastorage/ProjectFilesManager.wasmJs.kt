@@ -4,7 +4,7 @@ import kotlinx.browser.localStorage
 import kotlinx.serialization.json.Json
 import org.mr0btain.tunerstoolkit.components.datastorage.components.ProjectChanges
 import org.mr0btain.tunerstoolkit.components.datastorage.components.ProjectFileType
-import org.mr0btain.tunerstoolkit.core.logging.AppLogger
+import org.mr0btain.applogger.AppLogger
 import org.mr0btain.tunerstoolkit.screens.settings.classes.SettingsData
 
 private const val TAG = "ProjectFilesManager"

@@ -69,6 +69,9 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.core)
 
+            // The UI kit shared with TicketMan. Screens move onto it in Phase 2 (docs/PLAN.md)
+            implementation(libs.tm.ui.kit)
+
             implementation(libs.runtime)
             implementation(libs.foundation)
             implementation(libs.material3)

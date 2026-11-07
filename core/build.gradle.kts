@@ -61,6 +61,9 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.kotlin.coroutines)
             implementation(libs.kotlinx.serialization.json)
+
+            // AppLogger and LogBook, shared with TicketMan
+            api(libs.tm.applogger)
         }
 
         commonTest.dependencies {

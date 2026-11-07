@@ -11,7 +11,7 @@ import io.github.vinceglb.filekit.readBytes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.mr0btain.tunerstoolkit.components.datastorage.components.FileType
-import org.mr0btain.tunerstoolkit.core.logging.AppLogger
+import org.mr0btain.applogger.AppLogger
 
 private const val TAG = "FilePicker"
 

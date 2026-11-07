@@ -1,12 +1,13 @@
 package org.mr0btain.tunerstoolkit.core.error
 
+import org.mr0btain.applogger.LogMessage
+
 /**
  * The error half of a [TkResult]. [message] should be readable enough to show the user, since import and export
- * problems end up in the import report and the log screen
+ * problems end up in the import report and the log screen. Being a [LogMessage], it can be logged as it is:
+ * `AppLogger.e(TAG, error)`
  */
-interface Error {
-    val message: String
-}
+interface Error : LogMessage
 
 /**
  * Either the value a call produced or why it couldn't. Used instead of throwing, so callers have to decide what a

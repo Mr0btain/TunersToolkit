@@ -10,7 +10,7 @@ import org.mr0btain.tunerstoolkit.components.utilitytab.projecttab.classes.Proje
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.mr0btain.tunerstoolkit.core.logging.AppLogger
+import org.mr0btain.applogger.AppLogger
 
 /**
  * Test for opening files into the editor

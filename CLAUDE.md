@@ -26,13 +26,15 @@ The app is mid-overhaul. **`docs/PLAN.md` is the roadmap** (phases, target archi
 
 The version every package is built as is `tunerstoolkit.version` in `gradle.properties`. All modules use a JDK 21 toolchain (`jvmToolchain(21)`); Gradle downloads it through the foojay resolver if it isn't installed. CI (`.gitea/workflows/ci.yml`, copied to `.github/workflows/ci.yml` for GitHub) runs both test tasks and the web, desktop and Android builds on every pull request and push to `main`. GitHub also compiles iOS on a Mac, with `continue-on-error` until it has passed once. There's no lint task. `docs/testing.md` covers where tests go and how to use real ECU files.
 
+**Shared libraries**: Tm-AppLogger and Tm-UI-Kit (TicketMan uses them too) are built from source through `includeBuild` in `settings.gradle.kts`, from the first of `<sharedLibsDir>/<name>` (a Gradle property), `../<name>`, or `.deps/<name>`, which is cloned from `github.com/Mr0btain/<name>` at the tag pinned there. A change in a local checkout shows up here immediately. Bumping a library means changing its tag in `settings.gradle.kts` and its version in `gradle/libs.versions.toml`. The UI kit is a dependency of `composeApp` (package `org.mr0btain.uikit`, `Tm*` components, `TmTheme`), but screens don't use it yet; that's Phase 2.
+
 **Real ECU files never go in git** (usually OEM copyrighted). They live in git-ignored `testdata/local/`. On desktop, `readLocalTestFile()` reads from there, and the drawer's 07K test project (`components/testing/Open07kTestProject.kt`) uses it.
 
 ## Modules
 
 - **`core`**: KMP library (android, jvm, wasmJs, iOS on Mac) with **no Compose**. It's for logic testable with plain `kotlin.test`. So far it holds:
-  - `logging/AppLogger`: `e/w/i/d(tag, message, throwable?)`. Each line goes to the platform log through an `expect fun platformLog`, and into a ring buffer (`AppLogger.entries`, a `StateFlow`) for a future log screen. `d` only writes when `AppLogger.debug` is on. Use hierarchical constant tags: `private const val TAG = "Thing"`, then `"$TAG:Function"`. Never log file contents.
-  - `error/TkResult`: a `TkResult<D, E : Error>` (`Success`/`Failure`) with `map`, `flatMap`, `onSuccess`, `onFailure`, `getOrNull`, `valueOr`. New code returns this instead of throwing.
+  - Logging comes from **Tm-AppLogger** (`org.mr0btain.applogger`, an `api` dependency, so `composeApp` sees it too). `AppLogger.e/w/i/m/d(tag, message, throwable?)` writes to the platform log and keeps each line in `LogBook`. `d` only writes when `AppLogger.debug` is on. Use hierarchical constant tags: `private const val TAG = "Thing"`, then `"$TAG:Function"`. Never log file contents. On desktop, `main.kt` attaches a `LogFileStore` (daily `tunerstoolkit-<date>.log` files under the app data dir's `logs/`).
+  - `error/TkResult`: a `TkResult<D, E : Error>` (`Error` is a `LogMessage`, so it can be logged as is) (`Success`/`Failure`) with `map`, `flatMap`, `onSuccess`, `onFailure`, `getOrNull`, `valueOr`. New code returns this instead of throwing.
   - `diagnostics/Diagnostic` and `Diagnostics`: parse, decode and export problems with severity, `SourceLocation` and object name. Parsers report these instead of dropping things silently.
   - A generated `BuildInfo.VERSION`.
 
