@@ -1,144 +1,147 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidApplication)
-    alias(libs.plugins.jetbrainsCompose)
-    alias(libs.plugins.compose.compiler)
-    kotlin("plugin.serialization") version "1.9.0" apply true
+    alias(libs.plugins.androidMultiplatformLibrary)
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.serialize)
 }
 
 kotlin {
-    androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+    // JDK 21 everywhere (Gradle downloads it through foojay when it isn't installed), the same as CI
+    jvmToolchain(21)
+
+    // Built as an Android library; the app itself is :androidApp
+    android {
+        namespace = "org.mr0btain.tunerstoolkit"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
+
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
+
+        androidResources {
+            enable = true
+        }
     }
-    
+
+    // iOS only builds on a Mac (it needs Xcode), so elsewhere the targets are left out. Xcode builds the framework
+    // through embedAndSignAppleFrameworkForXcode (iosApp's build phase)
+    if (System.getProperty("os.name").startsWith("Mac")) {
+        listOf(
+            iosArm64(),
+            iosSimulatorArm64()
+        ).forEach { iosTarget ->
+            iosTarget.binaries.framework {
+                baseName = "ComposeApp"
+                isStatic = true
+            }
+        }
+    }
+
     jvm("desktop")
-    
-    /*
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
-        }
-    }
-     */
-    
-    sourceSets {
-        val desktopMain by getting
-        
-        androidMain.dependencies {
-            implementation(compose.preview)
-            implementation(libs.androidx.activity.compose)
-            implementation(libs.koin.android)
-        }
-        commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
-            implementation(libs.compose.viewmodel)
-            implementation(libs.compose.navigation)
 
-            // Context for coroutines
-            implementation(libs.kotlinx.coroutines.core)
-
-            // For Koin Implementation
-            implementation(libs.koin.core)
-            implementation(libs.koin.compose)
-
-            // File picker seems to not work for android
-            implementation(libs.calf.file.picker)
-
-            // Window Size class
-            implementation(libs.window.size.multiplatform)
-
-            // Serialization
-            implementation(libs.kotlinx.serialization.json)
-        }
-        desktopMain.dependencies {
-            implementation(compose.desktop.currentOs)
-
-            // JNA Java Native Access for use with getting OS specific directories in desktop
-            implementation(libs.jna)
-
-            // Should really hard code this
-            val lwjglVersion = "3.3.1"
-            listOf("lwjgl", "lwjgl-tinyfd").forEach { lwjglDep ->
-                implementation("org.lwjgl:${lwjglDep}:${lwjglVersion}")
-                listOf(
-                    "natives-windows",
-                    "natives-windows-x86",
-                    "natives-windows-arm64",
-                    "natives-macos",
-                    "natives-macos-arm64",
-                    "natives-linux",
-                    "natives-linux-arm64",
-                    "natives-linux-arm32"
-                ).forEach { native ->
-                    runtimeOnly("org.lwjgl:${lwjglDep}:${lwjglVersion}:${native}")
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        outputModuleName = "composeApp"
+        browser {
+            val rootDirPath = project.rootDir.path
+            val projectDirPath = project.projectDir.path
+            commonWebpackConfig {
+                outputFileName = "composeApp.js"
+                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
+                    static(rootDirPath)
+                    static(projectDirPath)
                 }
             }
+        }
+        binaries.executable()
+    }
+
+    sourceSets {
+        val desktopMain = getByName("desktopMain")
+
+        commonMain.dependencies {
+            implementation(projects.core)
+
+            implementation(libs.runtime)
+            implementation(libs.foundation)
+            implementation(libs.material3)
+            implementation(libs.material.icons.core)
+            implementation(libs.ui)
+            implementation(libs.components.resources)
+            implementation(libs.ui.tooling.preview)
+            implementation(libs.androidx.lifecycle.viewmodel)
+            implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.compose.navigation)
+
+            implementation(libs.kotlin.coroutines)
+            implementation(libs.kotlinx.serialization.json)
+
+            api(libs.bundles.koin)
+
+            // File open and save dialogs on every platform, including the browser
+            implementation(libs.bundles.fileKit)
+        }
+
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlin.coroutines.test)
+        }
+
+        androidMain.dependencies {
+            implementation(libs.androidx.activity.compose)
+        }
+
+        desktopMain.dependencies {
+            implementation(compose.desktop.currentOs)
+            implementation(libs.kotlinx.coroutinesSwing)
+
+            // OS specific app data folders (components/datastorage/components/*DirectoryResolver)
+            implementation(libs.jna)
         }
     }
 }
 
-android {
-    namespace = "org.mr0btain.tunerstoolkit"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-
-    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
-    sourceSets["main"].res.srcDirs("src/androidMain/res")
-    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
-
-    defaultConfig {
-        applicationId = "org.mr0btain.tunerstoolkit"
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
-    }
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
-    buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    buildFeatures {
-        compose = true
-    }
-    dependencies {
-        debugImplementation(compose.uiTooling)
-    }
+dependencies {
+    androidRuntimeClasspath(libs.ui.tooling)
 }
 
 compose.desktop {
     application {
-        mainClass = "MainKt"
+        mainClass = "org.mr0btain.tunerstoolkit.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "org.mr0btain.tunerstoolkit"
-            packageVersion = "1.0.0"
+            packageName = "TunersToolkit"
+            description = "ECU calibration editor"
+            vendor = "Mr0btain"
+            // Installers only take numbers, so a 1.0.0-rc1 is packaged as 1.0.0
+            val appVersion = providers.gradleProperty("tunerstoolkit.version").get().substringBefore('-')
+            packageVersion = appVersion
+            modules("jdk.unsupported")
+
+            macOS {
+                bundleID = "org.mr0btain.tunerstoolkit"
+                // macOS refuses a version starting with 0, so 0.x builds say 1.0.0 inside the app bundle
+                packageVersion = if (appVersion.startsWith("0.")) "1.0.0" else appVersion
+            }
+            windows {
+                // Never change this: it's how a newer MSI knows to replace the installed one
+                upgradeUuid = "2f6b1f0e-9a51-4c7e-8a4e-5d3c0b7a2e91"
+                menu = true
+                shortcut = true
+            }
+        }
+
+        // Where Open07kTestProject finds the real ECU files kept out of git
+        tasks.withType<JavaExec>().configureEach {
+            systemProperty("tunerstoolkit.testdata", rootProject.file("testdata/local").path)
         }
     }
 }

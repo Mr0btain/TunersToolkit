@@ -1,11 +1,10 @@
 *.iml
 .gradle
-/local.properties
+.kotlin
+local.properties
 /.idea
 .DS_Store
 build/
-composeApp/build/
-composeApp/.gradle
 /captures
 .externalNativeBuild
 .cxx
@@ -14,3 +13,7 @@ iosApp/Pods/*
 iosApp/iosApp.xcworkspace/*
 iosApp/iosApp.xcodeproj/*
 !iosApp/iosApp.xcodeproj/project.pbxproj
+xcuserdata/
+
+# Real ECU files (often OEM copyrighted) for local testing only, never committed. See docs/testing.md
+testdata/local/
