@@ -324,7 +324,7 @@ Commands (to put in CLAUDE.md once they exist):
 
 ## 12. Legal, licensing and safety notes
 
-- **The bundled 07K A2L/HEX is probably OEM-copyrighted** (VW/Bosch). Remove it from the repository. If it should also disappear from history, that needs a history rewrite (needs your approval: it's destructive and changes every commit hash). Replace it with synthetic fixtures.
+- **The bundled 07K A2L/HEX was probably OEM-copyrighted** (VW/Bosch). Done 2026-11-07: removed from every branch's history (`git filter-branch`, so every commit hash from June 2024 on changed) and from local copies, and replaced by the generated TT-DEMO-1 in `testdata/demo`. Old history stays on Gitea until the branches are force-pushed and the server's garbage collection runs.
 - Pick a project licence. TicketMan has one, this repo has none. Add font OFL licences when copying the fonts.
 - The README should say that modified calibrations can affect emissions and safety, and may be illegal for road use in some places. This is a common, non-preachy disclaimer in this category.
 - Treat every imported file as untrusted. Cap sizes and nesting depth, put a depth limit on `/include` and refuse cycles, and harden the XML parser (no external entities in XDF/CDF/PaCo).
@@ -387,7 +387,7 @@ Each phase ends with green CI and a usable app.
 ## 14. Open questions for you
 
 1. Which format was "the open source one": **TunerPro XDF** or **ASAM CDF/CDFX**? Both are planned for P1; this only decides which comes first.
-2. Should the OEM 07K files be removed **from git history** (a destructive rewrite plus force-push), or only from the current tree?
+2. ~~Should the OEM 07K files be removed from git history?~~ Yes, done 2026-11-07 (Section 12).
 3. Licence for the project (MIT / Apache-2.0 / GPL-3.0)?
 4. Should web deploy anywhere automatically (GitHub Pages or Gitea Pages), or ship only as a release zip?
 5. Checksums: generic algorithms only, or should we plan ECU-specific modules (and for which ECU families)?
