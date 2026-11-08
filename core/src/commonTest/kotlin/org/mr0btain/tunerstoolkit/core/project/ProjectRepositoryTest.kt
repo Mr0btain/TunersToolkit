@@ -146,4 +146,16 @@ class ProjectRepositoryTest {
         repository.addVersion(project.id, "Stage 1", emptyList()).ok()
         assertEquals("golf.a2l", repository.manifest(project.id).ok().definition?.fileName)
     }
+
+    @Test
+    fun otherFilesAreKeptByNameAndOnlySafeNames() = runTest {
+        val project = repository.create("Golf", source, sourceBytes).ok()
+        val updated = repository.setFile(project.id, "checksums.ttsum", "{}".encodeToByteArray()).ok()
+        assertEquals(mapOf("checksums.ttsum" to 2L), updated.files)
+        assertContentEquals("{}".encodeToByteArray(), repository.file(project.id, "checksums.ttsum").ok())
+        assertEquals(emptyMap(), repository.setFile(project.id, "checksums.ttsum", null).ok().files)
+        assertEquals(TkResult.Success(null), repository.file(project.id, "checksums.ttsum"))
+        assertEquals(TkResult.Failure(ProjectError.SAVE_FAILED), repository.setFile(project.id, "../escape", ByteArray(1)))
+        assertEquals(TkResult.Success(null), repository.file(project.id, "../../projects"))
+    }
 }

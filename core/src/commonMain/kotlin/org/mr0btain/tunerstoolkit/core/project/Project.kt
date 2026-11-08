@@ -13,6 +13,7 @@ import org.mr0btain.tunerstoolkit.core.image.Patch
  * `definition.bin` (the definition describing the image, as it was read) and `additions.ttdef` (maps made by hand).
  * @property definition The definition saved with it, if any
  * @property additions The maps made by hand saved with it, if any
+ * @property files Other files saved with it (checksum modules, say), by name, with their sizes
  * @property formatVersion Bumped when the layout changes, so older saves can be moved over
  * @property versions Saved versions, oldest first. The original is always there too, as [ORIGINAL]
  */
@@ -27,6 +28,7 @@ data class ProjectManifest(
     val versions: List<ProjectVersion> = emptyList(),
     val definition: ProjectDefinition? = null,
     val additions: ProjectDefinition? = null,
+    val files: Map<String, Long> = emptyMap(),
     val formatVersion: Int = FORMAT_VERSION
 ) {
     fun version(id: String): ProjectVersion? = versions.firstOrNull { it.id == id }

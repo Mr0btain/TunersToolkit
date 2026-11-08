@@ -142,8 +142,8 @@ object TtSum {
     // ------------------------------------------------ Reading (throws on nonsense; caught per item)
 
     private fun detector(dto: DetectDto): Detector = when {
-        dto.text != null -> Detector.Text(number(dto.address ?: error("a text needs an address")).toLong(), dto.text)
-        dto.bytes != null -> Detector.Bytes(number(dto.address ?: error("bytes need an address")).toLong(), hex(dto.bytes))
+        dto.text != null -> Detector.Text(address(dto.address ?: error("a text needs an address")), dto.text.also { require(it.length <= 256) { "a text to look for is at most 256 characters" } })
+        dto.bytes != null -> Detector.Bytes(address(dto.address ?: error("bytes need an address")), hex(dto.bytes).also { require(it.size <= 256) { "bytes to look for are at most 256" } })
         dto.size != null -> Detector.Size(number(dto.size).toLong())
         else -> error("it says nothing to look for")
     }
@@ -152,7 +152,7 @@ object TtSum {
         val ranges = dto.ranges.map(::range)
         require(ranges.isNotEmpty()) { "it has no ranges" }
         val store = ChecksumStore(
-            address = number(dto.store.address).toLong(),
+            address = address(dto.store.address),
             size = dto.store.size.also { require(it in 1..8) { "a stored checksum is 1 to 8 bytes" } },
             byteOrder = ByteOrder.valueOf(dto.store.byteOrder),
             form = StoreForm.valueOf(dto.store.form),
@@ -182,11 +182,20 @@ object TtSum {
     internal fun range(text: String): AddressRange {
         val parts = text.split('-').map { it.trim() }
         require(parts.size == 2) { "\"$text\" isn't a range like 0x8000-0xFFFF" }
-        val first = number(parts[0]).toLong()
-        val last = number(parts[1]).toLong()
+        val first = address(parts[0])
+        val last = address(parts[1])
         require(last >= first) { "\"$text\" ends before it starts" }
         return AddressRange(first, last + 1)
     }
+
+    /** An address: 0 to 0xFFFFFFFF, all a MemoryImage holds */
+    private fun address(text: String): Long {
+        val value = number(text)
+        require(value <= MAX_ADDRESS) { "$text is past 0xFFFFFFFF" }
+        return value.toLong()
+    }
+
+    private const val MAX_ADDRESS = 0xFFFFFFFFuL
 
     private fun number(text: String): ULong {
         val trimmed = text.trim()

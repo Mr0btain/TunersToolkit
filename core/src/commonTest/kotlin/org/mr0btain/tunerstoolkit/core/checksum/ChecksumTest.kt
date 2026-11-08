@@ -97,6 +97,19 @@ class ChecksumTest {
         assertTrue(Checksums.verify(image, overlapping).problem!!.contains("its own checksum"))
         val huge = ChecksumCheck("Huge", ChecksumAlgorithm.Sum(), listOf(AddressRange(4, 1L shl 40)), ChecksumStore(0, 2))
         assertTrue(Checksums.verify(image, huge).problem!!.contains("more than"))
+        // Ranges whose sizes would add up past a Long, or too many of them
+        val wrapping = ChecksumCheck("Wrap", ChecksumAlgorithm.Sum(), List(4) { AddressRange(4, Long.MAX_VALUE / 2) }, ChecksumStore(0, 2))
+        assertTrue(Checksums.verify(image, wrapping).problem!!.contains("more than"))
+        val many = ChecksumCheck("Many", ChecksumAlgorithm.Sum(), List(20_000) { AddressRange(4, 5) }, ChecksumStore(0, 2))
+        assertTrue(Checksums.verify(image, many).problem!!.contains("ranges"))
+        // A .ttsum with addresses past 32 bits, or an XOR of 3 byte words, loses those checks with a reason
+        val bad = """{"format": "ttsum", "formatVersion": 1, "id": "b", "name": "B", "checks": [
+            {"name": "Far", "algorithm": {"adler32": true}, "ranges": ["0x0-0xFFFFFFFFFFFF"], "store": {"address": "0x0", "size": 4}},
+            {"name": "Odd", "algorithm": {"xor": {"word": 3}}, "ranges": ["0x4-0x8"], "store": {"address": "0xFFFFFFFFFFFFFFFF", "size": 4}}
+        ]}"""
+        val read = (TtSum.read(bad.encodeToByteArray()) as TkResult.Success).data
+        assertTrue(read.value.checkList.isEmpty())
+        assertEquals(listOf("Far", "Odd"), read.diagnostics.map { it.objectName })
         // Adler can't be forced; a byte sum can't be forced through one byte
         assertFalse(Checksums.fixOne(image, ChecksumCheck("A", ChecksumAlgorithm.Adler32, listOf(AddressRange(0, 16)), ChecksumStore(12, 4, form = StoreForm.FORCE))))
         assertFalse(Checksums.fixOne(image, ChecksumCheck("B", ChecksumAlgorithm.Sum(1, 16), listOf(AddressRange(0, 16)), ChecksumStore(12, 1, form = StoreForm.FORCE))))

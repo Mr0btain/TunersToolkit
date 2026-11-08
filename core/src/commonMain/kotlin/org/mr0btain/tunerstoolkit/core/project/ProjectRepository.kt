@@ -104,6 +104,30 @@ class ProjectRepository(
             TkResult.Success(updated)
         }
 
+    /**
+     * Saves a file of [name] with the project (`files/<name>`), or removes it when [bytes] is null. Names are
+     * letters, digits, dots, dashes and underscores, so they can't reach outside the project's folder
+     */
+    suspend fun setFile(id: String, name: String, bytes: ByteArray?): TkResult<ProjectManifest, ProjectError> =
+        guard("SetFile", ProjectError.SAVE_FAILED) {
+            require(isFileName(name)) { "Not a file name" }
+            val manifest = when (val result = manifest(id)) {
+                is TkResult.Success -> result.data
+                is TkResult.Failure -> return@guard result
+            }
+            if (bytes == null) store.delete(filePath(id, name)) else store.write(filePath(id, name), bytes)
+            val files = if (bytes == null) manifest.files - name else manifest.files + (name to bytes.size.toLong())
+            val updated = manifest.copy(updatedAt = now(), files = files)
+            writeManifest(updated)
+            TkResult.Success(updated)
+        }
+
+    /** A file saved with the project, or null when there's none of that name */
+    suspend fun file(id: String, name: String): TkResult<ByteArray?, ProjectError> = guard("File", ProjectError.UNREADABLE) {
+        if (!isFileName(name)) return@guard TkResult.Success(null)
+        TkResult.Success(store.read(filePath(id, name)))
+    }
+
     /** The project's maps made by hand, or null when it has none */
     suspend fun additions(id: String): TkResult<ByteArray?, ProjectError> = guard("Additions", ProjectError.UNREADABLE) {
         TkResult.Success(store.read(additionsPath(id)))
@@ -257,6 +281,8 @@ class ProjectRepository(
         fun definitionPath(id: String) = "$PROJECTS/$id/definition.bin"
         fun additionsPath(id: String) = "$PROJECTS/$id/$ADDITIONS"
         const val ADDITIONS = "additions.ttdef"
+        fun filePath(id: String, name: String) = "$PROJECTS/$id/files/$name"
+        fun isFileName(name: String) = name.isNotEmpty() && name.length <= 100 && name.first() != '.' && name.all { it.isLetterOrDigit() || it in "._-" }
 
         private val json = Json {
             ignoreUnknownKeys = true

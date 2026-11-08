@@ -155,6 +155,9 @@ object Checksums {
     /** Most bytes one check reads, so a broken module can't ask for gigabytes */
     const val MAX_BYTES = 64L * 1024 * 1024
 
+    /** Most ranges one check has */
+    const val MAX_RANGES = 10_000
+
     fun verify(image: MemoryImage, checks: List<ChecksumCheck>): List<CheckResult> = checks.map { verify(image, it) }
 
     fun verify(image: MemoryImage, check: ChecksumCheck): CheckResult {
@@ -212,8 +215,15 @@ object Checksums {
 
     /** The checksum over the check's ranges as they are now */
     fun compute(image: MemoryImage, check: ChecksumCheck): TkResult<ULong, ChecksumError> {
-        val total = check.ranges.sumOf { it.size }
-        if (total > MAX_BYTES) return TkResult.Failure(ChecksumError("${check.name} reads ${total / 1024 / 1024} MB, more than ${MAX_BYTES / 1024 / 1024} MB"))
+        if (check.ranges.size > MAX_RANGES) return TkResult.Failure(ChecksumError("${check.name} has more than $MAX_RANGES ranges"))
+        // Added up so it stops at the cap and can't wrap round
+        var total = 0L
+        for (range in check.ranges) {
+            if (range.size < 0 || range.size > MAX_BYTES - total) {
+                return TkResult.Failure(ChecksumError("${check.name} reads more than ${MAX_BYTES / 1024 / 1024} MB"))
+            }
+            total += range.size
+        }
         if (check.store.form != StoreForm.FORCE && check.ranges.any { range -> check.store.ranges.any { it.overlaps(range) } }) {
             return TkResult.Failure(ChecksumError("${check.name}'s ranges include where its own checksum is kept"))
         }

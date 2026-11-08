@@ -37,6 +37,10 @@ sealed interface ChecksumAlgorithm {
 
     /** XORs [word]-byte words together */
     data class Xor(val word: Int = 1, val byteOrder: ByteOrder = ByteOrder.BIG_ENDIAN, val init: ULong = 0u) : ChecksumAlgorithm {
+        init {
+            require(word in listOf(1, 2, 4, 8)) { "Words are 1, 2, 4 or 8 bytes" }
+        }
+
         override val width: Int get() = word * 8
         override val label: String get() = "XOR of ${if (word == 1) "bytes" else "${word * 8}-bit words (${order(byteOrder)})"}"
         override fun start(): Running = WordRunning(word, byteOrder, width) { acc, value -> acc xor value }.also { it.acc = init }
