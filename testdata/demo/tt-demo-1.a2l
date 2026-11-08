@@ -431,7 +431,7 @@ ASAP2_VERSION 1 61
             1
             6
             FORMAT "%5.0"
-            FIX_AXIS_PAR 1 1 6
+            FIX_AXIS_PAR 1 0 6
         /end AXIS_DESCR
     /end CHARACTERISTIC
 

@@ -1,5 +1,6 @@
 package org.mr0btain.tunerstoolkit.core.a2l
 
+import org.mr0btain.tunerstoolkit.core.calibration.DataType
 import org.mr0btain.tunerstoolkit.core.diagnostics.SourceLocation
 import org.mr0btain.tunerstoolkit.core.image.ByteOrder
 
@@ -130,18 +131,6 @@ class CalibrationMethod(val method: String, val version: Long, val handles: List
 class CalibrationHandle(val values: List<Long>, val text: String?)
 
 // ------------------------------------------------ Types
-
-enum class DataType(val size: Int, val signed: Boolean, val float: Boolean = false) {
-    UBYTE(1, false), SBYTE(1, true),
-    UWORD(2, false), SWORD(2, true),
-    ULONG(4, false), SLONG(4, true),
-    A_UINT64(8, false), A_INT64(8, true),
-    FLOAT16_IEEE(2, true, true), FLOAT32_IEEE(4, true, true), FLOAT64_IEEE(8, true, true);
-
-    companion object {
-        fun of(name: String?): DataType? = entries.firstOrNull { it.name == name }
-    }
-}
 
 enum class Deposit { ABSOLUTE, DIFFERENCE }
 

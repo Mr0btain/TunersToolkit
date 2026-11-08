@@ -1,5 +1,6 @@
 package org.mr0btain.tunerstoolkit.core.a2l
 
+import org.mr0btain.tunerstoolkit.core.calibration.DataType
 import org.mr0btain.tunerstoolkit.core.diagnostics.Severity
 import kotlin.test.Test
 import kotlin.test.assertEquals

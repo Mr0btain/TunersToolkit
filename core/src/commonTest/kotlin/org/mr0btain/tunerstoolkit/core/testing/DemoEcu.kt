@@ -316,7 +316,7 @@ object DemoEcu {
             val gearAddress = put(Type.UWORD, torqueNm, gearLimits)
             placed["GearTorqueLimit"] = Placed("GearTorqueLimit", gearAddress, gearLimits)
             characteristic("GearTorqueLimit", "Most torque allowed in each gear", "CURVE", gearAddress, "Values_UWORD",
-                torqueNm, 0.0, 600.0, axes = axisDescr("FIX_AXIS", "Gear", identity, 6, 1.0, 6.0, "FIX_AXIS_PAR 1 1 6"))
+                torqueNm, 0.0, 600.0, axes = axisDescr("FIX_AXIS", "Gear", identity, 6, 1.0, 6.0, "FIX_AXIS_PAR 1 0 6"))
 
             // ------------------------------- Maps -------------------------------
             stdMap("IgnitionBase", "Base ignition advance", Type.UBYTE, ignDeg,
