@@ -46,6 +46,8 @@ The version every package is built as is `tunerstoolkit.version` in `gradle.prop
 
   `formats/` beyond binaries: `xml` (a lenient XML reader and writer, depth capped), `xdf` (TunerPro XDF definitions in and out), `ttdef` (our own definition JSON), and `values` (calibration values by name: `CalibrationData` turns objects into `DataRecord`s and applies records back as one undo step; `Dcm`, `Cdfx`, which also reads PaCo, and `Csv`). `calibration/ManualMap` makes the objects for a map defined by hand.
 
+  `checksum/`: generic checksum algorithms, checks and fixing (`Checksums`), and ECU family modules (`.ttsum` JSON via `TtSum`, or Kotlin `ChecksumModule`s), registered in `ChecksumModules`. `docs/checksums.md` says how to add a family.
+
   `calibration/` also has the map editing logic: `ObjectTree` (the map list's rows, with search; `a2l/A2lFolders` makes the FUNCTION and GROUP folders), `MapEdit` (set, add, multiply, add %, interpolate by axis values, smooth, and spreadsheet paste over a `CellSelection`), `writeAll` (many values as one undo step, clamped to the limits), `Tsv`, and `Compare` (two images' differences mapped to objects, and copying an object's bytes across).
 - **`composeApp`**: KMP Compose UI: screens, handlers and this app's kit components. It's built as an Android **library** (`com.android.kotlin.multiplatform.library`) plus `jvm("desktop")` and `wasmJs` (iOS only on macOS).
 - **`androidApp`**: a thin Android application around `composeApp` (`MainActivity`). It sets `appContext`, which the project store and settings read, before `setContent`. It also does release signing from the `TUNERSTOOLKIT_KEYSTORE*` env vars or Gradle properties.
@@ -53,7 +55,7 @@ The version every package is built as is `tunerstoolkit.version` in `gradle.prop
 
 ## Architecture
 
-`App.kt` is the app: `TmTheme` and the kit's `TmAppShell` (a nav rail on desktop and wide windows, a bottom bar on phones) around a `Destination` (Files, Editor, Versions, Compare, Log, Settings, and Gallery, which Settings opens).
+`App.kt` is the app: `TmTheme` and the kit's `TmAppShell` (a nav rail on desktop and wide windows, a bottom bar on phones) around a `Destination` (Files, Editor, Versions, Compare, Checksums, Log, Settings, and Gallery, which Settings opens).
 
 ### State: small handlers, made in `App`
 No view model and no DI; each handler is a `@Stable` class with Compose state, made once in `App` and passed to the screens that need it. Tests make them with `inBackground`/`readInBackground = false` so work happens straight away.
@@ -62,6 +64,7 @@ No view model and no DI; each handler is a `@Stable` class with Compose state, m
 - `ui/definition/DefinitionHandler`: the open definition (`OpenDefinition`: an A2L, XDF or .ttdef read by content, plus maps made by hand as `additions`, with the map list's `groupings`) resolved into one `CalibrationSet`, and `onImage`: the object index, EPK check and overlaps for the open image, rebuilt in the background whenever another image opens. `decode(obj)` reads an object from the open image.
 - `ui/editor/EditorHandler`: the editor's map tabs (`OpenMap`: its `MapTableState` and view), which is in front, the selected object, and the map list's mode, search and open folders. Kept while other screens are open.
 - `ui/exchange/ExchangeHandler`: values in (DCM, CDFX, PaCo) and out (DCM, CDFX), a map as CSV both ways, the map list as CSV, and the definition saved as .ttdef or XDF. The last import's report stays for the files screen.
+- `ui/checksum/ChecksumHandler`: the open image's checksum module (detected or picked), your own checks, the results (worked out again in the background after edits), and fixing. Its module and own checks are `ProjectAttachment`s: `ProjectHandler` saves anything that implements that with the project as a named file.
 - `ui/compare/CompareHandler`: what the open image is compared with (its original, a version or a file), the `ImageComparison` (redone after edits), and copying a map across.
 - `ui/settings/SettingsHandler`: `SettingsData`, saved on each change through `SettingsStorage` (expect/actual: the old `settings.sts` locations, localStorage on the web).
 
@@ -71,6 +74,7 @@ No view model and no DI; each handler is a `@Stable` class with Compose state, m
 - `ui/files`: open an image and a definition (or both demo files), the projects list, the calibration values panel (import with its report, export), the definition report (with saving as .ttdef, XDF or a map list CSV) (`DefinitionPanels`: objects, how many were read from the image, what was left out and why, overlaps, the EPK check) and the image's import report. `rememberFileSaver` is expect/actual (FileKit's save dialog, or a download on the web); `readTestDataFile()` reads the checkout's `testdata/` on desktop only.
 - `ui/editor`: the map list (`MapList`: by the definition's groupings or all, with search, and New map for `ManualMapDialog`) beside tabs for the hex view and each open map (`MapPane`: table, chart or 3D surface, cube slice pickers, the selection operations, details). Below 900dp the list is a tab. In the hex view the definition's objects are tinted, double-click opens one, and the status line names the object, cell and value under the cursor. Map edits go through `CalibrationCodec.writeAll` (clamped to the limits, one undo step).
 - `ui/versions`: the open project's versions as a timeline (open, compare, rename, start a new version from one, delete) and its info.
+- `ui/checksum`: the Checksums screen (module, every check, Fix all, adding your own).
 - `ui/compare`: the open image against its original, a version or a file: what changed by map, each map as this / other / difference, copy a map across, and changes outside maps.
 - `ui/log` (`LogBook` through `TmLogTerminal`), `ui/settings`, and `ui/gallery` (the kit's gallery plus this app's sections).
 

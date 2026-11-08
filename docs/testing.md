@@ -43,6 +43,8 @@ Map editing logic is in core too: `MapEditTest` covers selections, every operati
 
 Exchange formats are in `core/src/commonTest/.../formats/`: `XdfTest` (every demo object through an XDF and back, and a hand written XDF with every kind of item), `TtDefTest`, `ValuesExchangeTest` (DCM and CDFX each take every demo map back out of a tuned image to the original bytes; hand written DCM and CDFX; what applying reports; CSV) and `HostileFilesTest` (deep nesting, huge sizes, formula injection).
 
+Checksums: `ChecksumTest` checks every CRC preset against its catalogue check value, the sums, XOR and Adler-32, the demo's checksums, fixing (as one undo step), forcing CRCs to any target, `.ttsum` round trips and broken or hostile modules. A module for a real family should come with a test against real binaries in `testdata/local/` that skips when they're missing (see `docs/checksums.md`).
+
 The app's handlers are tested on desktop with the demo files and an in memory project store: `ProjectHandlerTest`, `DefinitionHandlerTest` (opening, indexing, saving the A2L with a project) and `CompareHandlerTest` (comparing, copying a map back, branching and renaming versions) and `ExchangeHandlerTest` (the definition through XDF and .ttdef, values out and in, a map as CSV, maps made by hand saved with a project). `ScreenRenderTest` draws every screen, the map editor in each view, to `composeApp/build/screen-renders`.
 
 ## The demo ECU

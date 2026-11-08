@@ -376,7 +376,7 @@ Each phase ends with green CI and a usable app.
 - [ ] CVX and PaCo (P2). PaCo is read through the CDFX reader (it keeps values in the same SW-INSTANCE structure), untested against a real PaCo file. CVX isn't done: no reliable description of its layout was found, so it waits for the standard or a sample file.
 
 **Phase 6: Pro features**
-- [ ] Checksum plugin interface plus generic algorithms and a verify view.
+- [x] Checksum plugin interface plus generic algorithms and a verify view. `core/.../checksum/`: generic algorithms (sums and XORs over bytes or words, any CRC up to 32 bits with the catalogue presets, Adler-32); checks whose result is stored as a value, a complement, both, or forced to a target through a correction word (CRCs solved over GF(2)); fixing as one undo step. ECU families are **modules**: `.ttsum` JSON for fixed checks (add a family without code), or Kotlin `ChecksumModule`s for families whose blocks have to be found by reading the image. Each module is marked verified, not verified or your own, with its source, and fixing with an unverified one asks first. The Checksums screen shows the module (found from the image, picked, or loaded), every check, Fix all and checks of your own; the module and your checks are saved with the project (through `ProjectAttachment`, the general way to save something with a project). Exporting warns when checksums are wrong. The demo ECU now has real checksums and its module is built in; the families researched (MED17/EDC17, ME7.x, Motronic, EDC15/16) are in `docs/checksums.md` with what's publicly known, waiting for real binaries to be verified against.
 - [ ] Map finder.
 - [ ] ECU ident scanning.
 
@@ -398,7 +398,7 @@ Each phase ends with green CI and a usable app.
 2. ~~Should the OEM 07K files be removed from git history?~~ Yes, done 2026-11-07 (Section 12).
 3. Licence for the project (MIT / Apache-2.0 / GPL-3.0)?
 4. Should web deploy anywhere automatically (GitHub Pages or Gitea Pages), or ship only as a release zip?
-5. Checksums: generic algorithms only, or should we plan ECU-specific modules (and for which ECU families)?
+5. ~~Checksums: generic algorithms only, or ECU-specific modules?~~ Both (2026-11-08): generic algorithms now, and a module format so families can be added over time (`docs/checksums.md`).
 6. Shared kit: is the Gitea instance publicly reachable, so it can host the `uikit` Maven artifacts for both CI systems? Or should we use Maven Central? And is `ui-kit` / `org.mr0btain.uikit` a good name?
 
 ---

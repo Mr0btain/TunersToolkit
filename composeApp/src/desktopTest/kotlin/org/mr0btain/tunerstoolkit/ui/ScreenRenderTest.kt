@@ -17,6 +17,8 @@ import org.mr0btain.tunerstoolkit.core.project.ProjectRepository
 import org.mr0btain.tunerstoolkit.core.calibration.CalibrationCodec
 import org.mr0btain.tunerstoolkit.core.calibration.writeAll
 import org.mr0btain.tunerstoolkit.core.error.TkResult
+import org.mr0btain.tunerstoolkit.ui.checksum.ChecksumHandler
+import org.mr0btain.tunerstoolkit.ui.checksum.ChecksumsScreen
 import org.mr0btain.tunerstoolkit.ui.compare.CompareHandler
 import org.mr0btain.tunerstoolkit.ui.compare.CompareScreen
 import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
@@ -65,6 +67,7 @@ class ScreenRenderTest {
         val values = (definitions.decode(ignition) as TkResult.Success).data
         documents.edit { CalibrationCodec.writeAll(it, values, mapOf(0 to 15.0, 1 to 16.0, 17 to 20.0)) }
         val exchange = ExchangeHandler(documents, definitions)
+        val checksums = ChecksumHandler(scope, documents, inBackground = false).apply { refresh() }
         val compare = CompareHandler(scope, documents, definitions, projects, inBackground = false).apply { compareWithOriginal() }
         val settings = SettingsHandler(CoroutineScope(Dispatchers.Unconfined), SettingsData(darkMode = dark))
 
@@ -82,6 +85,7 @@ class ScreenRenderTest {
                         Destination.FILES -> FilesScreen(documents, projects, definitions, exchange, onOpenEditor = {})
                         Destination.EDITOR -> EditorScreen(documents, projects, definitions, exchange, settings, snackbar, onOpenFiles = {}, editor = editor, startAt = startAt)
                         Destination.SETTINGS -> SettingsScreen(settings, onOpenGallery = {})
+                        Destination.CHECKSUMS -> ChecksumsScreen(documents, checksums, onOpenFiles = {}, onMessage = {})
                         Destination.VERSIONS -> VersionsScreen(projects, definitions, onOpenFiles = {}, onOpenEditor = {}, onCompare = { _, _ -> })
                         Destination.COMPARE -> CompareScreen(documents, projects, definitions, compare, onOpenFiles = {}, onOpenMap = {})
                         Destination.GALLERY -> GalleryScreen(settings)
@@ -134,6 +138,8 @@ class ScreenRenderTest {
         render("versions", Destination.VERSIONS, height = 1100)
         render("compare", Destination.COMPARE, height = 1100)
         render("compare-narrow", Destination.COMPARE, width = 420, height = 1400)
+        // The setup's edits broke the calibration and boot checksums
+        render("checksums", Destination.CHECKSUMS, height = 1000)
     }
 
     @Test

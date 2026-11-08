@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -14,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
+import org.mr0btain.tunerstoolkit.ui.checksum.ChecksumHandler
+import org.mr0btain.tunerstoolkit.ui.checksum.ChecksumsScreen
 import org.mr0btain.tunerstoolkit.ui.compare.CompareHandler
 import org.mr0btain.tunerstoolkit.ui.compare.CompareScreen
 import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
@@ -35,6 +39,7 @@ import tunerstoolkit.composeapp.generated.resources.Res
 import tunerstoolkit.composeapp.generated.resources.tt_compare
 import tunerstoolkit.composeapp.generated.resources.tt_cpu
 import tunerstoolkit.composeapp.generated.resources.tt_history
+import tunerstoolkit.composeapp.generated.resources.tt_shield
 import tunerstoolkit.composeapp.generated.resources.tt_folder
 import tunerstoolkit.composeapp.generated.resources.tt_sliders
 import tunerstoolkit.composeapp.generated.resources.tt_terminal
@@ -45,6 +50,7 @@ enum class Destination(val label: String, val icon: DrawableResource) {
     EDITOR("Editor", Res.drawable.tt_cpu),
     VERSIONS("Versions", Res.drawable.tt_history),
     COMPARE("Compare", Res.drawable.tt_compare),
+    CHECKSUMS("Checksums", Res.drawable.tt_shield),
     LOG("Log", Res.drawable.tt_terminal),
     SETTINGS("Settings", Res.drawable.tt_sliders),
     GALLERY("Gallery", Res.drawable.tt_sliders);
@@ -52,7 +58,7 @@ enum class Destination(val label: String, val icon: DrawableResource) {
     val navItem: TmNavItem get() = TmNavItem(key = name, label = label, icon = icon)
 
     companion object {
-        val inNav = listOf(FILES, EDITOR, VERSIONS, COMPARE, LOG, SETTINGS)
+        val inNav = listOf(FILES, EDITOR, VERSIONS, COMPARE, CHECKSUMS, LOG, SETTINGS)
     }
 }
 
@@ -72,7 +78,20 @@ fun App() {
     val definitions = remember { DefinitionHandler(scope, documents) }
     val editor = remember { EditorHandler() }
     val exchange = remember { ExchangeHandler(documents, definitions) }
-    val projects = remember { ProjectHandler(scope, documents, definitions = definitions, notify = { scope.launch { snackbar.showSnackbar(it) } }) }
+    val checksums = remember { ChecksumHandler(scope, documents) }
+    val projects = remember {
+        ProjectHandler(
+            scope, documents,
+            definitions = definitions,
+            attachments = listOf(checksums.moduleAttachment, checksums.ownAttachment),
+            notify = { scope.launch { snackbar.showSnackbar(it) } }
+        )
+    }
+    // Checksums follow edits, once typing pauses
+    LaunchedEffect(documents.version) {
+        delay(300)
+        if (checksums.state?.version != documents.version) checksums.refresh()
+    }
     val compare = remember { CompareHandler(scope, documents, definitions, projects) }
     var destination by rememberSaveable { mutableStateOf(Destination.FILES) }
     val data = settings.data
@@ -96,7 +115,7 @@ fun App() {
             ) {
                 when (destination) {
                     Destination.FILES -> FilesScreen(documents, projects, definitions, exchange, onOpenEditor = { destination = Destination.EDITOR }, onMessage = { scope.launch { snackbar.showSnackbar(it) } })
-                    Destination.EDITOR -> EditorScreen(documents, projects, definitions, exchange, settings, snackbar, onOpenFiles = { destination = Destination.FILES }, editor = editor)
+                    Destination.EDITOR -> EditorScreen(documents, projects, definitions, exchange, settings, snackbar, onOpenFiles = { destination = Destination.FILES }, editor = editor, checksums = checksums)
                     Destination.VERSIONS -> VersionsScreen(
                         projects,
                         definitions,
@@ -117,6 +136,12 @@ fun App() {
                             editor.open(name)
                             destination = Destination.EDITOR
                         }
+                    )
+                    Destination.CHECKSUMS -> ChecksumsScreen(
+                        documents,
+                        checksums,
+                        onOpenFiles = { destination = Destination.FILES },
+                        onMessage = { scope.launch { snackbar.showSnackbar(it) } }
                     )
                     Destination.LOG -> LogScreen()
                     Destination.SETTINGS -> SettingsScreen(settings, onOpenGallery = { destination = Destination.GALLERY })

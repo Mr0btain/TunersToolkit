@@ -52,6 +52,7 @@ import org.mr0btain.tunerstoolkit.core.image.BytePattern
 import org.mr0btain.tunerstoolkit.core.image.MemoryImage
 import org.mr0btain.tunerstoolkit.core.image.parseAddress
 import org.mr0btain.tunerstoolkit.core.image.toHexAddress
+import org.mr0btain.tunerstoolkit.ui.checksum.ChecksumHandler
 import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
 import org.mr0btain.tunerstoolkit.ui.document.OpenDocument
@@ -100,7 +101,8 @@ fun EditorScreen(
     onOpenFiles: () -> Unit,
     modifier: Modifier = Modifier,
     editor: EditorHandler = remember { EditorHandler() },
-    startAt: Long? = null
+    startAt: Long? = null,
+    checksums: ChecksumHandler? = null
 ) {
     val document = documents.document
     if (document == null) {
@@ -362,6 +364,11 @@ fun EditorScreen(
     if (exporting) {
         ExportDialog(
             document = document,
+            wrongChecksums = checksums?.state?.takeIf { it.version == version }?.wrong ?: 0,
+            onFixChecksums = {
+                val report = checksums?.fixAll()
+                if (report != null) message(if (report.allOk) "Fixed ${report.fixed} checksums" else "${report.results.count { !it.ok }} checksums couldn't be fixed")
+            },
             onExport = { format ->
                 exporting = false
                 when (val result = documents.export(format)) {
@@ -620,7 +627,7 @@ private fun FindDialog(initial: BytePattern?, onFind: (BytePattern, Boolean) -> 
 }
 
 @Composable
-private fun ExportDialog(document: OpenDocument, onExport: (BinaryFormat) -> Unit, onDismiss: () -> Unit) {
+private fun ExportDialog(document: OpenDocument, wrongChecksums: Int, onFixChecksums: () -> Unit, onExport: (BinaryFormat) -> Unit, onDismiss: () -> Unit) {
     var format by remember { mutableStateOf(document.format) }
     val gaps = document.image.ranges.size > 1
 
@@ -630,6 +637,14 @@ private fun ExportDialog(document: OpenDocument, onExport: (BinaryFormat) -> Uni
         onDismissRequest = onDismiss,
         actions = { TmButtonRow(confirmText = "Save", onConfirm = { onExport(format) }, onCancel = onDismiss) }
     ) {
+        if (wrongChecksums > 0) {
+            TmNotice(
+                kind = TmNoticeKind.WARNING,
+                title = "$wrongChecksums checksums are wrong",
+                text = "An ECU flashed with this image may not start. Fix them first, or export as it is to fix elsewhere."
+            )
+            TmButton(text = "Fix checksums", onClick = onFixChecksums, size = TmControlSize.SMALL)
+        }
         BinaryFormat.entries.forEach { option ->
             TmRadio(selected = format == option, onClick = { format = option }, label = option.label)
         }

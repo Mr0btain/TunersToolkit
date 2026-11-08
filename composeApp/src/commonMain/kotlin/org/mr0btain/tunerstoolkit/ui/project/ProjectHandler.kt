@@ -22,6 +22,21 @@ import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
 
 /**
+ * Something saved with a project as a file of its own (a checksum module, say): the project handler saves it when it's
+ * changed, gives it back when a project opens, and counts it in [ProjectHandler.hasUnsavedChanges]
+ */
+interface ProjectAttachment {
+    /** Its file's name in the project: letters, digits, dots, dashes and underscores */
+    val fileName: String
+
+    /** What to save now, or null for nothing (the file is removed) */
+    fun saved(): String?
+
+    /** Puts back what a project had, or null when it had none */
+    fun restore(text: String?)
+}
+
+/**
  * The project the open image belongs to, if any, and which of its versions
  */
 data class OpenProject(val manifest: ProjectManifest, val versionId: String) {
@@ -34,6 +49,7 @@ data class OpenProject(val manifest: ProjectManifest, val versionId: String) {
  * Saved projects, and saving the open image into them. Every open goes through here (not straight to
  * [DocumentHandler.open]), so [current] always matches what's in the editor.
  * @param definitions The open A2L, saved with the project and opened with it; null leaves definitions alone
+ * @param attachments Other things saved with a project, each as a file of its own
  * @param notify Shows a short message, like "Saved"
  * @param readInBackground Reads images on a background thread; false for tests and previews
  */
@@ -43,6 +59,7 @@ class ProjectHandler(
     private val documents: DocumentHandler,
     private val repository: ProjectRepository = ProjectRepository(platformProjectStore()),
     private val definitions: DefinitionHandler? = null,
+    private val attachments: List<ProjectAttachment> = emptyList(),
     private val notify: (String) -> Unit = {},
     private val readInBackground: Boolean = true
 ) {
@@ -74,7 +91,13 @@ class ProjectHandler(
     private var savedAdditions by mutableStateOf<String?>(null)
 
     private val definitionUnsaved: Boolean
-        get() = baseUnsaved || additionsUnsaved
+        get() = baseUnsaved || additionsUnsaved || attachmentsUnsaved
+
+    /** Each attachment's text as last opened or saved with the project */
+    private var savedAttachments by mutableStateOf<Map<String, String?>>(emptyMap())
+
+    private val attachmentsUnsaved: Boolean
+        get() = current != null && attachments.any { it.saved() != savedAttachments[it.fileName] }
 
     private val baseUnsaved: Boolean
         get() {
@@ -104,6 +127,7 @@ class ProjectHandler(
         documents.open(bytes, name, rawBaseAddress, inBackground = readInBackground) {
             current = null
             savedAdditions = null
+            savedAttachments = emptyMap()
             savedAt = documents.version
             onOpened()
         }
@@ -127,6 +151,11 @@ class ProjectHandler(
                 null -> if (additions != null) definitions?.openAdditions(additions) else definitions?.close()
             }
             savedAdditions = additions?.decodeToString()?.takeIf { it.isNotEmpty() }
+            val texts = attachments.associate { attachment ->
+                attachment.fileName to (repository.file(manifest.id, attachment.fileName) as? TkResult.Success)?.data?.decodeToString()
+            }
+            attachments.forEach { it.restore(texts[it.fileName]) }
+            savedAttachments = texts
             documents.open(source.data, manifest.source.fileName, manifest.source.rawBaseAddress, patches.data, readInBackground) {
                 current = OpenProject(manifest, versionId)
                 savedAt = documents.version
@@ -149,6 +178,7 @@ class ProjectHandler(
             }
             current = OpenProject(manifest, ProjectManifest.ORIGINAL)
             savedAdditions = null
+            savedAttachments = emptyMap()
             saveDefinition(manifest.id)?.let { return@launchSaving it }
             if (patches.isNotEmpty()) {
                 when (val added = repository.addVersion(manifest.id, versionName, patches, note)) {
@@ -203,6 +233,17 @@ class ProjectHandler(
         if (open != null && baseUnsaved) {
             when (val result = repository.setDefinition(id, open.name, open.source)) {
                 is TkResult.Success -> current = current?.copy(manifest = result.data)
+                is TkResult.Failure -> return result.error
+            }
+        }
+        for (attachment in attachments) {
+            val text = attachment.saved()
+            if (text == savedAttachments[attachment.fileName]) continue
+            when (val result = repository.setFile(id, attachment.fileName, text?.encodeToByteArray())) {
+                is TkResult.Success -> {
+                    current = current?.copy(manifest = result.data)
+                    savedAttachments = savedAttachments + (attachment.fileName to text)
+                }
                 is TkResult.Failure -> return result.error
             }
         }
