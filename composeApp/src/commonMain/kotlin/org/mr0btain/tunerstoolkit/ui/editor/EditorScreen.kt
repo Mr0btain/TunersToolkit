@@ -3,6 +3,9 @@ package org.mr0btain.tunerstoolkit.ui.editor
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
@@ -23,7 +26,8 @@ import org.mr0btain.tunerstoolkit.ui.definition.DefinitionOnImage
 import org.mr0btain.tunerstoolkit.ui.kit.hex.HexMarks
 import org.mr0btain.uikit.buttons.TmButton
 import org.mr0btain.uikit.buttons.TmButtonVariant
-import org.mr0btain.uikit.containers.TmTabs
+import org.mr0btain.tunerstoolkit.ui.kit.tabs.TmClosableTabs
+import org.mr0btain.tunerstoolkit.ui.kit.tabs.TmTab
 import org.mr0btain.uikit.foundation.TmControlSize
 import tunerstoolkit.composeapp.generated.resources.tt_table
 import androidx.compose.foundation.layout.Box
@@ -65,7 +69,7 @@ import org.mr0btain.tunerstoolkit.ui.kit.hex.TmHexView
 import org.mr0btain.tunerstoolkit.ui.kit.hex.byteCount
 import org.mr0btain.tunerstoolkit.ui.settings.SettingsHandler
 import org.mr0btain.uikit.buttons.TmButtonRow
-import org.mr0btain.uikit.buttons.TmIconButton
+import org.mr0btain.tunerstoolkit.ui.kit.tooltip.TmTipButton
 import org.mr0btain.uikit.containers.TmConfirmDialog
 import org.mr0btain.uikit.containers.TmDialog
 import org.mr0btain.uikit.containers.TmPageHeader
@@ -200,38 +204,46 @@ fun EditorScreen(
     }
 
     Column(modifier.fillMaxSize().padding(spacing.lg), verticalArrangement = Arrangement.spacedBy(spacing.md)) {
-        TmPageHeader(
-            title = project?.manifest?.name ?: document.name,
-            onBack = null,
-            subtitle = listOfNotNull(
-                project?.versionName,
-                "${document.format.label}, ${byteCount(image.size)}",
-                definition?.name,
-                if (changedBytes > 0) "${byteCount(changedBytes)} changed from the original" else null,
-                if (unsaved) "not saved" else null
-            ).joinToString(" · "),
-            actions = {
-                TmIconButton(
-                    icon = Res.drawable.tt_save,
-                    contentDescription = if (project == null) "Save as a project" else "Save",
-                    onClick = ::save,
-                    enabled = !projects.busy && (project == null || unsaved || project.isOriginal)
+        val headerActions: @Composable RowScope.() -> Unit = {
+            TmTipButton(
+                icon = Res.drawable.tt_save,
+                contentDescription = if (project == null) "Save as a project" else "Save",
+                onClick = ::save,
+                enabled = !projects.busy && (project == null || unsaved || project.isOriginal)
+            )
+            if (project != null) {
+                TmTipButton(
+                    icon = Res.drawable.tt_folder_plus,
+                    contentDescription = "Save as a new version",
+                    onClick = { saving = SaveKind.VERSION },
+                    enabled = !projects.busy
                 )
-                if (project != null) {
-                    TmIconButton(
-                        icon = Res.drawable.tt_folder_plus,
-                        contentDescription = "Save as a new version",
-                        onClick = { saving = SaveKind.VERSION },
-                        enabled = !projects.busy
-                    )
-                }
-                TmIconButton(icon = Res.drawable.tt_corner_up_left, contentDescription = "Undo", onClick = documents::undo, enabled = image.canUndo)
-                TmIconButton(icon = Res.drawable.tt_corner_up_right, contentDescription = "Redo", onClick = documents::redo, enabled = image.canRedo)
-                TmIconButton(icon = Res.drawable.tt_crosshair, contentDescription = "Go to address", onClick = { goingTo = true })
-                TmIconButton(icon = Res.drawable.tt_search, contentDescription = "Find", onClick = { finding = true })
-                TmIconButton(icon = Res.drawable.tt_download, contentDescription = "Export", onClick = { exporting = true })
             }
-        )
+            TmTipButton(icon = Res.drawable.tt_corner_up_left, contentDescription = "Undo", onClick = documents::undo, enabled = image.canUndo)
+            TmTipButton(icon = Res.drawable.tt_corner_up_right, contentDescription = "Redo", onClick = documents::redo, enabled = image.canRedo)
+            TmTipButton(icon = Res.drawable.tt_crosshair, contentDescription = "Go to address", onClick = { goingTo = true })
+            TmTipButton(icon = Res.drawable.tt_search, contentDescription = "Find", onClick = { finding = true })
+            TmTipButton(icon = Res.drawable.tt_download, contentDescription = "Export", onClick = { exporting = true })
+        }
+        val title = project?.manifest?.name ?: document.name
+        val subtitle = listOfNotNull(
+            project?.versionName,
+            "${document.format.label}, ${byteCount(image.size)}",
+            definition?.name,
+            if (changedBytes > 0) "${byteCount(changedBytes)} changed from the original" else null,
+            if (unsaved) "not saved" else null
+        ).joinToString(" · ")
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            // On a phone the buttons get a row of their own, or they'd squeeze the title to a letter a line
+            if (maxWidth < NARROW_HEADER) {
+                Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
+                    TmPageHeader(title = title, onBack = null, subtitle = subtitle)
+                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(spacing.sm), content = headerActions)
+                }
+            } else {
+                TmPageHeader(title = title, onBack = null, subtitle = subtitle, actions = headerActions)
+            }
+        }
 
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
             val wide = maxWidth >= WIDE_EDITOR
@@ -245,23 +257,31 @@ fun EditorScreen(
                 Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(spacing.sm)) {
                     val listTab = !wide
                     val tabs = buildList {
-                        if (listTab) add("Maps")
-                        add("Hex")
-                        editor.openMaps.forEach { add(it.name) }
+                        if (listTab) add(TmTab("Maps"))
+                        add(TmTab("Hex"))
+                        editor.openMaps.forEach { map ->
+                            val description = definition?.set?.get(map.name)?.description?.takeIf { it.isNotBlank() && it != map.name }
+                            add(TmTab(map.name, closable = true, tooltip = listOfNotNull(map.name, description).joinToString("\n")))
+                        }
                     }
+                    val firstMap = if (listTab) 2 else 1
                     val selected = when {
                         listTab && showingList -> 0
-                        editor.activeMap == null -> if (listTab) 1 else 0
-                        else -> tabs.indexOf(editor.activeMap).coerceAtLeast(0)
+                        editor.activeMap == null -> firstMap - 1
+                        else -> editor.openMaps.indexOfFirst { it.name == editor.activeMap }.let { if (it < 0) firstMap - 1 else firstMap + it }
                     }
                     if (tabs.size > 1) {
-                        TmTabs(tabs = tabs, selectedIndex = selected, onSelect = { index ->
-                            showingList = listTab && index == 0
-                            if (!showingList) {
-                                val name = tabs[index]
-                                if (index == (if (listTab) 1 else 0)) editor.showHex() else editor.open(name)
-                            }
-                        })
+                        TmClosableTabs(
+                            tabs = tabs,
+                            selectedIndex = selected,
+                            onSelect = { index ->
+                                showingList = listTab && index == 0
+                                if (!showingList) {
+                                    if (index < firstMap) editor.showHex() else editor.open(editor.openMaps[index - firstMap].name)
+                                }
+                            },
+                            onClose = { index -> editor.openMaps.getOrNull(index - firstMap)?.let { editor.close(it.name) } }
+                        )
                     }
                     val active = editor.active
                     when {
@@ -408,6 +428,9 @@ fun EditorScreen(
     }
 }
 
+/** Below this width the header's buttons go on a row under the title */
+private val NARROW_HEADER = 600.dp
+
 /** From this width the map list sits beside the editor; below it, it's a tab */
 private val WIDE_EDITOR = 900.dp
 
@@ -451,7 +474,8 @@ private fun ColumnScope.HexContent(
             onMessage = onMessage,
             marks = marks,
             coverage = coverage,
-            onOpenAt = { address -> onImage?.build?.index?.at(address)?.firstOrNull()?.let { onOpen(it.obj.name) } }
+            onOpenAt = { address -> onImage?.build?.index?.at(address)?.firstOrNull()?.let { onOpen(it.obj.name) } },
+            hoverText = onImage?.let { { address -> hoverTip(it, definitions, address) } }
         )
     }
     objectAtCursor?.let { obj ->

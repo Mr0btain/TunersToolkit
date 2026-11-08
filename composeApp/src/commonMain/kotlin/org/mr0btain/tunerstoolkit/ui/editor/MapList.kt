@@ -12,6 +12,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import org.mr0btain.tunerstoolkit.core.image.toHexAddress
+import org.mr0btain.tunerstoolkit.ui.kit.tooltip.TmTooltip
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,7 +23,7 @@ import org.mr0btain.tunerstoolkit.core.calibration.ObjectTree
 import org.mr0btain.tunerstoolkit.core.calibration.TreeRow
 import org.mr0btain.tunerstoolkit.ui.definition.OpenDefinition
 import org.mr0btain.uikit.buttons.TmButton
-import org.mr0btain.uikit.buttons.TmIconButton
+import org.mr0btain.tunerstoolkit.ui.kit.tooltip.TmTipButton
 import org.mr0btain.uikit.foundation.TmControlSize
 import org.mr0btain.uikit.search.TmSearchField
 import tunerstoolkit.composeapp.generated.resources.Res
@@ -58,7 +60,7 @@ internal fun MapList(definition: OpenDefinition?, editor: EditorHandler, onOpen:
     Column(modifier, verticalArrangement = Arrangement.spacedBy(spacing.sm)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.xs)) {
             TmSearchField(query = editor.query, onQueryChange = { editor.query = it }, placeholder = "Find a map", modifier = Modifier.weight(1f))
-            TmIconButton(icon = Res.drawable.tt_plus, contentDescription = "New map", onClick = onNew)
+            TmTipButton(icon = Res.drawable.tt_plus, contentDescription = "New map", onClick = onNew)
         }
         if (choices.size > 1) TmSegmented(options = choices, selected = chosen, onSelect = { editor.listGrouping = it }, optionLabel = { it })
         if (rows.isEmpty()) {
@@ -97,19 +99,28 @@ private fun FolderRow(row: TreeRow.Folder, onClick: () -> Unit) {
 private fun ObjectRow(row: TreeRow.Object, selected: Boolean, onClick: () -> Unit) {
     val colors = TmTheme.colors
     val obj = row.obj
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .background(if (selected) colors.accent.soft else colors.surface.copy(alpha = 0f), TmTheme.shapes.control)
-            .clickable(onClick = onClick)
-            .padding(start = TmTheme.spacing.md * row.depth + TmTheme.spacing.sm, top = TmTheme.spacing.xxs, bottom = TmTheme.spacing.xxs, end = TmTheme.spacing.xs)
-    ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(TmTheme.spacing.xs), verticalAlignment = Alignment.CenterVertically) {
-            Text(kindLabel(obj.kind), style = TmTheme.typography.caption, color = colors.accent.color)
-            Text(obj.displayName ?: obj.name, style = TmTheme.typography.body, color = colors.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-        if (obj.description.isNotBlank()) {
-            Text(obj.description, style = TmTheme.typography.caption, color = colors.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    // The row cuts long names and descriptions short, so the whole of both are in the tooltip
+    val tip = listOfNotNull(
+        obj.name,
+        obj.displayName?.takeIf { it != obj.name },
+        obj.description.takeIf { it.isNotBlank() },
+        "${kindName(obj.kind).replaceFirstChar { it.uppercase() }} at ${obj.address.toHexAddress()}"
+    ).joinToString("\n")
+    TmTooltip(tip) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .background(if (selected) colors.accent.soft else colors.surface.copy(alpha = 0f), TmTheme.shapes.control)
+                .clickable(onClick = onClick)
+                .padding(start = TmTheme.spacing.md * row.depth + TmTheme.spacing.sm, top = TmTheme.spacing.xxs, bottom = TmTheme.spacing.xxs, end = TmTheme.spacing.xs)
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(TmTheme.spacing.xs), verticalAlignment = Alignment.CenterVertically) {
+                Text(kindLabel(obj.kind), style = TmTheme.typography.caption, color = colors.accent.color)
+                Text(obj.displayName ?: obj.name, style = TmTheme.typography.body, color = colors.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            if (obj.description.isNotBlank()) {
+                Text(obj.description, style = TmTheme.typography.caption, color = colors.textMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
         }
     }
 }

@@ -41,7 +41,7 @@ import org.mr0btain.tunerstoolkit.ui.files.rememberFileSaver
 import org.mr0btain.uikit.buttons.TmButton
 import org.mr0btain.uikit.buttons.TmButtonRow
 import org.mr0btain.uikit.buttons.TmButtonVariant
-import org.mr0btain.uikit.buttons.TmIconButton
+import org.mr0btain.tunerstoolkit.ui.kit.tooltip.TmTipButton
 import org.mr0btain.uikit.containers.TmConfirmDialog
 import org.mr0btain.uikit.containers.TmDialog
 import org.mr0btain.uikit.containers.TmListRow
@@ -232,7 +232,7 @@ private fun CheckRow(result: CheckResult, own: Boolean, onRemove: () -> Unit) {
                     result.ok -> TmBadge(text = "Right", tone = TmTheme.colors.success)
                     else -> TmBadge(text = "Wrong", tone = TmTheme.colors.danger)
                 }
-                if (own) TmIconButton(icon = Res.drawable.tt_x, contentDescription = "Remove ${check.name}", onClick = onRemove)
+                if (own) TmTipButton(icon = Res.drawable.tt_x, contentDescription = "Remove ${check.name}", onClick = onRemove)
             }
         }
     )

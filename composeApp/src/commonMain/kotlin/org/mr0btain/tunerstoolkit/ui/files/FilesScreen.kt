@@ -44,7 +44,7 @@ import org.mr0btain.tunerstoolkit.core.project.ProjectManifest
 import org.mr0btain.tunerstoolkit.core.project.ProjectVersion
 import org.mr0btain.tunerstoolkit.ui.project.ProjectHandler
 import org.mr0btain.tunerstoolkit.ui.project.timeAgo
-import org.mr0btain.uikit.buttons.TmIconButton
+import org.mr0btain.tunerstoolkit.ui.kit.tooltip.TmTipButton
 import org.mr0btain.uikit.containers.TmConfirmDialog
 import org.mr0btain.uikit.containers.TmListRow
 import org.mr0btain.uikit.buttons.TmButton
@@ -223,7 +223,7 @@ private fun ProjectsPanel(projects: ProjectHandler, onOpenEditor: () -> Unit) {
                 selected = open,
                 onClick = { expanded = if (open) null else project.id },
                 trailing = {
-                    TmIconButton(icon = Res.drawable.tt_x, contentDescription = "Delete ${project.name}", onClick = { deletingProject = project })
+                    TmTipButton(icon = Res.drawable.tt_x, contentDescription = "Delete ${project.name}", onClick = { deletingProject = project })
                 }
             )
             if (open) {
@@ -286,7 +286,7 @@ private fun VersionRow(title: String, subtitle: String, isOpen: Boolean, onOpen:
         trailing = {
             Row(horizontalArrangement = Arrangement.spacedBy(TmTheme.spacing.xs), verticalAlignment = Alignment.CenterVertically) {
                 if (isOpen) TmBadge(text = "Open", tone = TmTheme.colors.accent)
-                if (onDelete != null) TmIconButton(icon = Res.drawable.tt_x, contentDescription = "Delete $title", onClick = onDelete)
+                if (onDelete != null) TmTipButton(icon = Res.drawable.tt_x, contentDescription = "Delete $title", onClick = onDelete)
             }
         }
     )

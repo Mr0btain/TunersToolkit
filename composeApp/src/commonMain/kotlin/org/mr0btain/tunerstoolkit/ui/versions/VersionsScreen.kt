@@ -28,7 +28,7 @@ import org.mr0btain.tunerstoolkit.ui.project.timeAgo
 import org.mr0btain.uikit.buttons.TmButton
 import org.mr0btain.uikit.buttons.TmButtonRow
 import org.mr0btain.uikit.buttons.TmButtonVariant
-import org.mr0btain.uikit.buttons.TmIconButton
+import org.mr0btain.tunerstoolkit.ui.kit.tooltip.TmTipButton
 import org.mr0btain.uikit.containers.TmConfirmDialog
 import org.mr0btain.uikit.containers.TmDialog
 import org.mr0btain.uikit.containers.TmListRow
@@ -104,11 +104,11 @@ fun VersionsScreen(
                     trailing = {
                         Row(horizontalArrangement = Arrangement.spacedBy(spacing.xxs), verticalAlignment = Alignment.CenterVertically) {
                             if (isOpen) TmBadge(text = "Open", tone = TmTheme.colors.accent)
-                            if (!isOpen) TmIconButton(icon = Res.drawable.tt_compare, contentDescription = "Compare ${entry.name} with what's open", onClick = { onCompare(manifest, entry.id) })
-                            TmIconButton(icon = Res.drawable.tt_folder_plus, contentDescription = "Start a new version from ${entry.name}", onClick = { branching = entry })
+                            if (!isOpen) TmTipButton(icon = Res.drawable.tt_compare, contentDescription = "Compare ${entry.name} with what's open", onClick = { onCompare(manifest, entry.id) })
+                            TmTipButton(icon = Res.drawable.tt_folder_plus, contentDescription = "Start a new version from ${entry.name}", onClick = { branching = entry })
                             if (entry.id != ProjectManifest.ORIGINAL) {
-                                TmIconButton(icon = Res.drawable.tt_sliders, contentDescription = "Rename ${entry.name}", onClick = { editing = entry })
-                                TmIconButton(icon = Res.drawable.tt_x, contentDescription = "Delete ${entry.name}", onClick = { deleting = entry })
+                                TmTipButton(icon = Res.drawable.tt_sliders, contentDescription = "Rename ${entry.name}", onClick = { editing = entry })
+                                TmTipButton(icon = Res.drawable.tt_x, contentDescription = "Delete ${entry.name}", onClick = { deleting = entry })
                             }
                         }
                     }

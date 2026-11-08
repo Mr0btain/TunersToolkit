@@ -381,12 +381,14 @@ Each phase ends with green CI and a usable app.
 - [x] ECU ident scanning. `core/.../ident/EcuIdent` reads the image's printable text and matches the makers' numbering: Bosch hardware (0261/0281) and software (1037/1039) numbers, VW group part numbers (906/907/909/997), Siemens/Continental (5WK/5WP/A2C), Toyota (89661-) and Denso (275xxx-xxxx) numbers, ECU family names (MED17, EDC16/17, ME7, SIMOS, SID…), slash separated calibration IDs and EPKs, and VINs. Each finding has its address, count, maker, what the pattern means and a confidence; more patterns go in `EcuIdent.PATTERNS`. The Files screen lists them and fills in an open project's ECU and software number; saving a new project fills them in automatically; Versions has "Fill in from the image". The A2L's EPK check (Phase 3) covers the other half of this item.
 
 **Phase 7: Some fixes/changes**
-- [ ] tabs in the editor should have a small X on the actual tab to close them quickly.
-- [ ] When the mouse hovers over things we should have tooltips and map names when hovering over things.
-- [ ] Make screen renders for each screen as a test, desktop and mobile, and check them to make sure everything works as it should.
-- [ ] Hex editor seems like the selected hex highlighting doesn't line up with where the text actually is, the further to the right end of the line you go the more it is offset, this needs checked with renders and fixed, and checked as screen size changes to ensure it still aligns when screen shrinks or expands.
-- [ ] Change the settings for the UI theme and stuff to match the way we do it in ticketman, see the example screenshot here: ![Screenshot From 2026-11-08 09-26-15.png](../../../../Pictures/Screenshots/Screenshot%20From%202026-11-08%2009-26-15.png) We want to keep those three example pictures of the theme to show people what they can expect.
+- [x] tabs in the editor should have a small X on the actual tab to close them quickly.
+- [x] When the mouse hovers over things we should have tooltips and map names when hovering over things.
+- [x] Make screen renders for each screen as a test, desktop and mobile, and check them to make sure everything works as it should.
+- [x] Hex editor seems like the selected hex highlighting doesn't line up with where the text actually is, the further to the right end of the line you go the more it is offset, this needs checked with renders and fixed, and checked as screen size changes to ensure it still aligns when screen shrinks or expands.
+- [x] Change the settings for the UI theme and stuff to match the way we do it in ticketman, see the example screenshot here: ![Screenshot From 2026-11-08 09-26-15.png](../../../../Pictures/Screenshots/Screenshot%20From%202026-11-08%2009-26-15.png) We want to keep those three example pictures of the theme to show people what they can expect.
+- [x] Map overlays should have an outline, with rounded corners
 - [ ] Test the entire application each tab and such in Desktop and mobile. that everything works looks right.
+- [ ] When selecting/clicking once something in the map list, we should just go to it in the hex editor and select the first hex inside it, double-clicking we can go to it in the hex editor but open it as a tab and go to that tab like it currently does on single click
 
 **Phase 8: Release**
 - [ ] Release workflows producing every artifact. First tagged release `v0.1.0`.
@@ -399,7 +401,7 @@ Each phase ends with green CI and a usable app.
 
 1. ~~Which format was "the open source one": TunerPro XDF or ASAM CDF/CDFX?~~ XDF first (2026-11-08); both are done in Phase 5.
 2. ~~Should the OEM 07K files be removed from git history?~~ Yes, done 2026-11-07 (Section 12).
-3. Licence for the project (MIT / Apache-2.0 / GPL-3.0)?
+3. ~~Licence for the project (MIT / Apache-2.0 / GPL-3.0)?~~ MIT (2026-11-08): `LICENSE`, and the desktop installers carry it.
 4. Should web deploy anywhere automatically (GitHub Pages or Gitea Pages), or ship only as a release zip?
 5. ~~Checksums: generic algorithms only, or ECU-specific modules?~~ Both (2026-11-08): generic algorithms now, and a module format so families can be added over time (`docs/checksums.md`).
 6. Shared kit: is the Gitea instance publicly reachable, so it can host the `uikit` Maven artifacts for both CI systems? Or should we use Maven Central? And is `ui-kit` / `org.mr0btain.uikit` a good name?

@@ -35,7 +35,7 @@ import org.mr0btain.tunerstoolkit.ui.kit.map.TmMapChart3D
 import org.mr0btain.tunerstoolkit.ui.kit.map.TmMapTable
 import org.mr0btain.uikit.buttons.TmButton
 import org.mr0btain.uikit.buttons.TmButtonVariant
-import org.mr0btain.uikit.buttons.TmIconButton
+import org.mr0btain.tunerstoolkit.ui.kit.tooltip.TmTipButton
 import org.mr0btain.uikit.containers.TmPaneHeader
 import org.mr0btain.uikit.data.TmKeyValueRow
 import org.mr0btain.uikit.feedback.TmNotice
@@ -89,11 +89,11 @@ internal fun MapPane(
             subtitle = listOf(obj.description, kindName(obj.kind), obj.unit, obj.address.toHexAddress()).filter { it.isNotBlank() }.joinToString(" · "),
             padded = false,
             actions = {
-                TmIconButton(icon = Res.drawable.tt_info, contentDescription = if (details) "Hide details" else "Show details", onClick = { details = !details })
-                TmIconButton(icon = Res.drawable.tt_download, contentDescription = "Save as CSV", onClick = onExportCsv)
-                TmIconButton(icon = Res.drawable.tt_upload, contentDescription = "Read a CSV into it", onClick = onImportCsv, enabled = !obj.readOnly)
-                TmIconButton(icon = Res.drawable.tt_cpu, contentDescription = "Show in the hex view", onClick = onShowInHex)
-                TmIconButton(icon = Res.drawable.tt_x, contentDescription = "Close ${obj.name}", onClick = onClose)
+                TmTipButton(icon = Res.drawable.tt_info, contentDescription = if (details) "Hide details" else "Show details", onClick = { details = !details })
+                TmTipButton(icon = Res.drawable.tt_download, contentDescription = "Save as CSV", onClick = onExportCsv)
+                TmTipButton(icon = Res.drawable.tt_upload, contentDescription = "Read a CSV into it", onClick = onImportCsv, enabled = !obj.readOnly)
+                TmTipButton(icon = Res.drawable.tt_cpu, contentDescription = "Show in the hex view", onClick = onShowInHex)
+                TmTipButton(icon = Res.drawable.tt_x, contentDescription = "Close ${obj.name}", onClick = onClose)
             }
         )
 

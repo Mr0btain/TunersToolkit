@@ -1,6 +1,10 @@
 package org.mr0btain.tunerstoolkit.ui.kit.hex
 
 import androidx.compose.foundation.Canvas
+import kotlinx.coroutines.delay
+import org.mr0btain.tunerstoolkit.ui.kit.tooltip.TM_HOVER_DELAY_MS
+import org.mr0btain.tunerstoolkit.ui.kit.tooltip.TmPointerTooltip
+import org.mr0btain.tunerstoolkit.ui.kit.tooltip.trackMouse
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -80,6 +84,8 @@ import kotlin.math.min
  * @param marks Tints bytes that belong to something, like calibration maps
  * @param coverage Where [marks] are, for the scrollbar's minimap
  * @param onOpenAt Called with the byte double-clicked (or double-tapped)
+ * @param hoverText What to say about the byte the mouse rests on, like the map it belongs to, shown as a tooltip;
+ * null says nothing
  */
 @Composable
 fun TmHexView(
@@ -97,7 +103,8 @@ fun TmHexView(
     onMessage: (String) -> Unit = {},
     marks: HexMarks? = null,
     coverage: List<AddressRange> = emptyList(),
-    onOpenAt: ((Long) -> Unit)? = null
+    onOpenAt: ((Long) -> Unit)? = null,
+    hoverText: ((Long) -> String?)? = null
 ) {
     val clipboard = LocalClipboard.current
     val colors = TmTheme.colors
@@ -110,7 +117,8 @@ fun TmHexView(
     val bytesPerRow = state.bytesPerRow
     val display = state.display
     val rows = remember(image, bytesPerRow) { HexRows(image.ranges, bytesPerRow) }
-    val charWidth = remember(style) { measurer.measure("0", style).size.width.toFloat() }
+    // A character's advance as a fraction: a single "0" is rounded to whole pixels, and that error adds up along a row
+    val charWidth = remember(style) { measurer.measure("0".repeat(WIDTH_SAMPLE), style).getLineRight(0) / WIDTH_SAMPLE }
     val lineHeight = remember(style) { measurer.measure("0", style).size.height.toFloat() }
     val padY = with(density) { 3.dp.toPx() }
     val rowHeightPx = lineHeight + padY * 2
@@ -121,6 +129,9 @@ fun TmHexView(
     val changes = remember(image, version) { image.changedRanges() }
     // The last press, for telling a double-click
     var lastPress by remember { mutableStateOf<Pair<Long, Long>?>(null) }
+    // Where the mouse rests, and the tooltip for the byte there once it has rested a moment
+    var hover by remember { mutableStateOf<Offset?>(null) }
+    var tip by remember { mutableStateOf<HexTip?>(null) }
 
     // The cursor starts on the first byte
     LaunchedEffect(image) {
@@ -290,6 +301,15 @@ fun TmHexView(
         return if (image.contains(address)) address to ascii else null
     }
 
+    val hoverAddress = hover?.let { addressAt(it)?.first }
+    LaunchedEffect(hoverAddress, hoverText, version) {
+        tip = null
+        val address = hoverAddress ?: return@LaunchedEffect
+        val text = hoverText?.invoke(address) ?: return@LaunchedEffect
+        delay(TM_HOVER_DELAY_MS)
+        hover?.let { tip = HexTip(it, text) }
+    }
+
     Row(modifier) {
         Box(
             Modifier
@@ -305,6 +325,7 @@ fun TmHexView(
                 modifier = Modifier
                     .width(with(density) { geometry.width.toDp() })
                     .fillMaxHeight()
+                    .trackMouse(hoverText != null) { hover = it }
                     .pointerInput(rows, geometry, onOpenAt) {
                         awaitEachGesture {
                             val down = awaitFirstDown(requireUnconsumed = false)
@@ -350,6 +371,7 @@ fun TmHexView(
                     }
                 }
             }
+            tip?.let { TmPointerTooltip(it.text, it.at) }
         }
 
         HexScrollbar(
@@ -480,6 +502,9 @@ private fun DataRow(
     }
 }
 
+/** A tooltip's [text], and the point it's shown by */
+private class HexTip(val at: Offset, val text: String)
+
 private class RowLayouts(val address: TextLayoutResult, val hex: TextLayoutResult, val ascii: TextLayoutResult)
 
 /** A background behind the bytes of [range] that are on this row, in both columns */
@@ -554,6 +579,9 @@ private fun oneDecimal(value: Double): String {
 }
 
 private const val TAG = "TmHexView"
+
+/** Characters measured together to find one's width */
+private const val WIDTH_SAMPLE = 64
 
 /** Two presses on one byte within this long are a double-click */
 private const val DOUBLE_CLICK_MS = 400L

@@ -6,6 +6,13 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
+import org.mr0btain.tunerstoolkit.ui.kit.tooltip.TM_HOVER_DELAY_MS
+import org.mr0btain.tunerstoolkit.ui.kit.tooltip.TmPointerTooltip
+import org.mr0btain.tunerstoolkit.ui.kit.tooltip.trackMouse
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
@@ -193,6 +200,18 @@ fun TmMapTable(
 
     fun rowAt(y: Float): Int? = state.listState.layoutInfo.visibleItemsInfo.firstOrNull { y >= it.offset && y < it.offset + it.size }?.index
 
+    // The cell the mouse rests on, told about in a tooltip once it has rested a moment
+    var hover by remember { mutableStateOf<Offset?>(null) }
+    var tip by remember { mutableStateOf<Pair<Offset, String>?>(null) }
+    val hoverCell = hover?.let { at -> cellAt(at.x)?.let { x -> rowAt(at.y)?.let { y -> x to y } } }
+    LaunchedEffect(hoverCell, values, other, mode, outer) {
+        tip = null
+        val (x, y) = hoverCell ?: return@LaunchedEffect
+        val text = cellTip(values, original, other, mode, x, y, outer)
+        delay(TM_HOVER_DELAY_MS)
+        hover?.let { tip = it to text }
+    }
+
     fun commitEdit() {
         val text = state.editText ?: return
         state.editText = null
@@ -314,6 +333,7 @@ fun TmMapTable(
                 modifier = Modifier
                     .width(totalWidth)
                     .fillMaxHeight()
+                    .trackMouse(true) { hover = it }
                     .pointerInput(values, cellWidth, headerWidth) {
                         awaitEachGesture {
                             val down = awaitFirstDown(requireUnconsumed = false)
@@ -354,6 +374,12 @@ fun TmMapTable(
                         modifier = Modifier.width(totalWidth).height(rowHeight)
                     )
                 }
+            }
+        }
+        // Over the table's rows: the header row (when there is one) sits above them
+        tip?.let { (at, text) ->
+            Box(Modifier.offset { IntOffset(0, if (values.dimensions.isNotEmpty()) rowHeightPx.toInt() else 0) }) {
+                TmPointerTooltip(text, at)
             }
         }
     }
@@ -493,6 +519,40 @@ private fun valueRange(values: CalibrationValues, shown: DoubleArray, outer: Lis
     }
     return if (low > high) 0.0..0.0 else low..high
 }
+
+/**
+ * What a cell's tooltip says: where it is on each axis, its value (and the other image's, in a compare), and what it
+ * was in the original when it has changed
+ */
+private fun cellTip(
+    values: CalibrationValues,
+    original: CalibrationValues?,
+    other: CalibrationValues?,
+    mode: MapTableMode,
+    x: Int,
+    y: Int,
+    outer: List<Int>
+): String {
+    val obj = values.obj
+    val index = values.indexAt(x, y, outer)
+    fun valueOf(from: CalibrationValues) = "${from.textAt(index) ?: formatValue(from.physical[index], obj.format)} ${obj.unit}".trim()
+    fun axisLine(axis: Int, at: Int): String? {
+        val points = values.axes.getOrNull(axis) ?: return null
+        val text = points.text(at) ?: formatValue(points.physical[at], points.axis.format)
+        val name = points.axis.input?.takeIf { it.isNotBlank() } ?: "${AXIS_LETTERS.getOrElse(axis) { "" }} axis"
+        return "$name: $text ${points.axis.unit}".trim()
+    }
+    return buildList {
+        add(obj.name)
+        if (values.dimensions.isNotEmpty()) axisLine(0, x)?.let(::add)
+        if (values.dimensions.size >= 2) axisLine(1, y)?.let(::add)
+        add("Value: ${valueOf(values)}")
+        if (other != null && mode != MapTableMode.VALUES) add("Other: ${valueOf(other)}")
+        if (original != null && original.size == values.size && original.raw[index] != values.raw[index]) add("Original: ${valueOf(original)}")
+    }.joinToString("\n")
+}
+
+private val AXIS_LETTERS = listOf("X", "Y", "Z", "4th", "5th")
 
 private fun numberText(values: CalibrationValues, shown: DoubleArray, x: Int, y: Int, outer: List<Int>): String =
     org.mr0btain.tunerstoolkit.core.calibration.plainNumber(shown[values.indexAt(x, y, outer)])

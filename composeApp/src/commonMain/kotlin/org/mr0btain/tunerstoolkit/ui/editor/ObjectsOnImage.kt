@@ -47,6 +47,22 @@ internal fun ObjectAtCursor(obj: CalibrationObject, definitions: DefinitionHandl
     }
 }
 
+/**
+ * The hex view's tooltip for [address]: the name of each object there, with its description and the number at
+ * [address] ("[3, 5] = 21.75 deg"), or null when it's in none
+ */
+internal fun hoverTip(onImage: DefinitionOnImage, definitions: DefinitionHandler, address: Long): String? {
+    val objects = onImage.build.index.at(address).map { it.obj }.distinctBy { it.name }
+    if (objects.isEmpty()) return null
+    return objects.joinToString("\n\n") { obj ->
+        listOfNotNull(
+            obj.name,
+            obj.description.takeIf { it.isNotBlank() && it != obj.name },
+            definitions.decode(obj)?.getOrNull()?.let { describeCell(it, address) }
+        ).joinToString("\n")
+    }
+}
+
 /** "[3, 5] = 21.75 deg" for the number at [address], or the axis point it is */
 internal fun describeCell(values: CalibrationValues, address: Long): String? {
     val obj = values.obj

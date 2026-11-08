@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ImageComposeScene
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.use
 import kotlinx.coroutines.CoroutineScope
@@ -34,6 +36,7 @@ import org.mr0btain.tunerstoolkit.ui.editor.EditorScreen
 import org.mr0btain.tunerstoolkit.ui.editor.MapView
 import org.mr0btain.tunerstoolkit.ui.files.FilesScreen
 import org.mr0btain.tunerstoolkit.ui.gallery.GalleryScreen
+import org.mr0btain.tunerstoolkit.ui.log.LogScreen
 import org.mr0btain.tunerstoolkit.ui.settings.SettingsHandler
 import org.mr0btain.tunerstoolkit.ui.settings.SettingsScreen
 import org.mr0btain.uikit.navigation.TmAppShell
@@ -53,7 +56,16 @@ class ScreenRenderTest {
     private val demo = File("../testdata/demo/tt-demo-1.hex").readBytes()
     private val demoA2l = File("../testdata/demo/tt-demo-1.a2l").readBytes()
 
-    private fun render(name: String, destination: Destination, width: Int = 1440, height: Int = 900, dark: Boolean = true, startAt: Long? = null, editor: EditorHandler = EditorHandler()) {
+    private fun render(
+        name: String,
+        destination: Destination,
+        width: Int = 1440,
+        height: Int = 900,
+        dark: Boolean = true,
+        startAt: Long? = null,
+        editor: EditorHandler = EditorHandler(),
+        hoverAt: Offset? = null
+    ) {
         val scope = CoroutineScope(Dispatchers.Unconfined)
         val documents = DocumentHandler(scope)
         // A project with a version, saved in memory, so the files screen lists it and the editor shows it's open
@@ -99,6 +111,7 @@ class ScreenRenderTest {
                         Destination.VERSIONS -> VersionsScreen(projects, definitions, onOpenFiles = {}, onOpenEditor = {}, onCompare = { _, _ -> })
                         Destination.COMPARE -> CompareScreen(documents, projects, definitions, compare, onOpenFiles = {}, onOpenMap = {})
                         Destination.GALLERY -> GalleryScreen(settings)
+                        Destination.LOG -> LogScreen()
                         else -> Unit
                     }
                 }
@@ -108,6 +121,15 @@ class ScreenRenderTest {
             repeat(8) { index ->
                 Thread.sleep(60)
                 frame = scene.render((index + 1) * 16_000_000L)
+            }
+            // Resting the mouse somewhere shows its tooltip, after the hover delay
+            hoverAt?.let { at ->
+                scene.sendPointerEvent(PointerEventType.Enter, at)
+                scene.sendPointerEvent(PointerEventType.Move, at)
+                repeat(12) { index ->
+                    Thread.sleep(80)
+                    frame = scene.render((index + 9) * 16_000_000L)
+                }
             }
             frame.encodeToData(EncodedImageFormat.PNG)!!.bytes
         }
@@ -120,8 +142,8 @@ class ScreenRenderTest {
         render("editor", Destination.EDITOR)
         render("editor-light", Destination.EDITOR, dark = false)
         render("editor-narrow", Destination.EDITOR, width = 420, height = 860)
-        // The calibration area, with the A2L's maps marked
-        render("editor-maps", Destination.EDITOR, startAt = 0x0080_4100L)
+        // The calibration area, with the A2L's maps marked, and the mouse resting on one
+        render("editor-maps", Destination.EDITOR, startAt = 0x0080_4100L, hoverAt = Offset(560f, 330f))
     }
 
     @Test
@@ -138,24 +160,49 @@ class ScreenRenderTest {
         render("map-surface", Destination.EDITOR, editor = withMap("BoostTarget", MapView.SURFACE))
         render("map-curve", Destination.EDITOR, editor = withMap("WarmupEnrichment", MapView.CHART))
         render("map-narrow", Destination.EDITOR, width = 420, height = 860, editor = withMap("IgnitionBase"))
+        // Several maps open, each tab with its X, and the mouse resting on a cell
+        render("map-tabs", Destination.EDITOR, editor = withMap("IgnitionBase").apply { open("VolumetricEfficiency"); open("BoostTarget"); open("IgnitionBase") }, hoverAt = Offset(760f, 330f))
     }
 
     @Test
-    fun files() = render("files", Destination.FILES, height = 2600)
+    fun files() {
+        render("files", Destination.FILES, height = 2600)
+        render("files-narrow", Destination.FILES, width = 420, height = 3600)
+    }
 
     @Test
     fun versionsAndCompare() {
         render("versions", Destination.VERSIONS, height = 1100)
+        render("versions-narrow", Destination.VERSIONS, width = 420, height = 1500)
         render("compare", Destination.COMPARE, height = 1100)
         render("compare-narrow", Destination.COMPARE, width = 420, height = 1400)
-        // The setup's edits broke the calibration and boot checksums
-        render("checksums", Destination.CHECKSUMS, height = 1000)
-        render("finder", Destination.FINDER, height = 1100)
     }
 
     @Test
-    fun settings() = render("settings", Destination.SETTINGS)
+    fun checksumsAndFinder() {
+        // The setup's edits broke the calibration and boot checksums
+        render("checksums", Destination.CHECKSUMS, height = 1000)
+        render("checksums-narrow", Destination.CHECKSUMS, width = 420, height = 1500)
+        render("finder", Destination.FINDER, height = 1100)
+        render("finder-narrow", Destination.FINDER, width = 420, height = 1800)
+    }
 
     @Test
-    fun gallery() = render("gallery", Destination.GALLERY, height = 7000)
+    fun log() {
+        render("log", Destination.LOG)
+        render("log-narrow", Destination.LOG, width = 420, height = 860)
+    }
+
+    @Test
+    fun settings() {
+        render("settings", Destination.SETTINGS, height = 1300)
+        render("settings-light", Destination.SETTINGS, height = 1300, dark = false)
+        render("settings-narrow", Destination.SETTINGS, width = 420, height = 1900)
+    }
+
+    @Test
+    fun gallery() {
+        render("gallery", Destination.GALLERY, height = 7000)
+        render("gallery-narrow", Destination.GALLERY, width = 420, height = 12000)
+    }
 }

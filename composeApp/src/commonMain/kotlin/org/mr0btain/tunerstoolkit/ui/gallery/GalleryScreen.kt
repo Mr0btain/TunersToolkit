@@ -11,7 +11,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.mr0btain.tunerstoolkit.core.image.AddressRange
 import org.mr0btain.tunerstoolkit.core.image.MemoryImage
+import org.mr0btain.tunerstoolkit.ui.kit.hex.HexMark
+import org.mr0btain.tunerstoolkit.ui.kit.hex.HexMarkRole
 import org.mr0btain.tunerstoolkit.ui.kit.hex.HexViewState
+import org.mr0btain.tunerstoolkit.ui.kit.tabs.TmClosableTabs
+import org.mr0btain.tunerstoolkit.ui.kit.tabs.TmTab
+import org.mr0btain.tunerstoolkit.ui.kit.tooltip.TmTipButton
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.tt_search
 import org.mr0btain.tunerstoolkit.ui.kit.hex.TmHexView
 import org.mr0btain.tunerstoolkit.ui.settings.SettingsHandler
 import org.mr0btain.uikit.foundation.TmSurface
@@ -38,7 +47,7 @@ fun GalleryScreen(settings: SettingsHandler, modifier: Modifier = Modifier) {
 }
 
 /** Tuners Toolkit's own components, for the gallery */
-fun appGallerySections(): List<@Composable () -> Unit> = listOf({ HexViewSection() }, { MapTableSection() }, { MapChartSection() })
+fun appGallerySections(): List<@Composable () -> Unit> = listOf({ HexViewSection() }, { MapTableSection() }, { MapChartSection() }, { TabsAndTipsSection() })
 
 /** Two segments with a gap, a changed byte, a selection and a search match */
 private fun sampleImage(): MemoryImage = MemoryImage.Builder().apply {
@@ -68,9 +77,36 @@ private fun HexViewSection() {
                         image.write(address, bytes)
                         version = image.version
                     },
-                    modifier = Modifier.fillMaxWidth().height(240.dp)
+                    modifier = Modifier.fillMaxWidth().height(240.dp),
+                    marks = { row ->
+                        listOf(HexMark(AddressRange(0x0080_0034L, 0x0080_0052L), "Sample map", HexMarkRole.VALUES)).filter { it.range.overlaps(row) }
+                    },
+                    hoverText = { address -> if (address in 0x0080_0034L until 0x0080_0052L) "Sample map" else null }
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun TabsAndTipsSection() {
+    val tabs = remember { mutableStateListOf("IgnitionBase", "VolumetricEfficiency", "BoostTarget") }
+    var selected by remember { mutableIntStateOf(1) }
+
+    GallerySection(title = "Tabs and tooltips", description = "Tabs that close from an X on the tab, and tips shown while the mouse rests on something") {
+        Specimen("TmClosableTabs") {
+            TmClosableTabs(
+                tabs = listOf(TmTab("Hex")) + tabs.map { TmTab(it, closable = true, tooltip = "$it, a map") },
+                selectedIndex = selected,
+                onSelect = { selected = it },
+                onClose = { index ->
+                    tabs.removeAt(index - 1)
+                    if (selected >= index) selected = (selected - 1).coerceAtLeast(0)
+                }
+            )
+        }
+        Specimen("TmTipButton") {
+            TmTipButton(icon = Res.drawable.tt_search, contentDescription = "Find", onClick = {})
         }
     }
 }

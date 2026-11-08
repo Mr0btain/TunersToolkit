@@ -123,6 +123,8 @@ compose.desktop {
             packageName = "TunersToolkit"
             description = "ECU calibration editor"
             vendor = "Mr0btain"
+            copyright = "Copyright (c) 2026 Mr0btain. MIT licence"
+            licenseFile.set(rootProject.file("LICENSE"))
             // Installers only take numbers, so a 1.0.0-rc1 is packaged as 1.0.0
             val appVersion = providers.gradleProperty("tunerstoolkit.version").get().substringBefore('-')
             packageVersion = appVersion
