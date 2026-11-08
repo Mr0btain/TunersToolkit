@@ -130,14 +130,20 @@ compose.desktop {
             packageVersion = appVersion
             modules("jdk.unsupported")
 
+            linux {
+                iconFile.set(project.file("icons/icon.png"))
+            }
             macOS {
                 bundleID = "org.mr0btain.tunerstoolkit"
+                // The icons are made by tools/make_icons.py
+                iconFile.set(project.file("icons/icon.icns"))
                 // macOS refuses a version starting with 0, so 0.x builds say 1.0.0 inside the app bundle
                 packageVersion = if (appVersion.startsWith("0.")) "1.0.0" else appVersion
             }
             windows {
                 // Never change this: it's how a newer MSI knows to replace the installed one
                 upgradeUuid = "2f6b1f0e-9a51-4c7e-8a4e-5d3c0b7a2e91"
+                iconFile.set(project.file("icons/icon.ico"))
                 menu = true
                 shortcut = true
             }

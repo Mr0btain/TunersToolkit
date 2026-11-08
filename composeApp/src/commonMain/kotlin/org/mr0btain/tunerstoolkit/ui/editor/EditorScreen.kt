@@ -194,6 +194,13 @@ fun EditorScreen(
         editor.open(name)
     }
 
+    /** Shows [name] in the hex view with the cursor on its first byte, without opening a tab */
+    fun selectObject(name: String) {
+        val obj = definition?.set?.get(name) ?: return
+        editor.selectedObject = name
+        editor.showHex(onImage?.build?.index?.parts(name)?.minOfOrNull { it.range.start } ?: obj.address)
+    }
+
     fun write(values: CalibrationValues, changes: Map<Int, Double>) {
         if (changes.isEmpty()) return
         val summary = documents.edit { CalibrationCodec.writeAll(it, values, changes) } ?: return
@@ -251,7 +258,7 @@ fun EditorScreen(
             Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(spacing.md)) {
                 if (wide) {
                     TmSurface(modifier = Modifier.width(300.dp).fillMaxHeight()) {
-                        MapList(definition, editor, onOpen = ::openObject, onNew = { making = MakeMap(null) }, modifier = Modifier.fillMaxSize().padding(spacing.sm))
+                        MapList(definition, editor, onSelect = ::selectObject, onOpen = ::openObject, onNew = { making = MakeMap(null) }, modifier = Modifier.fillMaxSize().padding(spacing.sm))
                     }
                 }
                 Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(spacing.sm)) {
@@ -285,7 +292,7 @@ fun EditorScreen(
                     }
                     val active = editor.active
                     when {
-                        listTab && showingList -> MapList(definition, editor, onOpen = { showingList = false; openObject(it) }, onNew = { making = MakeMap(null) }, modifier = Modifier.fillMaxSize())
+                        listTab && showingList -> MapList(definition, editor, onSelect = { showingList = false; selectObject(it) }, onOpen = { showingList = false; openObject(it) }, onNew = { making = MakeMap(null) }, modifier = Modifier.fillMaxSize())
                         active != null && definition?.set?.get(active.name) != null -> {
                             val obj = definition.set[active.name]!!
                             val values = remember(obj, version, document) { definitions.decode(obj) }

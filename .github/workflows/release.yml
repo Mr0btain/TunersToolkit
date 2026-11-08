@@ -1,0 +1,175 @@
+# A release for every v* tag: the desktop installers (built on each OS, since jpackage only packages for the one it
+# runs on), the Android APK and the web app as a zip, attached to a GitHub release. The tag has to match
+# tunerstoolkit.version in gradle.properties.
+#
+# The APK is signed when these secrets are set (otherwise it's unsigned):
+#   TUNERSTOOLKIT_KEYSTORE_BASE64 (the keystore file, base64), TUNERSTOOLKIT_KEYSTORE_PASSWORD,
+#   TUNERSTOOLKIT_KEY_ALIAS, TUNERSTOOLKIT_KEY_PASSWORD
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: An existing tag to build a release for, like v0.1.0
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  version:
+    name: Tag matches the version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Compare
+        run: |
+          version=$(sed -n 's/^tunerstoolkit.version=//p' gradle.properties)
+          if [ "v$version" != "$TAG" ]; then
+            echo "::error::The tag is $TAG but gradle.properties says $version"
+            exit 1
+          fi
+
+  desktop:
+    name: Desktop (${{ matrix.os }})
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+
+      - name: Installer
+        shell: bash
+        run: ./gradlew :composeApp:packageDistributionForCurrentOS
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: desktop-${{ matrix.os }}
+          path: |
+            composeApp/build/compose/binaries/main/dmg/*.dmg
+            composeApp/build/compose/binaries/main/msi/*.msi
+            composeApp/build/compose/binaries/main/deb/*.deb
+          if-no-files-found: error
+
+  android:
+    name: Android
+    needs: version
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+        with:
+          packages: platforms;android-37.0
+
+      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+
+      - name: Signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.TUNERSTOOLKIT_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            echo "TUNERSTOOLKIT_KEYSTORE=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+          else
+            echo "::warning::No signing key in the secrets, so the APK is unsigned"
+          fi
+
+      - name: APK
+        env:
+          TUNERSTOOLKIT_KEYSTORE_PASSWORD: ${{ secrets.TUNERSTOOLKIT_KEYSTORE_PASSWORD }}
+          TUNERSTOOLKIT_KEY_ALIAS: ${{ secrets.TUNERSTOOLKIT_KEY_ALIAS }}
+          TUNERSTOOLKIT_KEY_PASSWORD: ${{ secrets.TUNERSTOOLKIT_KEY_PASSWORD }}
+        run: |
+          ./gradlew :androidApp:assembleRelease
+          mkdir -p out
+          for apk in androidApp/build/outputs/apk/release/*.apk; do
+            cp "$apk" "out/TunersToolkit-${TAG#v}-$(basename "$apk" .apk | sed 's/^androidApp-//').apk"
+          done
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: android
+          path: out/*.apk
+          if-no-files-found: error
+
+  web:
+    name: Web
+    needs: version
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+
+      - name: Web build
+        run: |
+          ./gradlew :composeApp:wasmJsBrowserDistribution
+          mkdir -p out
+          (cd composeApp/build/dist/wasmJs/productionExecutable && zip -r "$GITHUB_WORKSPACE/out/TunersToolkit-${TAG#v}-web.zip" .)
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: web
+          path: out/*.zip
+          if-no-files-found: error
+
+  release:
+    name: GitHub release
+    needs: [desktop, android, web]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      # A draft, so the notes can be written and the files looked over before it's published
+      - name: Draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -l artifacts
+          prerelease=""
+          case "$TAG" in *-*) prerelease="--prerelease" ;; esac
+          gh release create "$TAG" artifacts/* --repo "$GITHUB_REPOSITORY" --draft --title "Tuners Toolkit ${TAG#v}" --generate-notes $prerelease

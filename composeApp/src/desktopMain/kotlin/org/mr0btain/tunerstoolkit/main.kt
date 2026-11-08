@@ -8,6 +8,9 @@ import org.mr0btain.applogger.AppLogger
 import org.mr0btain.applogger.LogBook
 import org.mr0btain.applogger.LogFileStore
 import org.mr0btain.tunerstoolkit.platform.DirectoryResolverFactory
+import org.jetbrains.compose.resources.painterResource
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.tt_app_icon
 
 private const val TAG = "Main"
 
@@ -17,7 +20,7 @@ fun main() {
     startLogFiles()
 
     application {
-        Window(onCloseRequest = ::exitApplication, title = "Tuners Toolkit") {
+        Window(onCloseRequest = ::exitApplication, title = "Tuners Toolkit", icon = painterResource(Res.drawable.tt_app_icon)) {
             App()
         }
     }

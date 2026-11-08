@@ -388,7 +388,10 @@ Each phase ends with green CI and a usable app.
 - [x] Change the settings for the UI theme and stuff to match the way we do it in ticketman, see the example screenshot here: ![Screenshot From 2026-11-08 09-26-15.png](../../../../Pictures/Screenshots/Screenshot%20From%202026-11-08%2009-26-15.png) We want to keep those three example pictures of the theme to show people what they can expect.
 - [x] Map overlays should have an outline, with rounded corners
 - [ ] Test the entire application each tab and such in Desktop and mobile. that everything works looks right.
-- [ ] When selecting/clicking once something in the map list, we should just go to it in the hex editor and select the first hex inside it, double-clicking we can go to it in the hex editor but open it as a tab and go to that tab like it currently does on single click
+- [x] When selecting/clicking once something in the map list, we should just go to it in the hex editor and select the first hex inside it, double-clicking we can go to it in the hex editor but open it as a tab and go to that tab like it currently does on single click.
+- [x] Generate icons for the app for everything. Matching the general overall look and feel. (`tools/make_icons.py`: the app icon for Android, the desktop window and installers, and the web favicon, plus Settings and Gallery icons of their own)
+- [x] Allow users to add custom checksums they can use. (Keep as a module: your own checks, and any .ttsum you load, are kept in the app's store for every image, `ModuleLibrary`)
+- [x] Setup deploy web to github pages automatically, and a release build for each OS as well. (`.github/workflows/pages.yml` on pushes to main; `release.yml` on v* tags drafts a GitHub release with the DMG, MSI, DEB, APK and a web zip)
 
 **Phase 8: Release**
 - [ ] Release workflows producing every artifact. First tagged release `v0.1.0`.
@@ -402,7 +405,7 @@ Each phase ends with green CI and a usable app.
 1. ~~Which format was "the open source one": TunerPro XDF or ASAM CDF/CDFX?~~ XDF first (2026-11-08); both are done in Phase 5.
 2. ~~Should the OEM 07K files be removed from git history?~~ Yes, done 2026-11-07 (Section 12).
 3. ~~Licence for the project (MIT / Apache-2.0 / GPL-3.0)?~~ MIT (2026-11-08): `LICENSE`, and the desktop installers carry it.
-4. Should web deploy anywhere automatically (GitHub Pages or Gitea Pages), or ship only as a release zip?
+4. ~~Should web deploy anywhere automatically (GitHub Pages or Gitea Pages), or ship only as a release zip?~~ GitHub Pages from main, and a zip with each release (2026-11-08).
 5. ~~Checksums: generic algorithms only, or ECU-specific modules?~~ Both (2026-11-08): generic algorithms now, and a module format so families can be added over time (`docs/checksums.md`).
 6. Shared kit: is the Gitea instance publicly reachable, so it can host the `uikit` Maven artifacts for both CI systems? Or should we use Maven Central? And is `ui-kit` / `org.mr0btain.uikit` a good name?
 

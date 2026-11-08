@@ -2,6 +2,7 @@ package org.mr0btain.tunerstoolkit.ui.editor
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,10 +34,10 @@ import org.mr0btain.uikit.theme.TmTheme
 
 /**
  * The definition's objects as a tree by FUNCTION or GROUP (or all in one list), with a search over names and
- * descriptions. Clicking an object opens it
+ * descriptions. Clicking an object shows it in the hex view ([onSelect]); double-clicking opens it in a tab ([onOpen])
  */
 @Composable
-internal fun MapList(definition: OpenDefinition?, editor: EditorHandler, onOpen: (String) -> Unit, onNew: () -> Unit, modifier: Modifier = Modifier) {
+internal fun MapList(definition: OpenDefinition?, editor: EditorHandler, onSelect: (String) -> Unit, onOpen: (String) -> Unit, onNew: () -> Unit, modifier: Modifier = Modifier) {
     val spacing = TmTheme.spacing
     if (definition == null) {
         Column(modifier, verticalArrangement = Arrangement.spacedBy(spacing.sm)) {
@@ -74,7 +75,7 @@ internal fun MapList(definition: OpenDefinition?, editor: EditorHandler, onOpen:
             items(rows, key = { row -> if (row is TreeRow.Object) "o:${row.path}/${row.obj.name}" else "f:${(row as TreeRow.Folder).path}" }) { row ->
                 when (row) {
                     is TreeRow.Folder -> FolderRow(row, onClick = { editor.toggle(row.path) })
-                    is TreeRow.Object -> ObjectRow(row, selected = row.obj.name == editor.selectedObject, onClick = { onOpen(row.obj.name) })
+                    is TreeRow.Object -> ObjectRow(row, selected = row.obj.name == editor.selectedObject, onClick = { onSelect(row.obj.name) }, onDoubleClick = { onOpen(row.obj.name) })
                 }
             }
         }
@@ -96,7 +97,7 @@ private fun FolderRow(row: TreeRow.Folder, onClick: () -> Unit) {
 }
 
 @Composable
-private fun ObjectRow(row: TreeRow.Object, selected: Boolean, onClick: () -> Unit) {
+private fun ObjectRow(row: TreeRow.Object, selected: Boolean, onClick: () -> Unit, onDoubleClick: () -> Unit) {
     val colors = TmTheme.colors
     val obj = row.obj
     // The row cuts long names and descriptions short, so the whole of both are in the tooltip
@@ -111,7 +112,7 @@ private fun ObjectRow(row: TreeRow.Object, selected: Boolean, onClick: () -> Uni
             Modifier
                 .fillMaxWidth()
                 .background(if (selected) colors.accent.soft else colors.surface.copy(alpha = 0f), TmTheme.shapes.control)
-                .clickable(onClick = onClick)
+                .combinedClickable(onClick = onClick, onDoubleClick = onDoubleClick)
                 .padding(start = TmTheme.spacing.md * row.depth + TmTheme.spacing.sm, top = TmTheme.spacing.xxs, bottom = TmTheme.spacing.xxs, end = TmTheme.spacing.xs)
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(TmTheme.spacing.xs), verticalAlignment = Alignment.CenterVertically) {

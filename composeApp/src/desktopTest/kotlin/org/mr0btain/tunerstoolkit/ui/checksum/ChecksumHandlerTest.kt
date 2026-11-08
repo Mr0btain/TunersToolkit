@@ -7,6 +7,8 @@ import org.mr0btain.tunerstoolkit.core.checksum.ChecksumCheck
 import org.mr0btain.tunerstoolkit.core.checksum.ChecksumModules
 import org.mr0btain.tunerstoolkit.core.checksum.ChecksumStore
 import org.mr0btain.tunerstoolkit.core.checksum.TtSum
+import org.mr0btain.tunerstoolkit.core.checksum.Detector
+import org.mr0btain.tunerstoolkit.core.checksum.ModuleLibrary
 import org.mr0btain.tunerstoolkit.core.image.AddressRange
 import org.mr0btain.tunerstoolkit.core.project.MemoryProjectStore
 import org.mr0btain.tunerstoolkit.core.project.ProjectRepository
@@ -111,5 +113,32 @@ class ChecksumHandlerTest {
         assertEquals(1, report.fixed, "the calibration CRC, which the stale results said was right")
         val image = documents.document!!.image
         assertTrue(org.mr0btain.tunerstoolkit.core.checksum.Checksums.verify(image, ChecksumModules.demo.checkList).all { it.ok })
+    }
+
+    @Test
+    fun yourOwnChecksKeptAsAModuleAreUsedForEveryImageAfterARestart() {
+        val store = MemoryProjectStore()
+        val first = ChecksumHandler(scope, documents, inBackground = false, library = ModuleLibrary(store))
+        projects.openFile(hex, "tt-demo-1.hex")
+        first.addOwn(ChecksumCheck("Mine", ChecksumAlgorithm.Sum(1, 16), listOf(AddressRange(0x800200, 0x800300)), ChecksumStore(0x800300, 2)))
+        val size = documents.document!!.image.size
+        val module = first.makeModule("Bench ECU", "Example", "", listOf(Detector.Size(size)))!!
+        assertNull(first.own, "the checks moved into the module")
+        assertEquals(module.id, first.active?.id)
+        assertTrue(module.id in first.kept)
+        assertTrue(first.needsConfirmation, "a module of your own isn't verified")
+
+        // Another run of the app: the module is there, and recognises an image of that size by itself
+        val second = ChecksumHandler(scope, documents, inBackground = false, library = ModuleLibrary(store))
+        assertTrue(second.modules.any { it.id == "bench-ecu" })
+        assertTrue(second.detected.any { it.module.id == "bench-ecu" })
+        assertEquals(listOf("Mine"), (second.modules.single { it.id == "bench-ecu" } as org.mr0btain.tunerstoolkit.core.checksum.DefinedModule).checkList.map { it.name })
+
+        // A loaded .ttsum is kept too, and forgetting takes either out
+        second.load(TtSum.write(ChecksumModules.demo.copy(id = "loaded", name = "Loaded")).encodeToByteArray(), "loaded.ttsum")
+        second.forget("bench-ecu")
+        assertTrue(second.modules.none { it.id == "bench-ecu" })
+        val third = ChecksumHandler(scope, documents, inBackground = false, library = ModuleLibrary(store))
+        assertEquals(setOf("loaded"), third.kept)
     }
 }
