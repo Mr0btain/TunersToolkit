@@ -342,8 +342,8 @@ fun EditorScreen(
 
     if (confirmingFix) {
         TmConfirmDialog(
-            title = "Fix with a module that isn't verified?",
-            message = "${checksums?.active?.name} hasn't been checked against real binaries. A wrong checksum can stop an ECU starting, so keep the original and check the result before flashing.",
+            title = "Fix with checks that aren't verified?",
+            message = "Some of these checks aren't from a verified module built into the app: they came from a file, a project, or were added by hand. A wrong checksum can stop an ECU starting, so keep the original and check the result before flashing.",
             confirmText = "Fix them",
             destructive = true,
             onConfirm = {
