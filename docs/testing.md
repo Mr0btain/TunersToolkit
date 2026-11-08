@@ -41,7 +41,9 @@ object back from the demo image, comparing it with what `DemoEcu` wrote.
 
 Map editing logic is in core too: `MapEditTest` covers selections, every operation, spreadsheet paste and copy, `writeAll`, the map list tree and search, and comparing. `ObjectIndexTest` covers the index (against a brute force search), overlaps and the EPK check, and `A2lWriterTest` the round trips.
 
-The app's handlers are tested on desktop with the demo files and an in memory project store: `ProjectHandlerTest`, `DefinitionHandlerTest` (opening, indexing, saving the A2L with a project) and `CompareHandlerTest` (comparing, copying a map back, branching and renaming versions). `ScreenRenderTest` draws every screen, the map editor in each view, to `composeApp/build/screen-renders`.
+Exchange formats are in `core/src/commonTest/.../formats/`: `XdfTest` (every demo object through an XDF and back, and a hand written XDF with every kind of item), `TtDefTest`, `ValuesExchangeTest` (DCM and CDFX each take every demo map back out of a tuned image to the original bytes; hand written DCM and CDFX; what applying reports; CSV) and `HostileFilesTest` (deep nesting, huge sizes, formula injection).
+
+The app's handlers are tested on desktop with the demo files and an in memory project store: `ProjectHandlerTest`, `DefinitionHandlerTest` (opening, indexing, saving the A2L with a project) and `CompareHandlerTest` (comparing, copying a map back, branching and renaming versions) and `ExchangeHandlerTest` (the definition through XDF and .ttdef, values out and in, a map as CSV, maps made by hand saved with a project). `ScreenRenderTest` draws every screen, the map editor in each view, to `composeApp/build/screen-renders`.
 
 ## The demo ECU
 

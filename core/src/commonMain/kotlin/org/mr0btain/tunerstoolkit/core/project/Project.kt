@@ -10,8 +10,9 @@ import org.mr0btain.tunerstoolkit.core.image.Patch
  *
  * In a [ProjectStore] a project is a folder `projects/<id>/` holding `project.json` (this), `source.bin` (the
  * original file), `versions/<version id>.json` (each version's [VersionPatches]) and, when it has one,
- * `definition.bin` (the A2L describing the image, as it was read).
+ * `definition.bin` (the definition describing the image, as it was read) and `additions.ttdef` (maps made by hand).
  * @property definition The definition saved with it, if any
+ * @property additions The maps made by hand saved with it, if any
  * @property formatVersion Bumped when the layout changes, so older saves can be moved over
  * @property versions Saved versions, oldest first. The original is always there too, as [ORIGINAL]
  */
@@ -25,6 +26,7 @@ data class ProjectManifest(
     val info: ProjectInfo = ProjectInfo(),
     val versions: List<ProjectVersion> = emptyList(),
     val definition: ProjectDefinition? = null,
+    val additions: ProjectDefinition? = null,
     val formatVersion: Int = FORMAT_VERSION
 ) {
     fun version(id: String): ProjectVersion? = versions.firstOrNull { it.id == id }
@@ -53,7 +55,7 @@ data class ProjectSource(
     val rawBaseAddress: Long = 0
 )
 
-/** The definition file (an A2L) saved with a project */
+/** A definition file (an A2L, XDF or .ttdef, or the additions) saved with a project */
 @Serializable
 data class ProjectDefinition(val fileName: String, val size: Long)
 

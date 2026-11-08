@@ -70,12 +70,21 @@ class ProjectHandler(
     val hasUnsavedChanges: Boolean
         get() = documents.document != null && (documents.version != savedAt || definitionUnsaved)
 
+    /** The additions' text as last opened or saved with the project, to tell when they've changed */
+    private var savedAdditions by mutableStateOf<String?>(null)
+
     private val definitionUnsaved: Boolean
+        get() = baseUnsaved || additionsUnsaved
+
+    private val baseUnsaved: Boolean
         get() {
-            val open = definitions?.definition ?: return false
+            val open = definitions?.definition?.takeIf { it.hasFile } ?: return false
             val saved = current?.manifest?.definition ?: return current != null
             return saved.fileName != open.name || saved.size != open.source.size.toLong()
         }
+
+    private val additionsUnsaved: Boolean
+        get() = current != null && definitions != null && definitions.definition?.additionsText() != savedAdditions
 
     init {
         refresh()
@@ -94,6 +103,7 @@ class ProjectHandler(
     fun openFile(bytes: ByteArray, name: String, rawBaseAddress: Long = 0, onOpened: () -> Unit = {}) {
         documents.open(bytes, name, rawBaseAddress, inBackground = readInBackground) {
             current = null
+            savedAdditions = null
             savedAt = documents.version
             onOpened()
         }
@@ -106,15 +116,17 @@ class ProjectHandler(
             val source = repository.source(manifest.id)
             val patches = repository.patches(manifest.id, versionId)
             val definition = if (definitions != null && manifest.definition != null) repository.definition(manifest.id) else null
+            val additions = if (definitions != null && manifest.additions != null) (repository.additions(manifest.id) as? TkResult.Success)?.data else null
             busy = false
             if (source !is TkResult.Success) return@launch failed("Open", (source as TkResult.Failure).error)
             if (patches !is TkResult.Success) return@launch failed("Open", (patches as TkResult.Failure).error)
-            // A project opens with its own definition, or none
+            // A project opens with its own definition and maps made by hand, or none
             when (definition) {
-                is TkResult.Success -> definition.data?.let { definitions?.open(it, manifest.definition!!.fileName) } ?: definitions?.close()
+                is TkResult.Success -> definition.data?.let { definitions?.open(it, manifest.definition!!.fileName, additions = additions ?: ByteArray(0)) } ?: definitions?.close()
                 is TkResult.Failure -> failed("Open", definition.error)
-                null -> definitions?.close()
+                null -> if (additions != null) definitions?.openAdditions(additions) else definitions?.close()
             }
+            savedAdditions = additions?.decodeToString()?.takeIf { it.isNotEmpty() }
             documents.open(source.data, manifest.source.fileName, manifest.source.rawBaseAddress, patches.data, readInBackground) {
                 current = OpenProject(manifest, versionId)
                 savedAt = documents.version
@@ -136,6 +148,7 @@ class ProjectHandler(
                 is TkResult.Failure -> return@launchSaving created.error
             }
             current = OpenProject(manifest, ProjectManifest.ORIGINAL)
+            savedAdditions = null
             saveDefinition(manifest.id)?.let { return@launchSaving it }
             if (patches.isNotEmpty()) {
                 when (val added = repository.addVersion(manifest.id, versionName, patches, note)) {
@@ -186,15 +199,24 @@ class ProjectHandler(
      * @return Why it couldn't be, or null
      */
     private suspend fun saveDefinition(id: String): ProjectError? {
-        if (!definitionUnsaved) return null
-        val open = definitions?.definition ?: return null
-        return when (val result = repository.setDefinition(id, open.name, open.source)) {
-            is TkResult.Success -> {
-                current = current?.copy(manifest = result.data)
-                null
+        val open = definitions?.definition
+        if (open != null && baseUnsaved) {
+            when (val result = repository.setDefinition(id, open.name, open.source)) {
+                is TkResult.Success -> current = current?.copy(manifest = result.data)
+                is TkResult.Failure -> return result.error
             }
-            is TkResult.Failure -> result.error
         }
+        if (additionsUnsaved) {
+            val text = open?.additionsText()
+            when (val result = repository.setAdditions(id, text?.encodeToByteArray())) {
+                is TkResult.Success -> {
+                    current = current?.copy(manifest = result.data)
+                    savedAdditions = text
+                }
+                is TkResult.Failure -> return result.error
+            }
+        }
+        return null
     }
 
     /** Renames a version of the open project or changes its note */

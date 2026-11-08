@@ -371,16 +371,21 @@ Each phase ends with green CI and a usable app.
 - [x] Versions and compare screens. Versions lists the open project's versions as a timeline (open, compare with what's open, rename and note, start a new version from any of them, delete) and its info, which the A2L can fill in. Compare puts the open image against its original, a saved version or another file: bytes and stretches that differ, the maps that changed (each as this, other or the difference, with copy-from-other), and changes outside any map. The legacy app is gone: its screens, view model, parsers and Koin, with settings kept where they were.
 
 **Phase 5: Exchange formats**
-- [ ] DCM, CDFX and XDF import and export (P1), CSV.
-- [ ] Our own `.ttdef` definitions and manual map definition.
-- [ ] CVX and PaCo (P2).
+- [x] DCM, CDFX and XDF import and export (P1), CSV. **XDF** (`core/.../formats/xdf/`) reads constants, tables (axes as labels, in memory as shared AXIS objects, or linked to another table), flags and categories, with MATH equations through `Expression` (`^` is a power there; linear ones become exactly linear). Its offsets count from the image's first byte plus BASEOFFSET. It writes any definition XDF can express and lists what it couldn't (text, cubes, conversions other than linear or a one-variable formula, values not stored in a packed grid). `mmedtypeflags` are read as 0x01 signed, 0x02 LSB first, 0x04 column major, 0x10000 float: checked against TunerPro's behaviour as remembered, not a spec, so check them against real XDFs. Not read: equations with more than one VAR, strides, checksums and patches (reported). **Values** go by name through `formats/values/CalibrationData` (records out of the image; applied back as one undo step, clamped to limits, with names missing, sizes that differ and shared or fixed axes that differ all reported). **DCM** 2.0 reads and writes FESTWERT, FESTWERTEBLOCK, (FEST/GRUPPEN)KENNLINIE and KENNFELD, STUETZSTELLENVERTEILUNG and TEXTSTRING. **CDFX** writes CDF 2.0 SW-INSTANCEs; maps as a VG per x point holding that column's y values (cubes nest outer axes around that), which is the reading of the standard used here, so check it against a tool that reads CDFX. **CSV**: a map as a grid both ways (tab, semicolon or comma, comma decimals; text that would run as a formula is escaped), and the map list out. The files screen imports and exports values (all maps or only changed ones) and saves the definition as .ttdef or XDF; each map pane saves and reads a CSV. A small XML reader and writer (`formats/xml`) serves XDF, CDFX and PaCo.
+- [x] Our own `.ttdef` definitions and manual map definition. `.ttdef` is the calibration model as JSON (`formats/ttdef/TtDef`), read and written exactly. Maps made by hand (`ManualMap`: value, curve, map or block at an address, its type, byte order, size, order, factor and offset, limits, and axes as positions, evenly spaced or in memory) come from the editor's New map button, can be changed or deleted, sit beside whatever definition is open (or alone), and are saved with the project as `additions.ttdef`. The app opens A2L, XDF and .ttdef alike (by content).
+- [ ] CVX and PaCo (P2). PaCo is read through the CDFX reader (it keeps values in the same SW-INSTANCE structure), untested against a real PaCo file. CVX isn't done: no reliable description of its layout was found, so it waits for the standard or a sample file.
 
 **Phase 6: Pro features**
 - [ ] Checksum plugin interface plus generic algorithms and a verify view.
 - [ ] Map finder.
 - [ ] ECU ident scanning.
 
-**Phase 7: Release**
+**Phase 7: Some fixes/changes**
+- [ ] Make screen renders for each screen as a test, desktop and mobile.
+- [ ] Hex editor seems like the selected hex highlighting doesn't line up with where the text actually is, the further to the right end of the line you go the more it is offset, this needs checked with renders and fixed, and checked as screen size changes to ensure it still aligns when screen shrinks or expands.
+- [ ] Change the settings for the UI theme and stuff to match the way we do it in ticketman, see the example screenshot here: ![Screenshot From 2026-11-08 09-26-15.png](../../../../Pictures/Screenshots/Screenshot%20From%202026-11-08%2009-26-15.png) We want to keep those three example pictures of the theme to show people what they can expect.
+
+**Phase 8: Release**
 - [ ] Release workflows producing every artifact. First tagged release `v0.1.0`.
 - [ ] **Rewrite the README** (features, screenshots from the render tests, supported formats table, build and run commands, disclaimer) once the app is in a good state.
 - [ ] `docs/` pages: architecture, formats (with spec references), testing, releasing.
@@ -389,7 +394,7 @@ Each phase ends with green CI and a usable app.
 
 ## 14. Open questions for you
 
-1. Which format was "the open source one": **TunerPro XDF** or **ASAM CDF/CDFX**? Both are planned for P1; this only decides which comes first.
+1. ~~Which format was "the open source one": TunerPro XDF or ASAM CDF/CDFX?~~ XDF first (2026-11-08); both are done in Phase 5.
 2. ~~Should the OEM 07K files be removed from git history?~~ Yes, done 2026-11-07 (Section 12).
 3. Licence for the project (MIT / Apache-2.0 / GPL-3.0)?
 4. Should web deploy anywhere automatically (GitHub Pages or Gitea Pages), or ship only as a release zip?

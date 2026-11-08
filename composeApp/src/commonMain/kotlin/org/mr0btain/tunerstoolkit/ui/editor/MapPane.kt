@@ -49,6 +49,8 @@ import org.mr0btain.uikit.selection.TmSegmented
 import org.mr0btain.uikit.theme.TmTheme
 import tunerstoolkit.composeapp.generated.resources.Res
 import tunerstoolkit.composeapp.generated.resources.tt_cpu
+import tunerstoolkit.composeapp.generated.resources.tt_download
+import tunerstoolkit.composeapp.generated.resources.tt_upload
 import tunerstoolkit.composeapp.generated.resources.tt_info
 import tunerstoolkit.composeapp.generated.resources.tt_x
 
@@ -69,6 +71,10 @@ internal fun MapPane(
     onWriteText: (CalibrationValues, String) -> Unit,
     onShowInHex: () -> Unit,
     onClose: () -> Unit,
+    onExportCsv: () -> Unit,
+    onImportCsv: () -> Unit,
+    onChangeMade: (() -> Unit)?,
+    onDeleteMade: (() -> Unit)?,
     onUndo: () -> Unit,
     onRedo: () -> Unit,
     onMessage: (String) -> Unit,
@@ -84,10 +90,20 @@ internal fun MapPane(
             padded = false,
             actions = {
                 TmIconButton(icon = Res.drawable.tt_info, contentDescription = if (details) "Hide details" else "Show details", onClick = { details = !details })
+                TmIconButton(icon = Res.drawable.tt_download, contentDescription = "Save as CSV", onClick = onExportCsv)
+                TmIconButton(icon = Res.drawable.tt_upload, contentDescription = "Read a CSV into it", onClick = onImportCsv, enabled = !obj.readOnly)
                 TmIconButton(icon = Res.drawable.tt_cpu, contentDescription = "Show in the hex view", onClick = onShowInHex)
                 TmIconButton(icon = Res.drawable.tt_x, contentDescription = "Close ${obj.name}", onClick = onClose)
             }
         )
+
+        if (onChangeMade != null || onDeleteMade != null) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(spacing.xs), itemVerticalAlignment = Alignment.CenterVertically) {
+                Text("Made here", style = TmTheme.typography.caption, color = TmTheme.colors.accent.color)
+                onChangeMade?.let { TmButton(text = "Change", onClick = it, size = TmControlSize.SMALL, variant = TmButtonVariant.GHOST) }
+                onDeleteMade?.let { TmButton(text = "Delete", onClick = it, size = TmControlSize.SMALL, variant = TmButtonVariant.GHOST) }
+            }
+        }
 
         val read = when (values) {
             is TkResult.Success -> values.data

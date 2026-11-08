@@ -91,6 +91,24 @@ class ProjectRepository(
             TkResult.Success(updated)
         }
 
+    /** Saves maps made by hand with the project (a .ttdef), or removes them when [bytes] is null */
+    suspend fun setAdditions(id: String, bytes: ByteArray?): TkResult<ProjectManifest, ProjectError> =
+        guard("SetAdditions", ProjectError.SAVE_FAILED) {
+            val manifest = when (val result = manifest(id)) {
+                is TkResult.Success -> result.data
+                is TkResult.Failure -> return@guard result
+            }
+            if (bytes == null) store.delete(additionsPath(id)) else store.write(additionsPath(id), bytes)
+            val updated = manifest.copy(updatedAt = now(), additions = bytes?.let { ProjectDefinition(ADDITIONS, it.size.toLong()) })
+            writeManifest(updated)
+            TkResult.Success(updated)
+        }
+
+    /** The project's maps made by hand, or null when it has none */
+    suspend fun additions(id: String): TkResult<ByteArray?, ProjectError> = guard("Additions", ProjectError.UNREADABLE) {
+        TkResult.Success(store.read(additionsPath(id)))
+    }
+
     /** The project's definition file, or null when it has none */
     suspend fun definition(id: String): TkResult<ByteArray?, ProjectError> = guard("Definition", ProjectError.UNREADABLE) {
         TkResult.Success(store.read(definitionPath(id)))
@@ -237,6 +255,8 @@ class ProjectRepository(
         fun sourcePath(id: String) = "$PROJECTS/$id/source.bin"
         fun versionPath(id: String, versionId: String) = "$PROJECTS/$id/versions/$versionId.json"
         fun definitionPath(id: String) = "$PROJECTS/$id/definition.bin"
+        fun additionsPath(id: String) = "$PROJECTS/$id/$ADDITIONS"
+        const val ADDITIONS = "additions.ttdef"
 
         private val json = Json {
             ignoreUnknownKeys = true

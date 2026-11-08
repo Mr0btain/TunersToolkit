@@ -20,6 +20,7 @@ import org.mr0btain.tunerstoolkit.core.error.TkResult
 import org.mr0btain.tunerstoolkit.ui.compare.CompareHandler
 import org.mr0btain.tunerstoolkit.ui.compare.CompareScreen
 import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
+import org.mr0btain.tunerstoolkit.ui.exchange.ExchangeHandler
 import org.mr0btain.tunerstoolkit.ui.versions.VersionsScreen
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
 import org.mr0btain.tunerstoolkit.ui.project.ProjectHandler
@@ -63,6 +64,7 @@ class ScreenRenderTest {
         val ignition = definitions.definition!!.set["IgnitionBase"]!!
         val values = (definitions.decode(ignition) as TkResult.Success).data
         documents.edit { CalibrationCodec.writeAll(it, values, mapOf(0 to 15.0, 1 to 16.0, 17 to 20.0)) }
+        val exchange = ExchangeHandler(documents, definitions)
         val compare = CompareHandler(scope, documents, definitions, projects, inBackground = false).apply { compareWithOriginal() }
         val settings = SettingsHandler(CoroutineScope(Dispatchers.Unconfined), SettingsData(darkMode = dark))
 
@@ -77,8 +79,8 @@ class ScreenRenderTest {
                     wide = width >= 840
                 ) {
                     when (destination) {
-                        Destination.FILES -> FilesScreen(documents, projects, definitions, onOpenEditor = {})
-                        Destination.EDITOR -> EditorScreen(documents, projects, definitions, settings, snackbar, onOpenFiles = {}, editor = editor, startAt = startAt)
+                        Destination.FILES -> FilesScreen(documents, projects, definitions, exchange, onOpenEditor = {})
+                        Destination.EDITOR -> EditorScreen(documents, projects, definitions, exchange, settings, snackbar, onOpenFiles = {}, editor = editor, startAt = startAt)
                         Destination.SETTINGS -> SettingsScreen(settings, onOpenGallery = {})
                         Destination.VERSIONS -> VersionsScreen(projects, definitions, onOpenFiles = {}, onOpenEditor = {}, onCompare = { _, _ -> })
                         Destination.COMPARE -> CompareScreen(documents, projects, definitions, compare, onOpenFiles = {}, onOpenMap = {})

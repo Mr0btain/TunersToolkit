@@ -364,7 +364,7 @@ object Xdf {
         val category = mutableMapOf<String, Int>()
         fun collect(folder: ObjectFolder, index: Int, depth: Int) {
             if (depth > 32) return
-            folder.objects.forEach { category.putIfAbsent(it, index) }
+            folder.objects.forEach { if (it !in category) category[it] = index }
             folder.folders.forEach { collect(it, index, depth + 1) }
         }
         folders.forEachIndexed { i, folder -> collect(folder, i, 0) }

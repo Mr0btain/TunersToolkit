@@ -20,6 +20,7 @@ import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
 import org.mr0btain.tunerstoolkit.ui.versions.VersionsScreen
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
 import org.mr0btain.tunerstoolkit.ui.editor.EditorHandler
+import org.mr0btain.tunerstoolkit.ui.exchange.ExchangeHandler
 import org.mr0btain.tunerstoolkit.ui.editor.EditorScreen
 import org.mr0btain.tunerstoolkit.ui.files.FilesScreen
 import org.mr0btain.tunerstoolkit.ui.gallery.GalleryScreen
@@ -70,6 +71,7 @@ fun App() {
     val snackbar = remember { SnackbarHostState() }
     val definitions = remember { DefinitionHandler(scope, documents) }
     val editor = remember { EditorHandler() }
+    val exchange = remember { ExchangeHandler(documents, definitions) }
     val projects = remember { ProjectHandler(scope, documents, definitions = definitions, notify = { scope.launch { snackbar.showSnackbar(it) } }) }
     val compare = remember { CompareHandler(scope, documents, definitions, projects) }
     var destination by rememberSaveable { mutableStateOf(Destination.FILES) }
@@ -93,8 +95,8 @@ fun App() {
                 wide = wide
             ) {
                 when (destination) {
-                    Destination.FILES -> FilesScreen(documents, projects, definitions, onOpenEditor = { destination = Destination.EDITOR })
-                    Destination.EDITOR -> EditorScreen(documents, projects, definitions, settings, snackbar, onOpenFiles = { destination = Destination.FILES }, editor = editor)
+                    Destination.FILES -> FilesScreen(documents, projects, definitions, exchange, onOpenEditor = { destination = Destination.EDITOR }, onMessage = { scope.launch { snackbar.showSnackbar(it) } })
+                    Destination.EDITOR -> EditorScreen(documents, projects, definitions, exchange, settings, snackbar, onOpenFiles = { destination = Destination.FILES }, editor = editor)
                     Destination.VERSIONS -> VersionsScreen(
                         projects,
                         definitions,

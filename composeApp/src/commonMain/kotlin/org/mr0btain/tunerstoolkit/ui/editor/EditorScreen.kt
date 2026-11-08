@@ -8,7 +8,13 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.unit.dp
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.readBytes
 import org.mr0btain.tunerstoolkit.core.calibration.CalibrationCodec
+import org.mr0btain.tunerstoolkit.core.calibration.CalibrationObject
+import org.mr0btain.tunerstoolkit.core.calibration.ManualMap
+import org.mr0btain.tunerstoolkit.ui.exchange.ExchangeHandler
 import org.mr0btain.tunerstoolkit.core.calibration.CalibrationValues
 import org.mr0btain.tunerstoolkit.core.calibration.writeAll
 import org.mr0btain.tunerstoolkit.core.error.getOrNull
@@ -88,6 +94,7 @@ fun EditorScreen(
     documents: DocumentHandler,
     projects: ProjectHandler,
     definitions: DefinitionHandler,
+    exchange: ExchangeHandler,
     settings: SettingsHandler,
     snackbar: SnackbarHostState,
     onOpenFiles: () -> Unit,
@@ -127,6 +134,13 @@ fun EditorScreen(
     var finding by remember { mutableStateOf(false) }
     var exporting by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf<SaveKind?>(null) }
+    var making by remember { mutableStateOf<MakeMap?>(null) }
+    var csvTarget by remember { mutableStateOf<CalibrationObject?>(null) }
+    val csvPicker = rememberFilePickerLauncher(type = FileKitType.File()) { file ->
+        val target = csvTarget ?: return@rememberFilePickerLauncher
+        if (file == null) return@rememberFilePickerLauncher
+        scope.launch { snackbar.showSnackbar(exchange.importMapCsv(target, file.readBytes())) }
+    }
     val saver = rememberFileSaver { name ->
         scope.launch { snackbar.showSnackbar(if (name != null) "Saved $name" else "Not saved") }
     }
@@ -217,13 +231,13 @@ fun EditorScreen(
             val wide = maxWidth >= WIDE_EDITOR
             var showingList by rememberSaveable { mutableStateOf(false) }
             Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(spacing.md)) {
-                if (definition != null && wide) {
+                if (wide) {
                     TmSurface(modifier = Modifier.width(300.dp).fillMaxHeight()) {
-                        MapList(definition, editor, onOpen = ::openObject, modifier = Modifier.fillMaxSize().padding(spacing.sm))
+                        MapList(definition, editor, onOpen = ::openObject, onNew = { making = MakeMap(null) }, modifier = Modifier.fillMaxSize().padding(spacing.sm))
                     }
                 }
                 Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(spacing.sm)) {
-                    val listTab = definition != null && !wide
+                    val listTab = !wide
                     val tabs = buildList {
                         if (listTab) add("Maps")
                         add("Hex")
@@ -245,7 +259,7 @@ fun EditorScreen(
                     }
                     val active = editor.active
                     when {
-                        listTab && showingList -> MapList(definition!!, editor, onOpen = { showingList = false; openObject(it) }, modifier = Modifier.fillMaxSize())
+                        listTab && showingList -> MapList(definition, editor, onOpen = { showingList = false; openObject(it) }, onNew = { making = MakeMap(null) }, modifier = Modifier.fillMaxSize())
                         active != null && definition?.set?.get(active.name) != null -> {
                             val obj = definition.set[active.name]!!
                             val values = remember(obj, version, document) { definitions.decode(obj) }
@@ -266,6 +280,15 @@ fun EditorScreen(
                                     editor.showHex(address)
                                 },
                                 onClose = { editor.close(obj.name) },
+                                onExportCsv = {
+                                    when (val result = exchange.exportMapCsv(obj)) {
+                                        is TkResult.Success -> saver.save(result.data.bytes, result.data.name, result.data.extension)
+                                        is TkResult.Failure -> message(result.error.message)
+                                    }
+                                },
+                                onImportCsv = { csvTarget = obj; csvPicker.launch() },
+                                onChangeMade = if (definitions.isAddition(obj.name)) ({ making = MakeMap(obj.name) }) else null,
+                                onDeleteMade = if (definitions.isAddition(obj.name)) ({ definitions.removeAddition(obj.name); editor.close(obj.name) }) else null,
                                 onUndo = documents::undo,
                                 onRedo = documents::redo,
                                 onMessage = ::message,
@@ -293,6 +316,24 @@ fun EditorScreen(
                 }
             }
         }
+    }
+
+    making?.let { make ->
+        val set = definition?.set
+        val existing = make.name?.let { name -> set?.get(name)?.let { obj -> ManualMap.of(obj, set) } }
+        val start = image.ranges.firstOrNull()?.start ?: 0
+        ManualMapDialog(
+            initial = existing ?: ManualMap(name = "", address = state.cursor ?: start, columns = 8, rows = 8),
+            editing = existing != null,
+            taken = set?.objects?.map { it.name }?.toSet().orEmpty(),
+            onSave = { map ->
+                definitions.putAdditions(map.objects(), replacing = make.name)
+                making = null
+                make.name?.takeIf { it != map.name }?.let { editor.close(it) }
+                editor.open(map.name)
+            },
+            onDismiss = { making = null }
+        )
     }
 
     if (goingTo) GoToDialog(image, onGo = { editor.showHex(); state.reveal(it); goingTo = false }, onDismiss = { goingTo = false })
@@ -387,6 +428,9 @@ private fun ColumnScope.HexContent(
     }
     StatusBar(image, state, version)
 }
+
+/** The map form is open: for a new map ([name] null) or to change one made by hand */
+private class MakeMap(val name: String?)
 
 /** What the save dialog makes */
 private enum class SaveKind { PROJECT, VERSION }

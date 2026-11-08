@@ -169,7 +169,7 @@ private fun ProjectInfoPanel(projects: ProjectHandler, definitions: DefinitionHa
     var name by remember(manifest.id, manifest.name) { mutableStateOf(manifest.name) }
     var info by remember(manifest.id, manifest.info) { mutableStateOf(manifest.info) }
     val changed = name != manifest.name || info != manifest.info
-    val modPar = definitions.definition?.module?.modPar
+    val modPar = definitions.definition?.a2l?.module?.modPar
     TmPanel(modifier = Modifier.fillMaxWidth(), title = "Project", icon = Res.drawable.tt_info, actions = {
         if (modPar != null) {
             TmButton(

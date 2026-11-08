@@ -16,12 +16,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import org.mr0btain.tunerstoolkit.core.a2l.A2lFolders
 import org.mr0btain.tunerstoolkit.core.calibration.ObjectKind
 import org.mr0btain.tunerstoolkit.core.calibration.ObjectTree
 import org.mr0btain.tunerstoolkit.core.calibration.TreeRow
 import org.mr0btain.tunerstoolkit.ui.definition.OpenDefinition
+import org.mr0btain.uikit.buttons.TmButton
+import org.mr0btain.uikit.buttons.TmIconButton
+import org.mr0btain.uikit.foundation.TmControlSize
 import org.mr0btain.uikit.search.TmSearchField
+import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.tt_plus
 import org.mr0btain.uikit.selection.TmSegmented
 import org.mr0btain.uikit.theme.TmTheme
 
@@ -30,23 +34,33 @@ import org.mr0btain.uikit.theme.TmTheme
  * descriptions. Clicking an object opens it
  */
 @Composable
-internal fun MapList(definition: OpenDefinition, editor: EditorHandler, onOpen: (String) -> Unit, modifier: Modifier = Modifier) {
+internal fun MapList(definition: OpenDefinition?, editor: EditorHandler, onOpen: (String) -> Unit, onNew: () -> Unit, modifier: Modifier = Modifier) {
     val spacing = TmTheme.spacing
-    val set = definition.set
-    val roots = remember(definition, editor.listMode) {
-        when (editor.listMode) {
-            ListMode.FUNCTIONS -> A2lFolders.byFunction(definition.module, set)
-            ListMode.GROUPS -> A2lFolders.byGroup(definition.module, set)
-            ListMode.ALL -> listOf(ObjectTree.all(set))
+    if (definition == null) {
+        Column(modifier, verticalArrangement = Arrangement.spacedBy(spacing.sm)) {
+            Text("No definition", style = TmTheme.typography.subtitle, color = TmTheme.colors.text)
+            Text("Open an A2L, XDF or .ttdef on the files screen, or make a map here from its address.", style = TmTheme.typography.body, color = TmTheme.colors.textMuted)
+            TmButton(text = "New map", onClick = onNew, leadingIcon = Res.drawable.tt_plus, size = TmControlSize.SMALL)
         }
+        return
+    }
+    val set = definition.set
+    val groupings = definition.groupings
+    val choices = groupings.map { it.label } + EditorHandler.ALL
+    val chosen = editor.listGrouping?.takeIf { it in choices } ?: choices.first()
+    val roots = remember(definition, chosen) {
+        groupings.firstOrNull { it.label == chosen }?.folders ?: listOf(ObjectTree.all(set))
     }
     // With everything in one folder, it's open
-    val expanded = if (editor.listMode == ListMode.ALL) editor.expanded + roots.map { it.name } else editor.expanded
+    val expanded = if (chosen == EditorHandler.ALL) editor.expanded + roots.map { it.name } else editor.expanded
     val rows = remember(roots, expanded, editor.query) { ObjectTree.rows(roots, set, expanded, editor.query) }
 
     Column(modifier, verticalArrangement = Arrangement.spacedBy(spacing.sm)) {
-        TmSearchField(query = editor.query, onQueryChange = { editor.query = it }, placeholder = "Find a map", modifier = Modifier.fillMaxWidth())
-        TmSegmented(options = ListMode.entries, selected = editor.listMode, onSelect = { editor.listMode = it }, optionLabel = { it.label })
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(spacing.xs)) {
+            TmSearchField(query = editor.query, onQueryChange = { editor.query = it }, placeholder = "Find a map", modifier = Modifier.weight(1f))
+            TmIconButton(icon = Res.drawable.tt_plus, contentDescription = "New map", onClick = onNew)
+        }
+        if (choices.size > 1) TmSegmented(options = choices, selected = chosen, onSelect = { editor.listGrouping = it }, optionLabel = { it })
         if (rows.isEmpty()) {
             Text(
                 if (editor.query.isBlank()) "Nothing to list" else "Nothing matches \"${editor.query}\"",

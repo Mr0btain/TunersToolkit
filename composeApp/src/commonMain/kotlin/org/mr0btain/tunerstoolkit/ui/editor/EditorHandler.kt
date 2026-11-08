@@ -10,8 +10,6 @@ import org.mr0btain.tunerstoolkit.ui.kit.map.MapTableState
 /** How an open map is shown */
 enum class MapView(val label: String) { TABLE("Table"), CHART("Chart"), SURFACE("3D") }
 
-/** How the map list groups objects */
-enum class ListMode(val label: String) { FUNCTIONS("Functions"), GROUPS("Groups"), ALL("All") }
 
 /** A map open in its own tab, with where its cursor is and how it's shown */
 @Stable
@@ -38,7 +36,8 @@ class EditorHandler {
     /** An address the hex view should scroll to next, taken by it once done */
     var revealRequest by mutableStateOf<Long?>(null)
 
-    var listMode by mutableStateOf(ListMode.FUNCTIONS)
+    /** Which of the definition's groupings the map list uses, by label; null for the first, [ALL] for none */
+    var listGrouping by mutableStateOf<String?>(null)
     var query by mutableStateOf("")
     var expanded by mutableStateOf<Set<String>>(emptySet())
 
@@ -79,8 +78,11 @@ class EditorHandler {
 
     val active: OpenMap? get() = openMaps.firstOrNull { it.name == activeMap }
 
-    private companion object {
+    companion object {
         /** More tabs than this and the oldest closes */
-        const val MAX_TABS = 12
+        private const val MAX_TABS = 12
+
+        /** The map list's choice of every object in one list */
+        const val ALL = "All"
     }
 }

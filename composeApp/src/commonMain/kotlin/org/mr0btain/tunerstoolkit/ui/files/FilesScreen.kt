@@ -30,7 +30,11 @@ import org.mr0btain.tunerstoolkit.core.diagnostics.Diagnostic
 import org.mr0btain.tunerstoolkit.core.diagnostics.Severity
 import org.mr0btain.tunerstoolkit.core.image.parseAddress
 import org.mr0btain.tunerstoolkit.core.image.toHexAddress
+import org.mr0btain.tunerstoolkit.core.error.TkResult
 import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
+import org.mr0btain.tunerstoolkit.ui.exchange.ExchangeError
+import org.mr0btain.tunerstoolkit.ui.exchange.ExchangeHandler
+import org.mr0btain.tunerstoolkit.ui.exchange.Exported
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
 import org.mr0btain.tunerstoolkit.ui.document.OpenDocument
 import org.mr0btain.tunerstoolkit.ui.kit.hex.byteCount
@@ -75,8 +79,10 @@ fun FilesScreen(
     documents: DocumentHandler,
     projects: ProjectHandler,
     definitions: DefinitionHandler,
+    exchange: ExchangeHandler,
     onOpenEditor: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onMessage: (String) -> Unit = {}
 ) {
     val spacing = TmTheme.spacing
     val scope = rememberCoroutineScope()
@@ -97,14 +103,35 @@ fun FilesScreen(
         }
     }
 
-    val a2lPicker = rememberFilePickerLauncher(type = FileKitType.File()) { file ->
+    val definitionPicker = rememberFilePickerLauncher(type = FileKitType.File()) { file ->
         if (file == null) return@rememberFilePickerLauncher
         scope.launch {
             try {
                 definitions.open(file.readBytes(), file.name)
             } catch (e: Exception) {
-                AppLogger.e("$TAG:ReadA2l", "Couldn't read ${file.name}", e)
+                AppLogger.e("$TAG:ReadDefinition", "Couldn't read ${file.name}", e)
             }
+        }
+    }
+    val valuesPicker = rememberFilePickerLauncher(type = FileKitType.File()) { file ->
+        if (file == null) return@rememberFilePickerLauncher
+        scope.launch {
+            try {
+                onMessage(exchange.importValues(file.readBytes(), file.name))
+            } catch (e: Exception) {
+                AppLogger.e("$TAG:ReadValues", "Couldn't read ${file.name}", e)
+            }
+        }
+    }
+    val saver = rememberFileSaver { name -> if (name != null) onMessage("Saved $name") }
+    fun save(result: TkResult<Exported, ExchangeError>) {
+        when (result) {
+            is TkResult.Success -> {
+                saver.save(result.data.bytes, result.data.name, result.data.extension)
+                if (result.data.skipped.isNotEmpty()) onMessage("${result.data.count} written; ${result.data.skipped.size} couldn't go in, see the log")
+                result.data.skipped.forEach { AppLogger.w("$TAG:Export", "${it.objectName}: ${it.message}") }
+            }
+            is TkResult.Failure -> onMessage(result.error.message)
         }
     }
 
@@ -140,11 +167,15 @@ fun FilesScreen(
             documents.openError?.let { TmNotice(kind = TmNoticeKind.ERROR, title = "Couldn't open the file", text = it) }
         }
 
-        DefinitionPanel(definitions, onOpen = { a2lPicker.launch() })
+        DefinitionPanel(definitions, onOpen = { definitionPicker.launch() })
 
         ProjectsPanel(projects, onOpenEditor)
 
-        definitions.definition?.let { DefinitionReport(it, definitions.onImage, definitions.indexing, onOpenEditor) }
+        definitions.definition?.let { DefinitionReport(it, definitions.onImage, definitions.indexing, exchange, ::save, onOpenEditor) }
+
+        if (definitions.definition != null && documents.document != null) {
+            ValuesPanel(exchange, onImport = { valuesPicker.launch() }, onSave = ::save)
+        }
 
         documents.document?.let { ImportReport(it, onOpenEditor) }
     }
