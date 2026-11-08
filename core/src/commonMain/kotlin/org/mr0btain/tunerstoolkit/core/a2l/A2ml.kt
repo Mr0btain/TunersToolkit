@@ -77,6 +77,9 @@ private class A2mlParser(private val text: String, private val origin: SourceLoc
     private val tokens = tokenize()
     private var position = 0
     private val types = mutableMapOf<String, A2mlType>()
+
+    /** How deeply types are nested, so a grammar nested absurdly deep can't overflow the stack */
+    private var depth = 0
     val diagnostics = mutableListOf<Diagnostic>()
 
     fun parse(): A2ml {
@@ -108,6 +111,16 @@ private class A2mlParser(private val text: String, private val origin: SourceLoc
     }
 
     private fun typeName(): A2mlType {
+        if (depth >= MAX_NESTING) throw A2mlSyntaxError("Types are nested more than $MAX_NESTING deep", peek()?.line ?: lastLine())
+        depth++
+        try {
+            return typeNameContent()
+        } finally {
+            depth--
+        }
+    }
+
+    private fun typeNameContent(): A2mlType {
         val token = take() ?: throw A2mlSyntaxError("A2ML ends where a type was expected", lastLine())
         return when (token.text) {
             in BASIC_TYPES -> A2mlType.Basic(token.text)
@@ -260,6 +273,7 @@ private class A2mlParser(private val text: String, private val origin: SourceLoc
     }
 
     companion object {
+        const val MAX_NESTING = 256
         val BASIC_TYPES = setOf("char", "int", "long", "uint", "ulong", "int64", "uint64", "float", "double", "float16")
     }
 }

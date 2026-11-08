@@ -143,3 +143,23 @@ class A2lParserTest {
         assertEquals(TkResult.Failure(ImportError.EMPTY_FILE), A2lImport.read(ByteArray(0)))
     }
 }
+
+class A2lNestingTest {
+    @Test
+    fun absurdlyDeepBlocksAreSkippedNotOverflowed() {
+        val levels = 100_000
+        val text = "/begin GROUP g \"\" ".repeat(levels) + "/end GROUP ".repeat(levels) + "/begin FUNCTION after \"\" /end FUNCTION"
+        val parser = A2lParser(text)
+        val tree = parser.parse()
+        assertEquals(listOf("GROUP", "FUNCTION"), tree.elements.map { it.keyword })
+        assertTrue(parser.diagnostics.any { "nested more than" in it.message })
+    }
+
+    @Test
+    fun absurdlyDeepA2mlIsReportedNotOverflowed() {
+        val levels = 100_000
+        val text = "struct { ".repeat(levels) + "int; " + "}; ".repeat(levels)
+        val (_, diagnostics) = A2ml.parse(text)
+        assertTrue(diagnostics.any { "nested more than" in it.message })
+    }
+}

@@ -31,6 +31,9 @@ class A2lParser(
     private val lexer = A2lLexer(text, file)
     private val found = mutableListOf<Diagnostic>()
 
+    /** How many blocks deep the parser is, so a file nested absurdly deep can't overflow the stack */
+    private var depth = 0
+
     val diagnostics: List<Diagnostic> get() = lexer.diagnostics + found
 
     fun parse(): A2lTree = A2lTree(parseBody(open = null))
@@ -91,6 +94,22 @@ class A2lParser(
     private fun parseBlock(keyword: A2lToken): A2lElement {
         val rule = A2lSpec.rule(keyword.text)
         val location = keyword.location(file)
+        if (depth >= MAX_NESTING) {
+            // Skipped without recursing: the lexer steps over everything up to the matching /end
+            error(keyword, "/begin ${keyword.text} is nested more than $MAX_NESTING blocks deep, skipped")
+            lexer.rawUntilEnd()
+            if (lexer.peek().kind == TokenKind.IDENT) lexer.next()
+            return A2lElement(keyword.text, true, emptyList(), emptyList(), location, known = false)
+        }
+        depth++
+        try {
+            return parseBlockContent(keyword, rule, location)
+        } finally {
+            depth--
+        }
+    }
+
+    private fun parseBlockContent(keyword: A2lToken, rule: A2lRule?, location: SourceLocation): A2lElement {
         if (rule != null && rule.raw) {
             val raw = lexer.rawUntilEnd()
             if (raw == null) {
@@ -245,6 +264,9 @@ class A2lParser(
 
     companion object {
         const val MAX_INCLUDE_DEPTH = 16
+
+        /** Real files nest about 6 deep; this is far past that and far short of the stack running out */
+        const val MAX_NESTING = 256
 
         /** Where a [SourceLocation] would point for a whole file */
         fun fileLocation(file: String) = SourceLocation(file, 1, 1)
