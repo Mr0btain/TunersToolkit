@@ -352,10 +352,12 @@ Each phase ends with green CI and a usable app.
 
 **Phase 2: Shared UI kit and the new hex view**
 - [x] Create the `Tm-UI-Kit` and `Tm-AppLogger` repos and move the generic kit and the logger out of TicketMan (Section 4.1). TicketMan's move is on its `shared-ui-kit` branch.
-- [ ] Tag `v0.1.0` of both libraries and push them to the GitHub mirrors, so builds without a local checkout can clone them.
-- [ ] Tuners Toolkit's screens on the kit (`TmTheme`, the shared app shell, `KitRules` in `UiKitRulesTest`, render tests). The app shell is still TicketMan's own; move it into the kit first.
-- [ ] `TmHexView`: virtualized rows, Canvas drawing, address-based selection and editing, go-to address, find, data width modes, proportional scrollbar, and minimap.
-- [ ] Projects screen plus open file (FileKit) on all three platforms, and storage (files on desktop/Android, OPFS on web).
+- [x] Tag `v0.1.0` of both libraries and push them to the GitHub mirrors, so builds without a local checkout can clone them.
+- [x] Tuners Toolkit's screens on the kit: `TmTheme`, the kit's new `TmAppShell` (Tm-UI-Kit 0.2.0; TicketMan still has its own shell and can move to it), `KitRules` in `UiKitRulesTest`, and `ScreenRenderTest`. The old screens live on as the Legacy place until Phases 3 and 4 replace them.
+- [x] `TmHexView`: virtualized rows, Canvas drawing, address-based selection and editing, go-to address, find, data width modes, proportional scrollbar, and minimap.
+- [x] Open files (FileKit) on every platform, an import report, export as Intel HEX, S-record or BIN (save dialog, or a download on the web), and a Log screen.
+- [ ] Projects with versions, saved on every platform (files on desktop/Android, OPFS on web). Until then an opened image only lasts until it's closed.
+- [ ] Copy and paste in the hex view (hex text and raw bytes).
 
 **Phase 3: A2L, done properly**
 - [ ] Lexer, parser and A2ML. Full keyword checklist from Section 7.1, each item with a test.

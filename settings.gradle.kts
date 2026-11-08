@@ -42,7 +42,7 @@ plugins {
 // (and the matching version in gradle/libs.versions.toml)
 val sharedLibs = linkedMapOf(
     "Tm-AppLogger" to "v0.1.0",
-    "Tm-UI-Kit" to "v0.1.0"
+    "Tm-UI-Kit" to "v0.2.0"
 )
 
 fun git(vararg args: String, dir: File? = null) {

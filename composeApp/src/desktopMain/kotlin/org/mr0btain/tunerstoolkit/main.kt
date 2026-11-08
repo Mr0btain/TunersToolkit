@@ -2,6 +2,7 @@ package org.mr0btain.tunerstoolkit
 
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import io.github.vinceglb.filekit.FileKit
 import kotlinx.io.files.Path
 import org.mr0btain.applogger.AppLogger
 import org.mr0btain.applogger.LogBook
@@ -11,6 +12,8 @@ import org.mr0btain.tunerstoolkit.components.datastorage.components.DirectoryRes
 private const val TAG = "Main"
 
 fun main() {
+    // Sets up FileKit's dialogs and folders for this app
+    FileKit.init("TunersToolkit")
     startLogFiles()
 
     application {

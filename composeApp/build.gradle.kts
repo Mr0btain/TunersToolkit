@@ -97,6 +97,11 @@ kotlin {
             implementation(libs.kotlin.coroutines.test)
         }
 
+        getByName("desktopTest").dependencies {
+            // UiKitRulesTest's checks
+            implementation(libs.tm.ui.kit.rules)
+        }
+
         androidMain.dependencies {
             implementation(libs.androidx.activity.compose)
         }

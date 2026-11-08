@@ -47,6 +47,20 @@ The version every package is built as is `tunerstoolkit.version` in `gradle.prop
 
 ## Architecture (current app, before the overhaul)
 
+### The new app (`ui/`, Phase 2)
+`App.kt` is the app: `TmTheme` and the kit's `TmAppShell` (a nav rail on desktop and wide windows, a bottom bar on phones) around a `Destination` (Files, Editor, Log, Settings, Legacy, and Gallery, which Settings opens). State is in small handlers made in `App`, not a view model: `ui/document/DocumentHandler` (the open `MemoryImage` read through core's `BinaryImport`, every write, undo and redo, find and export; `version` is state so the hex view redraws) and `ui/settings/SettingsHandler` (`SettingsData`, saved on each change). The screens are `ui/files` (open, the import report, and `rememberFileSaver`, which is expect/actual: FileKit's save dialog, or a download on the web), `ui/editor`, `ui/log` (`LogBook` through `TmLogTerminal`), `ui/settings` and `ui/gallery` (the kit's gallery plus this app's sections).
+
+App-specific kit components are in `ui/kit` (Tm prefix, built from Tm-UI-Kit pieces, with a gallery entry). `ui/kit/hex` is the hex view:
+- `HexRows` maps rows to addresses by binary search over blocks of segments, with one row per gap, so nothing is made per row.
+- `HexViewState` holds the cursor, the selection and the display (cell width, byte order, radix), all as byte addresses. `reveal(address)` scrolls to one.
+- `TmHexView` puts one Canvas on each lazy row, with its text measured once and kept until the bytes change. It handles clicks, drags and keys, and never writes itself: edits go to `onWrite`.
+- `HexScrollbar` jumps straight to rows, and marks changed bytes, the search match and the cursor.
+
+`UiKitRulesTest` runs Tm-UI-Kit's `KitRules` over `ui/` (not `ui/kit` or the legacy `ui/theme`) and `App.kt`. `ScreenRenderTest` draws the screens with the demo image to `composeApp/build/screen-renders/*.png`, so you can look a change over without running the app.
+
+### Legacy app (before the overhaul)
+`LegacyApp.kt` is the old app (its drawer, editor, map list and map grid), shown in the Legacy place. Everything below describes it; Phases 3 and 4 replace it.
+
 ### State: one big `MainViewModel`
 `MainViewModel.kt` holds nearly all app state as Compose `mutableStateOf` / `mutableStateMapOf` fields:
 - parsed `a2lData`
@@ -57,10 +71,10 @@ The version every package is built as is `tunerstoolkit.version` in `gradle.prop
 - dialog visibility flags
 - settings
 
-`App.kt` creates it with `remember { MainViewModel() }` and passes it explicitly down through navigation, screens and parsers. Parsers write their results straight into it. Koin is set up but not used for it. The plan replaces this with small handlers.
+`LegacyApp()` creates it with `remember { MainViewModel() }` and passes it explicitly down through navigation, screens and parsers. Parsers write their results straight into it. Koin is set up but not used for it. The plan replaces this with small handlers.
 
 ### Navigation and adaptive layout
-- `App.kt` picks `SideMenuDrawer` on desktop (`getPlatform().name == "Java"`) or on wide windows, and `DrawerNavigation` on compact widths.
+- `LegacyApp.kt` picks `SideMenuDrawer` on desktop (`getPlatform().name == "Java"`) or on wide windows, and `DrawerNavigation` on compact widths.
 - `navigation/components/NavigationHost.kt` defines the routes from `screens/Screens.kt` (MAIN, EDITOR, SETTINGS).
 - Each screen comes as a `Compact*` / `Expanded*` pair, chosen by `components/screenconfig/AdaptiveScreen.kt`.
 - Window size classes come from our own `components/screenconfig/WindowSizeClass.kt`, built on `LocalWindowInfo`. The chrisbanes multiplatform library crashes on Compose 1.12, so don't add it back.
