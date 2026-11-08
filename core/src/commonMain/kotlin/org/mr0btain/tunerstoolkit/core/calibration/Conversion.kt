@@ -71,23 +71,35 @@ sealed interface Conversion {
      */
     class Table(pairs: List<Pair<Double, Double>>, val interpolate: Boolean, val default: Double? = null) : Conversion {
         val pairs: List<Pair<Double, Double>> = pairs.sortedBy { it.first }
-        private val byPhysical = pairs.map { it.second to it.first }.sortedBy { it.first }
+        private val rawKeys = this.pairs.map { it.first }.toDoubleArray()
+        private val rawValues = this.pairs.map { it.second }.toDoubleArray()
+        private val byPhysical = this.pairs.sortedBy { it.second }
+        private val physicalKeys = byPhysical.map { it.second }.toDoubleArray()
+        private val physicalValues = byPhysical.map { it.first }.toDoubleArray()
 
-        override fun toPhysical(raw: Double) = look(pairs, raw, default)
-        override fun toRaw(physical: Double, range: ClosedFloatingPointRange<Double>?) = look(byPhysical, physical, null)
+        override fun toPhysical(raw: Double) = look(rawKeys, rawValues, raw, default)
+        override fun toRaw(physical: Double, range: ClosedFloatingPointRange<Double>?) = look(physicalKeys, physicalValues, physical, null)
 
-        private fun look(table: List<Pair<Double, Double>>, x: Double, fallback: Double?): Double {
-            if (table.isEmpty()) return fallback ?: Double.NaN
+        /** Binary search, so a long table costs log n per value */
+        private fun look(keys: DoubleArray, values: DoubleArray, x: Double, fallback: Double?): Double {
+            if (keys.isEmpty()) return fallback ?: Double.NaN
+            val upper = firstAtLeast(keys, x)
             if (!interpolate) {
-                table.firstOrNull { it.first == x }?.let { return it.second }
-                return fallback ?: table.minBy { abs(it.first - x) }.second
+                if (upper < keys.size && keys[upper] == x) return values[upper]
+                if (fallback != null) return fallback
+                val nearest = when {
+                    upper == 0 -> 0
+                    upper == keys.size -> keys.size - 1
+                    abs(keys[upper - 1] - x) <= abs(keys[upper] - x) -> upper - 1
+                    else -> upper
+                }
+                return values[nearest]
             }
-            if (x <= table.first().first) return table.first().second
-            if (x >= table.last().first) return table.last().second
-            val upper = table.indexOfFirst { it.first >= x }
-            val (x0, y0) = table[upper - 1]
-            val (x1, y1) = table[upper]
-            return if (x1 == x0) y0 else y0 + (y1 - y0) * (x - x0) / (x1 - x0)
+            if (x <= keys.first()) return values.first()
+            if (x >= keys.last()) return values.last()
+            val x0 = keys[upper - 1]
+            val x1 = keys[upper]
+            return if (x1 == x0) values[upper - 1] else values[upper - 1] + (values[upper] - values[upper - 1]) * (x - x0) / (x1 - x0)
         }
     }
 

@@ -485,10 +485,8 @@ private class RecordReader(
         } else {
             dimensions
         }
-        val totalLong = dimensions.fold(1L) { a, b -> a * b }
-        val stored = memory.fold(1L) { a, b -> a * b }
-        if (totalLong > MAX_VALUES || stored > MAX_VALUES) throw DecodeFailure("it would have more than $MAX_VALUES values")
-        val total = totalLong.toInt()
+        val total = cappedProduct(dimensions.asList()).toInt()
+        val stored = cappedProduct(memory.asList())
         val data = target(at, field.pointer)
         // Memory strides in storage order: y first puts dimension 1 innermost
         val walk = if (field.order == ValueOrder.Y_FIRST && dimensions.size >= 2) listOf(1, 0) + (2 until dimensions.size) else dimensions.indices.toList()
@@ -531,8 +529,7 @@ private class RecordReader(
         ObjectKind.VAL_BLK, ObjectKind.ASCII -> {
             val dimensions = obj.dimensions.ifEmpty { listOf(1) }
             if (dimensions.any { it < 1 }) throw DecodeFailure("its size ${dimensions.joinToString(" x ")} isn't valid")
-            val total = dimensions.fold(1L) { a, b -> a * b }
-            if (total > MAX_VALUES) throw DecodeFailure("it would have more than $MAX_VALUES values")
+            val total = cappedProduct(dimensions)
             if (obj.kind == ObjectKind.ASCII) intArrayOf(total.toInt()) else dimensions.toIntArray()
         }
         ObjectKind.AXIS -> throw DecodeFailure("an axis's record has values instead of points")
@@ -582,7 +579,7 @@ private class RecordReader(
     )
 
     private fun asciiText(): String {
-        val slots = valueSlots ?: return ""
+        val slots = valueSlots?.takeIf { it.addresses.isNotEmpty() } ?: return ""
         val bytes = image.readOrNull(slots.addresses.first(), slots.addresses.size * slots.type.size) ?: return ""
         return TextCoding.decode(bytes, obj.encoding, order)
     }
@@ -611,6 +608,17 @@ private class RecordReader(
         if (!image.contains(address, size)) throw DecodeFailure("$what at ${address.toHexAddress()} isn't in the image")
     }
 
+    /** The product of [sizes], stopping before it can overflow once it passes [MAX_VALUES] */
+    private fun cappedProduct(sizes: List<Int>): Long {
+        var product = 1L
+        for (size in sizes) {
+            if (size < 0) throw DecodeFailure("a size of $size isn't valid")
+            if (size != 0 && product > MAX_VALUES / size) throw DecodeFailure("it would have more than $MAX_VALUES values")
+            product *= size
+        }
+        return product
+    }
+
     private fun axisName(i: Int) = AXIS_NAMES.getOrElse(i) { "${i + 1}" }
 
     companion object {
@@ -636,7 +644,7 @@ private fun interpolate(xs: DoubleArray, ys: DoubleArray, x: Double): Double {
     if (xs.isEmpty()) return Double.NaN
     if (x <= xs.first()) return ys.first()
     if (x >= xs.last()) return ys.last()
-    val upper = xs.indexOfFirst { it >= x }
+    val upper = firstAtLeast(xs, x)
     val x0 = xs[upper - 1]
     val x1 = xs[upper]
     return if (x1 == x0) ys[upper - 1] else ys[upper - 1] + (ys[upper] - ys[upper - 1]) * (x - x0) / (x1 - x0)
@@ -645,3 +653,14 @@ private fun interpolate(xs: DoubleArray, ys: DoubleArray, x: Double): Double {
 /** For the codec's callers: all of an object's values as physical numbers, or why they couldn't be read */
 fun CalibrationSet.decode(image: MemoryImage, obj: CalibrationObject, variant: Int? = null): TkResult<CalibrationValues, DecodeError> =
     CalibrationCodec.decode(image, obj, this, variant)
+
+/** The first index of sorted [xs] whose value is at least [x], by binary search; [xs] size when there's none */
+internal fun firstAtLeast(xs: DoubleArray, x: Double): Int {
+    var low = 0
+    var high = xs.size
+    while (low < high) {
+        val middle = (low + high) ushr 1
+        if (xs[middle] < x) low = middle + 1 else high = middle
+    }
+    return low
+}

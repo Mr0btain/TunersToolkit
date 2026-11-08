@@ -386,6 +386,9 @@ class CalibrationCodecTest {
         assertTrue("axis Y" in decodeError(MemoryImage.empty(), obj(ObjectKind.CURVE, RecordField.AxisCount(1, DataType.UBYTE), values(DataType.UBYTE), axes = listOf(axis()))))
         val huge = obj(ObjectKind.VAL_BLK, values(DataType.UBYTE), dimensions = listOf(100_000, 100_000))
         assertTrue("more than" in decodeError(MemoryImage.empty(), huge))
+        // A product that would overflow a Long and wrap round to something small is still refused
+        val overflowing = obj(ObjectKind.VAL_BLK, values(DataType.UBYTE), dimensions = List(3) { Int.MAX_VALUE })
+        assertTrue("more than" in decodeError(MemoryImage.empty(), overflowing))
     }
 
     @Test
