@@ -161,8 +161,17 @@ class ChecksumHandler(
         return report
     }
 
-    /** Whether fixing has to be confirmed first: the module in use isn't verified */
-    val needsConfirmation: Boolean get() = active?.status == ModuleStatus.UNVERIFIED
+    /**
+     * Whether fixing has to be confirmed first: unless every check comes from a verified module built into the app,
+     * it does. A file's word for its own status isn't taken (see [untrusted]), and checks of your own ask too, since a
+     * project they came with may be someone else's
+     */
+    val needsConfirmation: Boolean
+        get() {
+            val module = active
+            val trusted = module == null || (module.status == ModuleStatus.VERIFIED && ChecksumModules.builtIn.any { it === module })
+            return !trusted || own != null
+        }
 
     /** The chosen module, saved with the project when it isn't the one detected */
     val moduleAttachment = object : ProjectAttachment {
@@ -193,15 +202,16 @@ class ChecksumHandler(
         const val TAG = "ChecksumHandler"
 
         /**
-         * A module from a file or a project: whatever its file says, it isn't verified, and it can't take a built in
-         * module's place by using its id
+         * A module from a file or a project: whatever its file says (verified, or your own), it's taken as not
+         * verified, and it can't take a built in module's place by using its id
          */
         fun untrusted(module: DefinedModule): DefinedModule {
             val clash = ChecksumModules.builtIn.any { it.id == module.id }
             return module.copy(
                 id = if (clash) "${module.id}-loaded" else module.id,
                 name = if (clash) "${module.name} (loaded)" else module.name,
-                status = if (module.status == ModuleStatus.USER) ModuleStatus.USER else ModuleStatus.UNVERIFIED
+                // Whatever the file says
+                status = ModuleStatus.UNVERIFIED
             )
         }
 

@@ -87,6 +87,18 @@ class ChecksumHandlerTest {
         assertTrue(checksums.needsConfirmation)
         assertNull(checksums.fixAll())
         assertTrue(checksums.fixAll(confirmedUnverified = true)!!.allOk)
+
+        // Nor can a file claim to be your own to skip asking
+        val mine = ChecksumModules.demo.copy(id = "mine", status = org.mr0btain.tunerstoolkit.core.checksum.ModuleStatus.USER)
+        checksums.load(TtSum.write(mine).encodeToByteArray(), "mine.ttsum")
+        assertEquals(org.mr0btain.tunerstoolkit.core.checksum.ModuleStatus.UNVERIFIED, checksums.active!!.status)
+        assertTrue(checksums.needsConfirmation)
+
+        // The built in, verified module fixes without asking; adding checks of your own makes it ask
+        checksums.choose(null)
+        assertFalse(checksums.needsConfirmation)
+        checksums.addOwn(ChecksumCheck("Mine", ChecksumAlgorithm.Sum(1, 16), listOf(AddressRange(0x800200, 0x800300)), ChecksumStore(0x800300, 2)))
+        assertTrue(checksums.needsConfirmation)
     }
 
     @Test
