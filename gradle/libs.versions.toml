@@ -1,55 +1,71 @@
+# Versions follow TicketMan (github.com/Mr0btain/TicketMan) so the two projects can share the UI kit later
 [versions]
-agp = "8.2.0"
-android-compileSdk = "34"
-android-minSdk = "24"
-android-targetSdk = "34"
-androidx-activityCompose = "1.9.0"
-androidx-appcompat = "1.6.1"
-androidx-constraintlayout = "2.1.4"
-androidx-core-ktx = "1.13.1"
-androidx-espresso-core = "3.5.1"
-androidx-material = "1.12.0"
-androidx-test-junit = "1.1.5"
-compose-plugin = "1.6.11"
-junit = "4.13.2"
-kotlin = "2.0.0"
-calfFilePicker = "0.2.0"
-koinCompose = "1.1.0"
-koinCore = "3.5.0"
-kotlinxCoroutinesCore = "1.7.3"
-kotlinxSerializationJson = "1.6.0"
-material3WindowSizeClassMultiplatform = "0.3.1"
-viewModel = "2.8.0"
-compose-navigation = "2.7.0-alpha07"
+agp = "9.1.1"
+android-compileSdk = "37"
+android-minSdk = "25"
+android-targetSdk = "37"
+androidx-activity = "1.13.0"
+androidx-lifecycle = "2.11.0"
+composeMultiplatform = "1.12.2"
+kotlin = "2.4.20"
+kotlinx-coroutines = "1.11.0"
+kotlinxSerializationJson = "1.11.0"
+# The one FileKit uses; project files on desktop, Android and iOS
+kotlinx-io = "0.9.1"
+compose-navigation = "2.9.2"
+material3 = "1.9.0"
+filekit = "0.16.0"
 jna = "5.14.0"
-mpfilepicker = "3.1.0"
+# Our shared libraries (Tm-AppLogger, Tm-UI-Kit)
+tm-applogger = "0.1.0"
+tm-uikit = "0.2.0"
+# The last release; Compose stopped bundling icons. Only the old dropdowns use them, the UI kit won't
+materialIcons = "1.7.3"
 
 [libraries]
-koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koinCompose" }
-koin-core = { module = "io.insert-koin:koin-core", version.ref = "koinCore" }
-calf-file-picker = { module = "com.mohamedrejeb.calf:calf-file-picker", version.ref = "calfFilePicker" }
+# Compose
+runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
+foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "composeMultiplatform" }
+ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
+ui-tooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.ref = "composeMultiplatform" }
+ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
+components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
+material-icons-core = { module = "org.jetbrains.compose.material:material-icons-core", version.ref = "materialIcons" }
+material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
+compose-navigation = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "compose-navigation" }
+androidx-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
+
+# Shared with TicketMan
+tm-applogger = { module = "org.mr0btain:tm-applogger", version.ref = "tm-applogger" }
+tm-ui-kit = { module = "org.mr0btain:tm-ui-kit", version.ref = "tm-uikit" }
+tm-ui-kit-rules = { module = "org.mr0btain:tm-ui-kit-rules", version.ref = "tm-uikit" }
+
+# Kotlin
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
-kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
-junit = { group = "junit", name = "junit", version.ref = "junit" }
-androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "androidx-core-ktx" }
-androidx-test-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-junit" }
-androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "androidx-espresso-core" }
-androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "androidx-appcompat" }
-androidx-material = { group = "com.google.android.material", name = "material", version.ref = "androidx-material" }
-androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "androidx-constraintlayout" }
-androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
-kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
+kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlin-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
+kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
-window-size-multiplatform = { module = "dev.chrisbanes.material3:material3-window-size-class-multiplatform", version.ref = "material3WindowSizeClassMultiplatform" }
-koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinCore" }
-compose-viewmodel = { group = "compose", module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "viewModel" }
-compose-navigation = { group = "compose", module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "compose-navigation" }
-jna = { group = "java", module = "net.java.dev.jna:jna-platform", version.ref = "jna" }
-mpfilepicker = { module = "com.darkrockstudios:mpfilepicker", version.ref = "mpfilepicker" }
+
+
+# Files
+filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekit" }
+filekit-dialogs = { module = "io.github.vinceglb:filekit-dialogs", version.ref = "filekit" }
+filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose", version.ref = "filekit" }
+
+# Desktop: OS specific app data folders (components/datastorage/components/*DirectoryResolver)
+jna = { module = "net.java.dev.jna:jna-platform", version.ref = "jna" }
+
+[bundles]
+fileKit = ["filekit-core", "filekit-dialogs", "filekit-dialogs-compose"]
 
 [plugins]
+androidMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 androidApplication = { id = "com.android.application", version.ref = "agp" }
-androidLibrary = { id = "com.android.library", version.ref = "agp" }
-jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
+composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+serialize = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

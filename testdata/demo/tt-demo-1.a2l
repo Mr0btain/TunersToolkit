@@ -1,0 +1,699 @@
+ASAP2_VERSION 1 61
+/* TT-DEMO-1: a made up engine controller from Tuners Toolkit's DemoEcu generator.
+   Not a real ECU. Free to use, change and share. */
+/begin PROJECT TT_DEMO "Tuners Toolkit demo"
+
+/begin HEADER "Made up for testing"
+    VERSION "0.1"
+    PROJECT_NO TTDEMO1
+/end HEADER
+
+/begin MODULE DEMO_ECU "Demo engine controller"
+
+/begin MOD_COMMON ""
+    BYTE_ORDER MSB_LAST
+    ALIGNMENT_BYTE 1
+    ALIGNMENT_WORD 2
+    ALIGNMENT_LONG 4
+/end MOD_COMMON
+
+/begin MOD_PAR "TT-DEMO-1"
+    VERSION "TTDEMO1 0.1"
+    ADDR_EPK 0x00800100
+    EPK "TTDEMO1/0.1/2026-11-07"
+    ECU "TT-DEMO-1"
+    CPU_TYPE "Generic 32 bit"
+    /begin MEMORY_SEGMENT Flash "Code and calibration" CODE FLASH INTERN 0x00800000 0x8000 -1 -1 -1 -1 -1
+    /end MEMORY_SEGMENT
+    /begin MEMORY_SEGMENT Boot "Boot block" RESERVED FLASH INTERN 0x00000000 0x100 -1 -1 -1 -1 -1
+    /end MEMORY_SEGMENT
+/end MOD_PAR
+
+    /begin COMPU_METHOD
+        rpm
+        ""
+        RAT_FUNC
+        "%6.0"
+        "rpm"
+        COEFFS 0 1 0 0 0 1
+    /end COMPU_METHOD
+
+    /begin COMPU_METHOD
+        load_pct
+        ""
+        RAT_FUNC
+        "%5.1"
+        "%"
+        COEFFS 0 1 0 0 0 0.75
+    /end COMPU_METHOD
+
+    /begin COMPU_METHOD
+        pedal_pct
+        ""
+        RAT_FUNC
+        "%5.1"
+        "%"
+        COEFFS 0 2 0 0 0 1
+    /end COMPU_METHOD
+
+    /begin COMPU_METHOD
+        temp_c
+        ""
+        RAT_FUNC
+        "%5.1"
+        "degC"
+        COEFFS 0 1 48 0 0 0.75
+    /end COMPU_METHOD
+
+    /begin COMPU_METHOD
+        ign_deg
+        ""
+        RAT_FUNC
+        "%5.2"
+        "deg"
+        COEFFS 0 1 35.25 0 0 0.375
+    /end COMPU_METHOD
+
+    /begin COMPU_METHOD
+        factor_q15
+        ""
+        RAT_FUNC
+        "%7.5"
+        "-"
+        COEFFS 0 32768 0 0 0 1
+    /end COMPU_METHOD
+
+    /begin COMPU_METHOD
+        factor_q7
+        ""
+        RAT_FUNC
+        "%6.4"
+        "-"
+        COEFFS 0 128 0 0 0 1
+    /end COMPU_METHOD
+
+    /begin COMPU_METHOD
+        pressure_hpa
+        ""
+        LINEAR
+        "%6.1"
+        "hPa"
+        COEFFS_LINEAR 0.1 0
+    /end COMPU_METHOD
+
+    /begin COMPU_METHOD
+        torque_nm
+        ""
+        RAT_FUNC
+        "%5.0"
+        "Nm"
+        COEFFS 0 1 0 0 0 1
+    /end COMPU_METHOD
+
+    /begin COMPU_METHOD
+        time_us
+        ""
+        RAT_FUNC
+        "%6.0"
+        "us"
+        COEFFS 0 1 0 0 0 1
+    /end COMPU_METHOD
+
+    /begin COMPU_METHOD
+        ident
+        ""
+        RAT_FUNC
+        "%5.0"
+        ""
+        COEFFS 0 1 0 0 0 1
+    /end COMPU_METHOD
+
+    /begin COMPU_METHOD
+        onoff
+        ""
+        TAB_VERB
+        "%3.0"
+        ""
+        COMPU_TAB_REF onoff
+    /end COMPU_METHOD
+
+    /begin COMPU_VTAB
+        onoff
+        ""
+        TAB_VERB
+        2
+        0 "Off"
+        1 "On"
+    /end COMPU_VTAB
+
+    /begin RECORD_LAYOUT Axis_UWORD
+        NO_AXIS_PTS_X 1 UWORD
+        AXIS_PTS_X 2 UWORD INDEX_INCR DIRECT
+    /end RECORD_LAYOUT
+
+    /begin RECORD_LAYOUT Axis_UBYTE
+        NO_AXIS_PTS_X 1 UBYTE
+        AXIS_PTS_X 2 UBYTE INDEX_INCR DIRECT
+    /end RECORD_LAYOUT
+
+    /begin RECORD_LAYOUT Val_UWORD
+        FNC_VALUES 1 UWORD COLUMN_DIR DIRECT
+    /end RECORD_LAYOUT
+
+    /begin RECORD_LAYOUT Val_UBYTE
+        FNC_VALUES 1 UBYTE COLUMN_DIR DIRECT
+    /end RECORD_LAYOUT
+
+    /begin RECORD_LAYOUT Val_SWORD
+        FNC_VALUES 1 SWORD COLUMN_DIR DIRECT
+    /end RECORD_LAYOUT
+
+    /begin RECORD_LAYOUT Val_ULONG
+        FNC_VALUES 1 ULONG COLUMN_DIR DIRECT
+    /end RECORD_LAYOUT
+
+    /begin RECORD_LAYOUT Values_UWORD
+        FNC_VALUES 1 UWORD COLUMN_DIR DIRECT
+    /end RECORD_LAYOUT
+
+    /begin RECORD_LAYOUT Values_UBYTE
+        FNC_VALUES 1 UBYTE COLUMN_DIR DIRECT
+    /end RECORD_LAYOUT
+
+    /begin RECORD_LAYOUT Curve_StdUb_UBYTE
+        NO_AXIS_PTS_X 1 UBYTE
+        AXIS_PTS_X 2 UBYTE INDEX_INCR DIRECT
+        FNC_VALUES 3 UBYTE COLUMN_DIR DIRECT
+    /end RECORD_LAYOUT
+
+    /begin RECORD_LAYOUT Map_StdUw_UBYTE
+        NO_AXIS_PTS_X 1 UWORD
+        NO_AXIS_PTS_Y 2 UWORD
+        AXIS_PTS_X 3 UWORD INDEX_INCR DIRECT
+        AXIS_PTS_Y 4 UWORD INDEX_INCR DIRECT
+        FNC_VALUES 5 UBYTE COLUMN_DIR DIRECT
+    /end RECORD_LAYOUT
+
+    /begin RECORD_LAYOUT Map_StdUw_UWORD
+        NO_AXIS_PTS_X 1 UWORD
+        NO_AXIS_PTS_Y 2 UWORD
+        AXIS_PTS_X 3 UWORD INDEX_INCR DIRECT
+        AXIS_PTS_Y 4 UWORD INDEX_INCR DIRECT
+        FNC_VALUES 5 UWORD COLUMN_DIR DIRECT
+    /end RECORD_LAYOUT
+
+    /begin AXIS_PTS
+        RpmAxis16
+        "Engine speed points for the main maps"
+        0x00804000
+        EngineSpeed
+        Axis_UWORD
+        6200
+        rpm
+        16
+        600
+        6800
+        FORMAT "%6.0"
+        DEPOSIT ABSOLUTE
+    /end AXIS_PTS
+
+    /begin AXIS_PTS
+        LoadAxis12
+        "Engine load points for the main maps"
+        0x00804022
+        EngineLoad
+        Axis_UWORD
+        150
+        load_pct
+        12
+        10
+        160
+        FORMAT "%5.1"
+        DEPOSIT ABSOLUTE
+    /end AXIS_PTS
+
+    /begin AXIS_PTS
+        PedalAxis10
+        "Pedal position points"
+        0x0080403C
+        PedalPosition
+        Axis_UBYTE
+        100
+        pedal_pct
+        10
+        0
+        100
+        FORMAT "%5.1"
+        DEPOSIT ABSOLUTE
+    /end AXIS_PTS
+
+    /begin CHARACTERISTIC
+        RevLimit
+        "Engine speed limit"
+        VALUE
+        0x00804048
+        Val_UWORD
+        9000
+        rpm
+        0
+        9000
+        FORMAT "%6.0"
+    /end CHARACTERISTIC
+
+    /begin CHARACTERISTIC
+        IdleSpeedTarget
+        "Idle speed, warm engine"
+        VALUE
+        0x0080404A
+        Val_UWORD
+        1000
+        rpm
+        500
+        1500
+        FORMAT "%6.0"
+    /end CHARACTERISTIC
+
+    /begin CHARACTERISTIC
+        FanOnTemp
+        "Coolant temperature that turns the fan on"
+        VALUE
+        0x0080404C
+        Val_UBYTE
+        191.25
+        temp_c
+        -48
+        143.25
+        FORMAT "%5.1"
+    /end CHARACTERISTIC
+
+    /begin CHARACTERISTIC
+        LaunchControl
+        "Launch control on or off"
+        VALUE
+        0x0080404D
+        Val_UBYTE
+        1
+        onoff
+        0
+        1
+        FORMAT "%3.0"
+    /end CHARACTERISTIC
+
+    /begin CHARACTERISTIC
+        MaxBoost
+        "Highest boost pressure allowed"
+        VALUE
+        0x0080404E
+        Val_UWORD
+        2000
+        pressure_hpa
+        1000
+        3000
+        FORMAT "%6.1"
+    /end CHARACTERISTIC
+
+    /begin CHARACTERISTIC
+        InjDeadTimeOffset
+        "Injector dead time correction"
+        VALUE
+        0x00804050
+        Val_SWORD
+        1000
+        time_us
+        -500
+        500
+        FORMAT "%6.0"
+    /end CHARACTERISTIC
+
+    /begin CHARACTERISTIC
+        SerialNumber
+        "Unit serial number"
+        VALUE
+        0x00804054
+        Val_ULONG
+        4294967295
+        ident
+        0
+        4294967295
+        FORMAT "%5.0"
+    /end CHARACTERISTIC
+
+    /begin CHARACTERISTIC
+        InjectorTrim
+        "Fuel trim per injector"
+        VAL_BLK
+        0x00804058
+        Values_UWORD
+        1
+        factor_q15
+        0.5
+        1.5
+        FORMAT "%7.5"
+        NUMBER 4
+    /end CHARACTERISTIC
+
+    /begin CHARACTERISTIC
+        SoftwareId
+        "Software identification"
+        ASCII
+        0x00804060
+        Values_UBYTE
+        255
+        ident
+        0
+        255
+        FORMAT "%5.0"
+        NUMBER 16
+    /end CHARACTERISTIC
+
+    /begin CHARACTERISTIC
+        WarmupEnrichment
+        "Extra fuel while the engine warms up"
+        CURVE
+        0x00804070
+        Curve_StdUb_UBYTE
+        0.99
+        factor_q7
+        1
+        1.99
+        FORMAT "%6.4"
+        /begin AXIS_DESCR
+            STD_AXIS
+            CoolantTemp
+            temp_c
+            9
+            -30
+            90
+            FORMAT "%5.1"
+            DEPOSIT ABSOLUTE
+        /end AXIS_DESCR
+    /end CHARACTERISTIC
+
+    /begin CHARACTERISTIC
+        ThrottleProgression
+        "Throttle opening for each pedal position"
+        CURVE
+        0x00804083
+        Values_UBYTE
+        100
+        pedal_pct
+        0
+        100
+        FORMAT "%5.1"
+        /begin AXIS_DESCR
+            COM_AXIS
+            PedalPosition
+            pedal_pct
+            10
+            0
+            100
+            FORMAT "%5.1"
+            AXIS_PTS_REF PedalAxis10
+        /end AXIS_DESCR
+    /end CHARACTERISTIC
+
+    /begin CHARACTERISTIC
+        GearTorqueLimit
+        "Most torque allowed in each gear"
+        CURVE
+        0x0080408E
+        Values_UWORD
+        600
+        torque_nm
+        0
+        600
+        FORMAT "%5.0"
+        /begin AXIS_DESCR
+            FIX_AXIS
+            Gear
+            ident
+            6
+            1
+            6
+            FORMAT "%5.0"
+            FIX_AXIS_PAR 1 0 6
+        /end AXIS_DESCR
+    /end CHARACTERISTIC
+
+    /begin CHARACTERISTIC
+        IgnitionBase
+        "Base ignition advance"
+        MAP
+        0x0080409A
+        Map_StdUw_UBYTE
+        60
+        ign_deg
+        -10
+        50
+        FORMAT "%5.2"
+        /begin AXIS_DESCR
+            STD_AXIS
+            EngineSpeed
+            rpm
+            16
+            600
+            6800
+            FORMAT "%6.0"
+            DEPOSIT ABSOLUTE
+        /end AXIS_DESCR
+        /begin AXIS_DESCR
+            STD_AXIS
+            EngineLoad
+            load_pct
+            12
+            10
+            160
+            FORMAT "%5.1"
+            DEPOSIT ABSOLUTE
+        /end AXIS_DESCR
+    /end CHARACTERISTIC
+
+    /begin CHARACTERISTIC
+        VolumetricEfficiency
+        "Air charge for each speed and load"
+        MAP
+        0x00804196
+        Map_StdUw_UWORD
+        1
+        factor_q15
+        0.2
+        1.2
+        FORMAT "%7.5"
+        /begin AXIS_DESCR
+            STD_AXIS
+            EngineSpeed
+            rpm
+            16
+            600
+            6800
+            FORMAT "%6.0"
+            DEPOSIT ABSOLUTE
+        /end AXIS_DESCR
+        /begin AXIS_DESCR
+            STD_AXIS
+            EngineLoad
+            load_pct
+            12
+            10
+            160
+            FORMAT "%5.1"
+            DEPOSIT ABSOLUTE
+        /end AXIS_DESCR
+    /end CHARACTERISTIC
+
+    /begin CHARACTERISTIC
+        BoostTarget
+        "Boost pressure target"
+        MAP
+        0x00804352
+        Values_UWORD
+        1400
+        pressure_hpa
+        1000
+        2400
+        FORMAT "%6.1"
+        /begin AXIS_DESCR
+            COM_AXIS
+            EngineSpeed
+            rpm
+            16
+            600
+            6800
+            FORMAT "%6.0"
+            AXIS_PTS_REF RpmAxis16
+        /end AXIS_DESCR
+        /begin AXIS_DESCR
+            COM_AXIS
+            EngineLoad
+            load_pct
+            12
+            10
+            160
+            FORMAT "%5.1"
+            AXIS_PTS_REF LoadAxis12
+        /end AXIS_DESCR
+    /end CHARACTERISTIC
+
+    /begin CHARACTERISTIC
+        LambdaTarget
+        "Air fuel ratio target"
+        MAP
+        0x008044D2
+        Values_UWORD
+        0.35
+        factor_q15
+        0.7
+        1.05
+        FORMAT "%7.5"
+        /begin AXIS_DESCR
+            COM_AXIS
+            EngineSpeed
+            rpm
+            16
+            600
+            6800
+            FORMAT "%6.0"
+            AXIS_PTS_REF RpmAxis16
+        /end AXIS_DESCR
+        /begin AXIS_DESCR
+            COM_AXIS
+            EngineLoad
+            load_pct
+            12
+            10
+            160
+            FORMAT "%5.1"
+            AXIS_PTS_REF LoadAxis12
+        /end AXIS_DESCR
+    /end CHARACTERISTIC
+
+    /begin MEASUREMENT
+        EngineSpeed
+        "Engine speed"
+        UWORD
+        rpm
+        1
+        100
+        0
+        9000
+        ECU_ADDRESS 0xD0000000
+        FORMAT "%6.0"
+    /end MEASUREMENT
+
+    /begin MEASUREMENT
+        EngineLoad
+        "Engine load"
+        UWORD
+        load_pct
+        1
+        100
+        0
+        200
+        ECU_ADDRESS 0xD0000002
+        FORMAT "%5.1"
+    /end MEASUREMENT
+
+    /begin MEASUREMENT
+        CoolantTemp
+        "Coolant temperature"
+        UBYTE
+        temp_c
+        1
+        100
+        -48
+        143.25
+        ECU_ADDRESS 0xD0000004
+        FORMAT "%5.1"
+    /end MEASUREMENT
+
+    /begin MEASUREMENT
+        PedalPosition
+        "Pedal position"
+        UBYTE
+        pedal_pct
+        1
+        100
+        0
+        100
+        ECU_ADDRESS 0xD0000005
+        FORMAT "%5.1"
+    /end MEASUREMENT
+
+    /begin MEASUREMENT
+        Gear
+        "Engaged gear"
+        UBYTE
+        ident
+        1
+        100
+        0
+        6
+        ECU_ADDRESS 0xD0000006
+        FORMAT "%5.0"
+    /end MEASUREMENT
+
+    /begin FUNCTION
+        Ignition
+        "Spark timing"
+        /begin DEF_CHARACTERISTIC
+            IgnitionBase RpmAxis16 LoadAxis12
+        /end DEF_CHARACTERISTIC
+        /begin IN_MEASUREMENT
+            EngineSpeed EngineLoad
+        /end IN_MEASUREMENT
+    /end FUNCTION
+
+    /begin FUNCTION
+        Fueling
+        "Fuel delivery"
+        /begin DEF_CHARACTERISTIC
+            VolumetricEfficiency LambdaTarget WarmupEnrichment InjectorTrim InjDeadTimeOffset
+        /end DEF_CHARACTERISTIC
+        /begin IN_MEASUREMENT
+            EngineSpeed EngineLoad CoolantTemp
+        /end IN_MEASUREMENT
+    /end FUNCTION
+
+    /begin FUNCTION
+        Boost
+        "Boost control"
+        /begin DEF_CHARACTERISTIC
+            BoostTarget MaxBoost
+        /end DEF_CHARACTERISTIC
+        /begin IN_MEASUREMENT
+            EngineSpeed EngineLoad
+        /end IN_MEASUREMENT
+    /end FUNCTION
+
+    /begin FUNCTION
+        Driveability
+        "Pedal and torque"
+        /begin DEF_CHARACTERISTIC
+            ThrottleProgression PedalAxis10 GearTorqueLimit LaunchControl
+        /end DEF_CHARACTERISTIC
+        /begin IN_MEASUREMENT
+            PedalPosition Gear
+        /end IN_MEASUREMENT
+    /end FUNCTION
+
+    /begin FUNCTION
+        Limits
+        "Speed and temperature limits"
+        /begin DEF_CHARACTERISTIC
+            RevLimit IdleSpeedTarget FanOnTemp
+        /end DEF_CHARACTERISTIC
+        /begin IN_MEASUREMENT
+            EngineSpeed CoolantTemp
+        /end IN_MEASUREMENT
+    /end FUNCTION
+
+    /begin FUNCTION
+        Identification
+        "Software and unit identity"
+        /begin DEF_CHARACTERISTIC
+            SoftwareId SerialNumber
+        /end DEF_CHARACTERISTIC
+    /end FUNCTION
+
+/end MODULE
+/end PROJECT

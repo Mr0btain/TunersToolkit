@@ -1,0 +1,70 @@
+# Testing
+
+## Running tests
+
+```bash
+./gradlew :core:jvmTest                                   # core: formats, A2L, projects, results (most tests live here)
+./gradlew :core:jvmTest --tests "*.DiagnosticsTest"       # one class
+./gradlew :composeApp:desktopTest                         # app tests (commonTest + desktopTest)
+```
+
+CI (`.gitea/workflows/ci.yml`, copied to `.github/workflows/ci.yml`) runs both test tasks and then builds web, desktop
+and Android on every pull request and push to `main`. GitHub's copy also compiles iOS on a Mac runner.
+
+## Where tests go
+
+- **`core/src/commonTest`**: anything that doesn't need Compose. Parsers, writers, conversions, `TkResult`,
+  `Diagnostics`, `AppLogger`. Keep fixtures small and hand-written, next to the test in `commonTest/resources`, and
+  build bigger ones in code.
+- **`composeApp/src/commonTest`**: app logic that lives in `composeApp`, like `WindowSizeClass`.
+
+## Fixtures
+
+`core/src/commonTest/.../testing/Fixtures.kt` builds images for tests, the same every run for a given seed:
+`randomImage(seed, segments, ...)` gives random segments with gaps between them, `ecuLikeImage()` gives a 32 bit ECU
+layout with segments crossing 64K boundaries, and `counting(address, size)` gives known bytes for checking exact
+output. Format tests round-trip these, and `FuzzTest` feeds random and mutated files to every reader (none may
+throw). `LargeFilesTest` (JVM only) times a 4 MB image and reads every HEX or S-record file in `testdata/local`,
+skipping when there are none.
+
+A2L tests are in `core/src/commonTest/.../a2l/`, one class per family of the checklist in `docs/PLAN.md` Section 7.1
+(`A2lStructureTest`, `A2lObjectsTest`, `A2lLayoutAndConversionTest`), plus the lexer, the parser and encodings. They
+write small A2L snippets inline: `readModule(body)` wraps one in a PROJECT and MODULE, and `cleanModule(body)` also
+checks it read without warnings. `DemoA2lTest` reads TT-DEMO-1's A2L, and `LargeA2lTest` (JVM only) times an 8.7 MB
+generated A2L and reads every A2L in `testdata/local`.
+
+Decoding is tested in two layers. `core/src/commonTest/.../calibration/` tests the format-neutral codec directly:
+`CalibrationCodecTest` builds each record byte by byte with `RecordBytes` (every object kind, both value orders, static
+layouts, pointers, every axis source, and the checks on writing), and `ConversionTest` and `ExpressionTest` cover the
+conversions and FORM formulas. `A2lResolverTest` goes from A2L text to `CalibrationObject`s, and reads every TT-DEMO-1
+object back from the demo image, comparing it with what `DemoEcu` wrote.
+
+Map editing logic is in core too: `MapEditTest` covers selections, every operation, spreadsheet paste and copy, `writeAll`, the map list tree and search, and comparing. `ObjectIndexTest` covers the index (against a brute force search), overlaps and the EPK check, and `A2lWriterTest` the round trips.
+
+Exchange formats are in `core/src/commonTest/.../formats/`: `XdfTest` (every demo object through an XDF and back, and a hand written XDF with every kind of item), `TtDefTest`, `ValuesExchangeTest` (DCM and CDFX each take every demo map back out of a tuned image to the original bytes; hand written DCM and CDFX; what applying reports; CSV) and `HostileFilesTest` (deep nesting, huge sizes, formula injection).
+
+Checksums: `ChecksumTest` checks every CRC preset against its catalogue check value, the sums, XOR and Adler-32, the demo's checksums, fixing (as one undo step), forcing CRCs to any target, `.ttsum` round trips and broken or hostile modules. A module for a real family should come with a test against real binaries in `testdata/local/` that skips when they're missing (see `docs/checksums.md`).
+
+The map finder: `MapFinderTest` finds the demo's maps with their own axes exactly (and reads them as the A2L does once added), skips what a definition covers, finds a big endian map with bare axes among noise, and finds nothing in random bytes or erased flash. Changes to its scoring should keep all of those.
+
+ECU identification: `EcuIdentTest` plants each maker's numbers in random bytes, checks near misses aren't taken, and reads the demo's EPK. A new pattern in `EcuIdent.PATTERNS` should come with an example that matches and one that mustn't.
+
+The app's handlers are tested on desktop with the demo files and an in memory project store: `ProjectHandlerTest`, `DefinitionHandlerTest` (opening, indexing, saving the A2L with a project) and `CompareHandlerTest` (comparing, copying a map back, branching and renaming versions) `FinderHandlerTest` (finding and adding, with and without the A2L) and `ExchangeHandlerTest` (the definition through XDF and .ttdef, values out and in, a map as CSV, maps made by hand saved with a project). `ScreenRenderTest` draws every screen, the map editor in each view, to `composeApp/build/screen-renders`.
+
+## The demo ECU
+
+`testdata/demo` holds TT-DEMO-1, a made up ECU (HEX and A2L) that's safe to commit. It's generated by
+`DemoEcu` in core's tests and checked by `DemoFilesTest`; see `testdata/demo/README.md` for what's in it and how to
+regenerate it. Use it for anything that needs an A2L and image that match, and in the app through the drawer's
+**Open demo project** (desktop).
+
+## Real ECU files
+
+Real ECU binaries and A2L files are usually OEM-copyrighted, so they are **never committed**. Keep them in
+`testdata/local/` (git ignored), for checking the readers against real files by hand. `LargeFilesTest` reads every
+HEX and S-record file in there when there are any. `:composeApp:run` passes `testdata/` to the app
+(`tunerstoolkit.testdata`), where `readTestDataFile()` reads from it on desktop. Tests
+that use real files have to skip themselves when the files aren't there, so CI and other machines still pass.
+
+Switching to an older branch whose `.gitignore` doesn't ignore `testdata/` can sweep these files into a stash
+(GitHub Desktop does this). If they go missing, look in `git stash list`.
