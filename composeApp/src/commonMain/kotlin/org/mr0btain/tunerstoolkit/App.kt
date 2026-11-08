@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
+import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
 import org.mr0btain.tunerstoolkit.ui.editor.EditorScreen
 import org.mr0btain.tunerstoolkit.ui.files.FilesScreen
@@ -61,7 +62,8 @@ fun App() {
     val settings = remember { SettingsHandler(scope) }
     val documents = remember { DocumentHandler(scope) }
     val snackbar = remember { SnackbarHostState() }
-    val projects = remember { ProjectHandler(scope, documents, notify = { scope.launch { snackbar.showSnackbar(it) } }) }
+    val definitions = remember { DefinitionHandler(scope, documents) }
+    val projects = remember { ProjectHandler(scope, documents, definitions = definitions, notify = { scope.launch { snackbar.showSnackbar(it) } }) }
     var destination by rememberSaveable { mutableStateOf(Destination.FILES) }
     val data = settings.data
 
@@ -83,8 +85,8 @@ fun App() {
                 wide = wide
             ) {
                 when (destination) {
-                    Destination.FILES -> FilesScreen(documents, projects, onOpenEditor = { destination = Destination.EDITOR })
-                    Destination.EDITOR -> EditorScreen(documents, projects, settings, snackbar, onOpenFiles = { destination = Destination.FILES })
+                    Destination.FILES -> FilesScreen(documents, projects, definitions, onOpenEditor = { destination = Destination.EDITOR })
+                    Destination.EDITOR -> EditorScreen(documents, projects, definitions, settings, snackbar, onOpenFiles = { destination = Destination.FILES })
                     Destination.LOG -> LogScreen()
                     Destination.SETTINGS -> SettingsScreen(settings, onOpenGallery = { destination = Destination.GALLERY })
                     Destination.LEGACY -> LegacyApp()

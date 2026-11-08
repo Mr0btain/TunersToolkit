@@ -14,6 +14,7 @@ import org.mr0btain.tunerstoolkit.Destination
 import org.mr0btain.tunerstoolkit.screens.settings.classes.SettingsData
 import org.mr0btain.tunerstoolkit.core.project.MemoryProjectStore
 import org.mr0btain.tunerstoolkit.core.project.ProjectRepository
+import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
 import org.mr0btain.tunerstoolkit.ui.project.ProjectHandler
 import org.mr0btain.tunerstoolkit.ui.editor.EditorScreen
@@ -36,13 +37,16 @@ import kotlin.test.assertTrue
 class ScreenRenderTest {
     private val outputDir = File("build/screen-renders").apply { mkdirs() }
     private val demo = File("../testdata/demo/tt-demo-1.hex").readBytes()
+    private val demoA2l = File("../testdata/demo/tt-demo-1.a2l").readBytes()
 
-    private fun render(name: String, destination: Destination, width: Int = 1440, height: Int = 900, dark: Boolean = true) {
+    private fun render(name: String, destination: Destination, width: Int = 1440, height: Int = 900, dark: Boolean = true, startAt: Long? = null) {
         val scope = CoroutineScope(Dispatchers.Unconfined)
         val documents = DocumentHandler(scope)
         // A project with a version, saved in memory, so the files screen lists it and the editor shows it's open
         val repository = ProjectRepository(MemoryProjectStore())
-        val projects = ProjectHandler(scope, documents, repository, readInBackground = false)
+        val definitions = DefinitionHandler(scope, documents, inBackground = false)
+        val projects = ProjectHandler(scope, documents, repository, definitions, readInBackground = false)
+        definitions.open(demoA2l, "tt-demo-1.a2l")
         projects.openFile(demo, "tt-demo-1.hex")
         documents.write(0x0010L, byteArrayOf(0x12, 0x34))
         projects.saveAsProject("TT-DEMO-1 bench ECU", "Stage 1", "Richer part load")
@@ -60,8 +64,8 @@ class ScreenRenderTest {
                     wide = width >= 840
                 ) {
                     when (destination) {
-                        Destination.FILES -> FilesScreen(documents, projects, onOpenEditor = {})
-                        Destination.EDITOR -> EditorScreen(documents, projects, settings, snackbar, onOpenFiles = {})
+                        Destination.FILES -> FilesScreen(documents, projects, definitions, onOpenEditor = {})
+                        Destination.EDITOR -> EditorScreen(documents, projects, definitions, settings, snackbar, onOpenFiles = {}, startAt = startAt)
                         Destination.SETTINGS -> SettingsScreen(settings, onOpenGallery = {})
                         Destination.GALLERY -> GalleryScreen(settings)
                         else -> Unit
@@ -85,10 +89,12 @@ class ScreenRenderTest {
         render("editor", Destination.EDITOR)
         render("editor-light", Destination.EDITOR, dark = false)
         render("editor-narrow", Destination.EDITOR, width = 420, height = 860)
+        // The calibration area, with the A2L's maps marked
+        render("editor-maps", Destination.EDITOR, startAt = 0x0080_4100L)
     }
 
     @Test
-    fun files() = render("files", Destination.FILES)
+    fun files() = render("files", Destination.FILES, height = 2200)
 
     @Test
     fun settings() = render("settings", Destination.SETTINGS)

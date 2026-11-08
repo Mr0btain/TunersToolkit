@@ -38,3 +38,23 @@ internal fun cleanModule(body: String): A2lModule {
 
 internal fun List<Diagnostic>.messages(severity: Severity? = null): List<String> =
     filter { severity == null || it.severity == severity }.map { it.message }
+
+/** An element as plain data, for checking two trees say the same thing (locations and layout aside) */
+internal fun A2lElement.shape(): String = buildString {
+    append(keyword).append(if (block) "{" else "")
+    values.forEach { append(' ').append(it.kind.name.first()).append(':').append(it.text) }
+    raw?.let { append(" raw:").append(it.trim().replace(Regex("\\s+"), " ")) }
+    children.forEach { append('\n').append(it.shape().prependIndent("  ")) }
+}
+
+internal fun A2lTree.shape(): String = elements.joinToString("\n") { it.shape() }
+
+/** Writes [text]'s tree back out and checks it reads as the same tree; returns the written text */
+internal fun assertRoundTrip(text: String): String {
+    val first = A2lParser(text, "first.a2l").parse()
+    val written = A2lWriter.write(first)
+    val second = A2lParser(written, "second.a2l")
+    val tree = second.parse()
+    assertEquals(first.shape(), tree.shape())
+    return written
+}

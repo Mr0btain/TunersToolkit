@@ -19,7 +19,7 @@ class LargeA2lTest {
         appendLine("ASAP2_VERSION 1 61")
         appendLine("/begin PROJECT Big \"\"\n/begin MODULE M \"\"")
         appendLine("/begin MOD_COMMON \"\" BYTE_ORDER MSB_FIRST ALIGNMENT_BYTE 1 /end MOD_COMMON")
-        appendLine("/begin RECORD_LAYOUT L FNC_VALUES 1 UWORD ROW_DIR DIRECT /end RECORD_LAYOUT")
+        appendLine("/begin RECORD_LAYOUT L NO_AXIS_PTS_X 1 UBYTE NO_AXIS_PTS_Y 2 UBYTE AXIS_PTS_X 3 UWORD INDEX_INCR DIRECT AXIS_PTS_Y 4 UWORD INDEX_INCR DIRECT FNC_VALUES 5 UWORD ROW_DIR DIRECT /end RECORD_LAYOUT")
         appendLine("/begin COMPU_METHOD c \"\" RAT_FUNC \"%5.2\" \"Nm\" COEFFS 0 1 0 0 0 0.25 /end COMPU_METHOD")
         for (index in 0 until characteristics) {
             val address = 0x80000000L + index * 64
@@ -57,6 +57,14 @@ class LargeA2lTest {
         assertEquals(18_000, imported.value.modules.single().characteristics.size)
         assertEquals(0, imported.diagnostics.count { it.severity == Severity.ERROR })
         assertTrue(time.inWholeSeconds < 15, "Parsing took $time")
+
+        val (set, resolveTime) = measureTimedValue { A2lResolver(imported.value.modules.single()).resolve() }
+        println("Resolved ${set.objects.size} objects in $resolveTime")
+        assertEquals(18_000, set.objects.count { it.kind != org.mr0btain.tunerstoolkit.core.calibration.ObjectKind.AXIS })
+
+        val (written, writeTime) = measureTimedValue { A2lWriter.write(imported.value.tree) }
+        println("Wrote ${written.length / 1024} KB in $writeTime")
+        assertEquals(imported.value.tree.shape(), A2lParser(written, "again.a2l").parse().shape())
     }
 
     @Test
@@ -68,6 +76,13 @@ class LargeA2lTest {
                 is TkResult.Success -> {
                     println("${file.name}: ${A2lImport.summary(result.data)} in $time")
                     result.data.diagnostics.take(20).forEach { println("  $it") }
+                    result.data.value.modules.forEach { module ->
+                        val (set, resolveTime) = measureTimedValue { A2lResolver(module).resolve() }
+                        println("  ${module.name}: ${set.objects.size} objects resolved in $resolveTime, ${set.diagnostics.count { it.severity == Severity.ERROR }} left out")
+                        set.diagnostics.filter { it.severity == Severity.ERROR }.take(10).forEach { println("    $it") }
+                    }
+                    val tree = result.data.value.tree
+                    assertEquals(tree.shape(), A2lParser(A2lWriter.write(tree), "again.a2l").parse().shape(), "${file.name} round trip")
                 }
                 is TkResult.Failure -> println("${file.name}: ${result.error.message}")
             }

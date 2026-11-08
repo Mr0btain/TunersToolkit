@@ -21,14 +21,15 @@ import kotlin.math.max
 
 /**
  * A scrollbar that maps straight onto the rows, so dragging it or clicking the track goes anywhere in the image at
- * once, plus a minimap: changed bytes ([markers]) in the warning tone, [highlight] (a search match) and the
- * [cursor] marked along the track
+ * once, plus a minimap: changed bytes ([markers]) in the warning tone, defined objects ([coverage]) faintly,
+ * [highlight] (a search match) and the [cursor] marked along the track
  */
 @Composable
 fun HexScrollbar(
     listState: LazyListState,
     rows: HexRows,
     markers: List<AddressRange>,
+    coverage: List<AddressRange> = emptyList(),
     highlight: AddressRange?,
     cursor: Long?,
     modifier: Modifier = Modifier
@@ -64,6 +65,7 @@ fun HexScrollbar(
             drawRect(color, topLeft = Offset(inset, top), size = Size(size.width - inset * 2, bottom - top))
         }
 
+        coverage.forEach { mark(it, colors.accent.soft, size.width * 0.2f) }
         markers.forEach { mark(it, colors.warning.color, size.width * 0.55f) }
         highlight?.let { mark(it, colors.success.color, 1f) }
 

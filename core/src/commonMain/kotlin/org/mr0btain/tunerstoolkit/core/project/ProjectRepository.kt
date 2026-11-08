@@ -75,6 +75,27 @@ class ProjectRepository(
         store.read(sourcePath(id))?.let { TkResult.Success(it) } ?: TkResult.Failure(ProjectError.NOT_FOUND)
     }
 
+    /**
+     * Saves [bytes] as the project's definition, replacing any it had
+     */
+    suspend fun setDefinition(id: String, fileName: String, bytes: ByteArray): TkResult<ProjectManifest, ProjectError> =
+        guard("SetDefinition", ProjectError.SAVE_FAILED) {
+            val manifest = when (val result = manifest(id)) {
+                is TkResult.Success -> result.data
+                is TkResult.Failure -> return@guard result
+            }
+            store.write(definitionPath(id), bytes)
+            val updated = manifest.copy(updatedAt = now(), definition = ProjectDefinition(fileName, bytes.size.toLong()))
+            writeManifest(updated)
+            AppLogger.i("$TAG:SetDefinition", "Saved a definition for $id from $fileName, ${bytes.size} bytes")
+            TkResult.Success(updated)
+        }
+
+    /** The project's definition file, or null when it has none */
+    suspend fun definition(id: String): TkResult<ByteArray?, ProjectError> = guard("Definition", ProjectError.UNREADABLE) {
+        TkResult.Success(store.read(definitionPath(id)))
+    }
+
     /** A version's changes from the original; none for [ProjectManifest.ORIGINAL] */
     suspend fun patches(id: String, versionId: String): TkResult<List<Patch>, ProjectError> = guard("Patches", ProjectError.UNREADABLE) {
         if (versionId == ProjectManifest.ORIGINAL) return@guard TkResult.Success(emptyList())
@@ -205,6 +226,7 @@ class ProjectRepository(
         fun manifestPath(id: String) = "$PROJECTS/$id/project.json"
         fun sourcePath(id: String) = "$PROJECTS/$id/source.bin"
         fun versionPath(id: String, versionId: String) = "$PROJECTS/$id/versions/$versionId.json"
+        fun definitionPath(id: String) = "$PROJECTS/$id/definition.bin"
 
         private val json = Json {
             ignoreUnknownKeys = true

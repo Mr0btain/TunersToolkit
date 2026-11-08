@@ -65,6 +65,22 @@ class DocumentHandler(private val scope: CoroutineScope) {
     /** The last thing searched for, for find next */
     var lastSearch by mutableStateOf<BytePattern?>(null)
 
+    private val listeners = mutableListOf<(OpenDocument?) -> Unit>()
+
+    /** Calls [listener] whenever a different image is opened, or it's closed */
+    fun onDocumentChanged(listener: (OpenDocument?) -> Unit) {
+        listeners += listener
+    }
+
+    /** The image as it was read, before any changes; made once per document, for comparing against */
+    private var originalCache: Pair<OpenDocument, MemoryImage>? = null
+
+    fun original(): MemoryImage? {
+        val document = document ?: return null
+        originalCache?.takeIf { it.first === document }?.let { return it.second }
+        return document.image.original().also { originalCache = document to it }
+    }
+
     /**
      * Reads [bytes] as an ECU image, in whichever format they're in
      * @param rawBaseAddress Where a raw binary starts in memory
@@ -117,6 +133,7 @@ class DocumentHandler(private val scope: CoroutineScope) {
                     document = opened
                     version = image.version
                     lastSearch = null
+                    listeners.forEach { it(opened) }
                     AppLogger.i(
                         "$TAG:Open",
                         "Opened $name as ${format.label}: ${image.ranges.size} segments, ${image.size} bytes, " +
@@ -134,6 +151,19 @@ class DocumentHandler(private val scope: CoroutineScope) {
     fun close() {
         document = null
         version = 0
+        listeners.forEach { it(null) }
+    }
+
+    /**
+     * Runs [block] on the open image as one undo step and redraws. For editors that write through core's codec
+     */
+    fun <T> edit(block: (MemoryImage) -> T): T? {
+        val image = document?.image ?: return null
+        return try {
+            image.edit { block(this) }
+        } finally {
+            version = image.version
+        }
     }
 
     fun write(address: Long, bytes: ByteArray) {

@@ -16,6 +16,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -74,6 +77,9 @@ import kotlin.math.min
  *
  * It never writes to [image] itself: edits go to [onWrite], so the screen's handler can record and redraw them.
  * @param version Changes whenever the image's bytes do (MemoryImage.version), so rows redraw
+ * @param marks Tints bytes that belong to something, like calibration maps
+ * @param coverage Where [marks] are, for the scrollbar's minimap
+ * @param onOpenAt Called with the byte double-clicked (or double-tapped)
  */
 @Composable
 fun TmHexView(
@@ -88,7 +94,10 @@ fun TmHexView(
     onFind: () -> Unit = {},
     onFindNext: () -> Unit = {},
     onSave: () -> Unit = {},
-    onMessage: (String) -> Unit = {}
+    onMessage: (String) -> Unit = {},
+    marks: HexMarks? = null,
+    coverage: List<AddressRange> = emptyList(),
+    onOpenAt: ((Long) -> Unit)? = null
 ) {
     val clipboard = LocalClipboard.current
     val colors = TmTheme.colors
@@ -110,6 +119,8 @@ fun TmHexView(
         HexGeometry(charWidth, bytesPerRow, display, with(density) { 12.dp.toPx() })
     }
     val changes = remember(image, version) { image.changedRanges() }
+    // The last press, for telling a double-click
+    var lastPress by remember { mutableStateOf<Pair<Long, Long>?>(null) }
 
     // The cursor starts on the first byte
     LaunchedEffect(image) {
@@ -294,7 +305,7 @@ fun TmHexView(
                 modifier = Modifier
                     .width(with(density) { geometry.width.toDp() })
                     .fillMaxHeight()
-                    .pointerInput(rows, geometry) {
+                    .pointerInput(rows, geometry, onOpenAt) {
                         awaitEachGesture {
                             val down = awaitFirstDown(requireUnconsumed = false)
                             val shift = currentEvent.keyboardModifiers.isPointerShiftPressed
@@ -302,6 +313,13 @@ fun TmHexView(
                             addressAt(down.position)?.let { (address, ascii) ->
                                 state.asciiFocus = ascii
                                 state.moveTo(address, extend = shift)
+                                val previous = lastPress
+                                if (onOpenAt != null && previous != null && previous.first == address && down.uptimeMillis - previous.second < DOUBLE_CLICK_MS) {
+                                    lastPress = null
+                                    onOpenAt(address)
+                                } else {
+                                    lastPress = address to down.uptimeMillis
+                                }
                             }
                             // Dragging selects with a mouse; on a touch screen it scrolls instead
                             if (down.type != PointerType.Mouse) return@awaitEachGesture
@@ -325,6 +343,7 @@ fun TmHexView(
                             colors = colors,
                             measurer = measurer,
                             padY = padY,
+                            marks = marks,
                             modifier = Modifier.fillMaxWidth().height(rowHeight)
                         )
                         is HexRows.Row.Gap -> GapRow(row.range, geometry, style, colors, measurer, Modifier.fillMaxWidth().height(rowHeight))
@@ -337,6 +356,7 @@ fun TmHexView(
             listState = state.listState,
             rows = rows,
             markers = changes,
+            coverage = coverage,
             highlight = state.highlight,
             cursor = state.cursor
         )
@@ -429,6 +449,7 @@ private fun DataRow(
     colors: TmColors,
     measurer: androidx.compose.ui.text.TextMeasurer,
     padY: Float,
+    marks: HexMarks?,
     modifier: Modifier
 ) {
     val bytesPerRow = state.bytesPerRow
@@ -446,6 +467,7 @@ private fun DataRow(
 
     Canvas(modifier) {
         val rowRange = AddressRange.ofSize(address, bytesPerRow.toLong())
+        marks?.on(rowRange)?.forEach { drawMark(it, rowRange, geometry, colors) }
         state.highlight?.let { markBytes(it, rowRange, geometry, colors.success.soft) }
         state.selection?.let { markBytes(it, rowRange, geometry, colors.accent.soft) }
         state.cursor?.takeIf { it in rowRange }?.let { cursor ->
@@ -532,3 +554,6 @@ private fun oneDecimal(value: Double): String {
 }
 
 private const val TAG = "TmHexView"
+
+/** Two presses on one byte within this long are a double-click */
+private const val DOUBLE_CLICK_MS = 400L

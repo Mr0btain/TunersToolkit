@@ -15,6 +15,7 @@ import org.mr0btain.tunerstoolkit.core.project.ProjectManifest
 import org.mr0btain.tunerstoolkit.core.project.ProjectRepository
 import org.mr0btain.tunerstoolkit.core.project.ProjectSource
 import org.mr0btain.tunerstoolkit.core.project.ProjectVersion
+import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
 
 /**
@@ -29,6 +30,7 @@ data class OpenProject(val manifest: ProjectManifest, val versionId: String) {
 /**
  * Saved projects, and saving the open image into them. Every open goes through here (not straight to
  * [DocumentHandler.open]), so [current] always matches what's in the editor.
+ * @param definitions The open A2L, saved with the project and opened with it; null leaves definitions alone
  * @param notify Shows a short message, like "Saved"
  * @param readInBackground Reads images on a background thread; false for tests and previews
  */
@@ -37,6 +39,7 @@ class ProjectHandler(
     private val scope: CoroutineScope,
     private val documents: DocumentHandler,
     private val repository: ProjectRepository = ProjectRepository(platformProjectStore()),
+    private val definitions: DefinitionHandler? = null,
     private val notify: (String) -> Unit = {},
     private val readInBackground: Boolean = true
 ) {
@@ -57,9 +60,19 @@ class ProjectHandler(
     /** Whether projects outlive the app here; not in a browser without OPFS */
     val persistent: Boolean get() = repository.persistent
 
-    /** Whether the open image has been edited (or undone) since it was opened or saved */
+    /**
+     * Whether the open image has been edited (or undone) since it was opened or saved, or a project has a definition
+     * open that isn't the one saved with it
+     */
     val hasUnsavedChanges: Boolean
-        get() = documents.document != null && documents.version != savedAt
+        get() = documents.document != null && (documents.version != savedAt || definitionUnsaved)
+
+    private val definitionUnsaved: Boolean
+        get() {
+            val open = definitions?.definition ?: return false
+            val saved = current?.manifest?.definition ?: return current != null
+            return saved.fileName != open.name || saved.size != open.source.size.toLong()
+        }
 
     init {
         refresh()
@@ -89,9 +102,16 @@ class ProjectHandler(
             busy = true
             val source = repository.source(manifest.id)
             val patches = repository.patches(manifest.id, versionId)
+            val definition = if (definitions != null && manifest.definition != null) repository.definition(manifest.id) else null
             busy = false
             if (source !is TkResult.Success) return@launch failed("Open", (source as TkResult.Failure).error)
             if (patches !is TkResult.Success) return@launch failed("Open", (patches as TkResult.Failure).error)
+            // A project opens with its own definition, or none
+            when (definition) {
+                is TkResult.Success -> definition.data?.let { definitions?.open(it, manifest.definition!!.fileName) } ?: definitions?.close()
+                is TkResult.Failure -> failed("Open", definition.error)
+                null -> definitions?.close()
+            }
             documents.open(source.data, manifest.source.fileName, manifest.source.rawBaseAddress, patches.data, readInBackground) {
                 current = OpenProject(manifest, versionId)
                 savedAt = documents.version
@@ -113,6 +133,7 @@ class ProjectHandler(
                 is TkResult.Failure -> return@launchSaving created.error
             }
             current = OpenProject(manifest, ProjectManifest.ORIGINAL)
+            saveDefinition(manifest.id)?.let { return@launchSaving it }
             if (patches.isNotEmpty()) {
                 when (val added = repository.addVersion(manifest.id, versionName, patches, note)) {
                     is TkResult.Success -> current = OpenProject(added.data.first, added.data.second.id)
@@ -129,6 +150,7 @@ class ProjectHandler(
         if (open.isOriginal) return
         val patches = documents.document?.image?.patchesFromOriginal() ?: return
         launchSaving("Save") {
+            saveDefinition(open.manifest.id)?.let { return@launchSaving it }
             when (val result = repository.updateVersion(open.manifest.id, open.versionId, patches)) {
                 is TkResult.Success -> {
                     current = open.copy(manifest = result.data)
@@ -144,6 +166,7 @@ class ProjectHandler(
         val open = current ?: return
         val patches = documents.document?.image?.patchesFromOriginal() ?: return
         launchSaving("SaveAsVersion") {
+            saveDefinition(open.manifest.id)?.let { return@launchSaving it }
             when (val result = repository.addVersion(open.manifest.id, name, patches, note, basedOn = open.versionId)) {
                 is TkResult.Success -> {
                     val (manifest, version) = result.data
@@ -152,6 +175,22 @@ class ProjectHandler(
                 }
                 is TkResult.Failure -> result.error
             }
+        }
+    }
+
+    /**
+     * Saves the open definition with project [id] when it isn't the one already there
+     * @return Why it couldn't be, or null
+     */
+    private suspend fun saveDefinition(id: String): ProjectError? {
+        if (!definitionUnsaved) return null
+        val open = definitions?.definition ?: return null
+        return when (val result = repository.setDefinition(id, open.name, open.source)) {
+            is TkResult.Success -> {
+                current = current?.copy(manifest = result.data)
+                null
+            }
+            is TkResult.Failure -> result.error
         }
     }
 

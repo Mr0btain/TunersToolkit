@@ -28,6 +28,25 @@ enum class EncodeError(override val message: String) : Error {
     NO_SUCH_VALUE("There's no value at that position")
 }
 
+/** What a part of an object's memory holds */
+enum class PartRole {
+    /** Its values (for an AXIS object, its points) */
+    VALUES,
+
+    /** An axis's points stored in its own record */
+    AXIS_POINTS,
+
+    /** Everything else in the record: counts, offsets, pointers and reserved space */
+    RECORD
+}
+
+/**
+ * One stretch of an object's own memory and what it holds. [axis] is the axis for [PartRole.AXIS_POINTS], -1 otherwise
+ */
+class ObjectPart(val range: AddressRange, val role: PartRole, val axis: Int = -1) {
+    override fun toString(): String = "$role${if (axis >= 0) " $axis" else ""} $range"
+}
+
 /** Where a run of numbers is stored, so they can be written back */
 class Slots internal constructor(
     val addresses: LongArray,
@@ -63,7 +82,8 @@ class AxisValues(
  * @property dimensions How many values along each axis; empty for a single value
  * @property text The text of an ASCII object
  * @property rescaleIndexes For a rescale AXIS object, the virtual index of each pair (its values are the axis values)
- * @property ranges The memory it was read from, its own record and anything pointers led to
+ * @property ranges The memory it was read from, merged: its own record, anything pointers led to, and shared axes
+ * @property parts Its own memory (not shared axes'), part by part with what each holds, for highlighting
  * @property warnings Things that looked off but didn't stop it being read
  */
 class CalibrationValues(
@@ -77,6 +97,7 @@ class CalibrationValues(
     val text: String? = null,
     val rescaleIndexes: DoubleArray? = null,
     val ranges: List<AddressRange> = emptyList(),
+    val parts: List<ObjectPart> = emptyList(),
     val warnings: List<Diagnostic> = emptyList()
 ) {
     val size: Int get() = raw.size
@@ -293,6 +314,13 @@ private class RecordReader(
     private val axisCount = if (obj.kind == ObjectKind.AXIS) 1 else obj.axes.size
     private val counts = IntArray(axisCount) { -1 }
     private val ranges = mutableListOf<AddressRange>()
+    private val parts = mutableListOf<ObjectPart>()
+
+    private fun own(range: AddressRange, role: PartRole, axis: Int = -1) {
+        if (range.size <= 0) return
+        ranges += range
+        parts += ObjectPart(range, role, axis)
+    }
     private val warnings = mutableListOf<Diagnostic>()
 
     private val pointRaw = arrayOfNulls<DoubleArray>(axisCount)
@@ -324,7 +352,7 @@ private class RecordReader(
                 CalibrationValues(
                     obj, start, valueDimensions, raw, DoubleArray(raw.size) { obj.conversion.toPhysical(raw[it]) }, axes, valueSlots,
                     text = if (obj.kind == ObjectKind.ASCII) asciiText() else null,
-                    ranges = ranges.merged(), warnings = warnings
+                    ranges = ranges.merged(), parts = parts.toList(), warnings = warnings
                 )
             }
         }
@@ -414,7 +442,7 @@ private class RecordReader(
         val at = align(cursor, pointer ?: field.type)
         // Counts, offsets and the space skipped are part of the record too; data fields add their own ranges
         if (field !is RecordField.AxisPoints && field !is RecordField.Rescale && field !is RecordField.Values) {
-            ranges += AddressRange.ofSize(at, field.type.size.toLong())
+            own(AddressRange.ofSize(at, field.type.size.toLong()), PartRole.RECORD)
         }
         return when (field) {
             is RecordField.AxisCount -> {
@@ -456,7 +484,8 @@ private class RecordReader(
         val addresses = LongArray(count) { i -> data + (if (field.decreasing) count - 1 - i else i).toLong() * field.type.size }
         var raw = DoubleArray(count) { i -> number(addresses[i], field.type, "axis ${axisName(field.axis)}'s point ${i + 1}") }
         if (axis.difference) raw = cumulative(raw)
-        ranges += AddressRange.ofSize(data, stored.toLong() * field.type.size)
+        val pointsRange = AddressRange.ofSize(data, stored.toLong() * field.type.size)
+        if (obj.kind == ObjectKind.AXIS) own(pointsRange, PartRole.VALUES) else own(pointsRange, PartRole.AXIS_POINTS, field.axis)
         pointRaw[field.axis] = raw
         pointSlots[field.axis] = Slots(addresses, field.type, order, difference = axis.difference)
         return if (field.pointer != null) at + field.pointer.size else at + stored.toLong() * field.type.size
@@ -474,7 +503,7 @@ private class RecordReader(
             number(address, field.type, "rescale pair ${i + 1}") to number(address + field.type.size, field.type, "rescale pair ${i + 1}")
         }
         rescaleSlots = Slots(pairAddresses, field.type, order)
-        ranges += AddressRange.ofSize(data, stored * pairSize)
+        own(AddressRange.ofSize(data, stored * pairSize), PartRole.VALUES)
         return if (field.pointer != null) at + field.pointer.size else at + stored * pairSize
     }
 
@@ -520,7 +549,7 @@ private class RecordReader(
         }
         valueSlots = Slots(addresses, field.type, order, mask)
         valueDimensions = dimensions
-        ranges += AddressRange.ofSize(data, stored * field.type.size)
+        own(AddressRange.ofSize(data, stored * field.type.size), PartRole.VALUES)
         return if (field.pointer != null) at + field.pointer.size else at + stored * field.type.size
     }
 
@@ -575,7 +604,7 @@ private class RecordReader(
     private fun axisObject(points: AxisValues): CalibrationValues = CalibrationValues(
         obj, start, intArrayOf(points.count), points.raw, points.physical, emptyList(), points.slots,
         rescaleIndexes = rescalePairs?.map { it.second }?.toDoubleArray(),
-        ranges = ranges.merged(), warnings = warnings
+        ranges = ranges.merged(), parts = parts.toList(), warnings = warnings
     )
 
     private fun asciiText(): String {
@@ -595,7 +624,7 @@ private class RecordReader(
     private fun target(at: Long, pointer: DataType?): Long {
         if (pointer == null) return at
         val address = number(at, pointer, "a pointer").toLong()
-        ranges += AddressRange.ofSize(at, pointer.size.toLong())
+        own(AddressRange.ofSize(at, pointer.size.toLong()), PartRole.RECORD)
         return address
     }
 

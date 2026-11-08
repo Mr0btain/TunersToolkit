@@ -27,6 +27,7 @@ import org.mr0btain.tunerstoolkit.core.image.BytePattern
 import org.mr0btain.tunerstoolkit.core.image.MemoryImage
 import org.mr0btain.tunerstoolkit.core.image.parseAddress
 import org.mr0btain.tunerstoolkit.core.image.toHexAddress
+import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
 import org.mr0btain.tunerstoolkit.ui.document.OpenDocument
 import org.mr0btain.tunerstoolkit.ui.files.rememberFileSaver
@@ -64,10 +65,12 @@ import tunerstoolkit.composeapp.generated.resources.tt_search
 fun EditorScreen(
     documents: DocumentHandler,
     projects: ProjectHandler,
+    definitions: DefinitionHandler,
     settings: SettingsHandler,
     snackbar: SnackbarHostState,
     onOpenFiles: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    startAt: Long? = null
 ) {
     val document = documents.document
     if (document == null) {
@@ -87,6 +90,7 @@ fun EditorScreen(
     val scope = rememberCoroutineScope()
     val state = remember(document) { HexViewState(settings.data.hexBytesPerRow) }
     LaunchedEffect(settings.data.hexBytesPerRow) { state.bytesPerRow = settings.data.hexBytesPerRow }
+    LaunchedEffect(document, startAt) { startAt?.let { state.moveTo(it); state.reveal(it) } }
 
     var goingTo by remember { mutableStateOf(false) }
     var finding by remember { mutableStateOf(false) }
@@ -114,6 +118,14 @@ fun EditorScreen(
 
     val project = projects.current
     val unsaved = projects.hasUnsavedChanges
+
+    // The definition's objects on this image, once it's indexed
+    val onImage = definitions.onImage?.takeIf { it.document === document }
+    var selectedObject by remember(document) { mutableStateOf<String?>(null) }
+    val marks = remember(onImage, selectedObject) { onImage?.let { objectMarks(it, selectedObject) } }
+    val coverage = remember(onImage) { onImage?.build?.index?.coverage.orEmpty() }
+    val objectAtCursor = state.cursor?.let { cursor -> onImage?.build?.index?.at(cursor)?.firstOrNull()?.obj }
+    LaunchedEffect(objectAtCursor) { objectAtCursor?.let { selectedObject = it.name } }
     fun save() {
         when {
             project == null -> saving = SaveKind.PROJECT
@@ -170,10 +182,14 @@ fun EditorScreen(
                 onFind = { finding = true },
                 onFindNext = { findNext() },
                 onSave = ::save,
-                onMessage = { message -> scope.launch { snackbar.showSnackbar(message) } }
+                onMessage = { message -> scope.launch { snackbar.showSnackbar(message) } },
+                marks = marks,
+                coverage = coverage,
+                onOpenAt = { address -> onImage?.build?.index?.at(address)?.firstOrNull()?.let { selectedObject = it.obj.name } }
             )
         }
 
+        objectAtCursor?.let { ObjectAtCursor(it, definitions, state.cursor!!, version) }
         StatusBar(image, state, version)
     }
 

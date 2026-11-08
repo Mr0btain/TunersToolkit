@@ -31,6 +31,7 @@ import org.mr0btain.tunerstoolkit.core.diagnostics.Diagnostic
 import org.mr0btain.tunerstoolkit.core.diagnostics.Severity
 import org.mr0btain.tunerstoolkit.core.image.parseAddress
 import org.mr0btain.tunerstoolkit.core.image.toHexAddress
+import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
 import org.mr0btain.tunerstoolkit.ui.document.OpenDocument
 import org.mr0btain.tunerstoolkit.ui.kit.hex.byteCount
@@ -74,6 +75,7 @@ private const val SHOWN_DIAGNOSTICS = 100
 fun FilesScreen(
     documents: DocumentHandler,
     projects: ProjectHandler,
+    definitions: DefinitionHandler,
     onOpenEditor: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -83,6 +85,7 @@ fun FilesScreen(
     val base = parseAddress(baseText)
     // The demo is read from the checkout, so it's only there on desktop while developing
     val demo = remember { readTestDataFile("demo/tt-demo-1.hex") }
+    val demoA2l = remember { readTestDataFile("demo/tt-demo-1.a2l") }
 
     val picker = rememberFilePickerLauncher(type = FileKitType.File()) { file ->
         if (file == null) return@rememberFilePickerLauncher
@@ -95,6 +98,17 @@ fun FilesScreen(
         }
     }
 
+    val a2lPicker = rememberFilePickerLauncher(type = FileKitType.File()) { file ->
+        if (file == null) return@rememberFilePickerLauncher
+        scope.launch {
+            try {
+                definitions.open(file.readBytes(), file.name)
+            } catch (e: Exception) {
+                AppLogger.e("$TAG:ReadA2l", "Couldn't read ${file.name}", e)
+            }
+        }
+    }
+
     TmScrollColumn(
         modifier = modifier.fillMaxSize().padding(spacing.lg),
         verticalArrangement = Arrangement.spacedBy(spacing.lg)
@@ -102,14 +116,19 @@ fun FilesScreen(
         TmPageHeader(
             title = "Files",
             onBack = null,
-            subtitle = "Open an ECU image: Intel HEX, Motorola S-record, or a raw binary"
+            subtitle = "Open an ECU image (Intel HEX, Motorola S-record or a raw binary) and the A2L that describes it"
         )
 
         TmPanel(modifier = Modifier.fillMaxWidth(), title = "Open an image", icon = Res.drawable.tt_folder) {
             OpenButtons(
                 loading = documents.loading || projects.busy,
                 onOpen = { picker.launch() },
-                onOpenDemo = demo?.let { bytes -> { projects.openFile(bytes, "tt-demo-1.hex") } }
+                onOpenDemo = demo?.let { bytes ->
+                    {
+                        demoA2l?.let { definitions.open(it, "tt-demo-1.a2l") }
+                        projects.openFile(bytes, "tt-demo-1.hex")
+                    }
+                }
             )
             TmTextField(
                 modifier = Modifier.widthIn(max = 360.dp),
@@ -122,7 +141,11 @@ fun FilesScreen(
             documents.openError?.let { TmNotice(kind = TmNoticeKind.ERROR, title = "Couldn't open the file", text = it) }
         }
 
+        DefinitionPanel(definitions, onOpen = { a2lPicker.launch() })
+
         ProjectsPanel(projects, onOpenEditor)
+
+        definitions.definition?.let { DefinitionReport(it, definitions.onImage, definitions.indexing, onOpenEditor) }
 
         documents.document?.let { ImportReport(it, onOpenEditor) }
     }
@@ -245,7 +268,7 @@ private fun OpenButtons(loading: Boolean, onOpen: () -> Unit, onOpenDemo: (() ->
     ) {
         TmButton(text = "Open a file", onClick = onOpen, leadingIcon = Res.drawable.tt_upload, loading = loading)
         if (onOpenDemo != null) {
-            TmButton(text = "Open the demo image", onClick = onOpenDemo, variant = TmButtonVariant.SECONDARY, enabled = !loading)
+            TmButton(text = "Open the demo", onClick = onOpenDemo, variant = TmButtonVariant.SECONDARY, enabled = !loading)
         }
     }
 }
@@ -292,7 +315,7 @@ private fun ImportReport(document: OpenDocument, onOpenEditor: () -> Unit) {
 }
 
 @Composable
-private fun DiagnosticRow(diagnostic: Diagnostic) {
+internal fun DiagnosticRow(diagnostic: Diagnostic) {
     val colors = TmTheme.colors
     val (label, tone) = when (diagnostic.severity) {
         Severity.ERROR -> "Error" to colors.danger
@@ -305,6 +328,7 @@ private fun DiagnosticRow(diagnostic: Diagnostic) {
             Text("line ${it.line}", style = TmTheme.typography.numeric, color = colors.textMuted)
         }
         Column(Modifier.weight(1f)) {
+            diagnostic.objectName?.let { Text(it, style = TmTheme.typography.caption, color = colors.textMuted) }
             Text(diagnostic.message, style = TmTheme.typography.body, color = colors.text)
         }
     }
