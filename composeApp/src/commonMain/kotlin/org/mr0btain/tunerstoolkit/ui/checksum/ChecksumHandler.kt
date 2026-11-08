@@ -94,7 +94,7 @@ class ChecksumHandler(
             is TkResult.Success -> result.data
             is TkResult.Failure -> return "$name isn't a checksum module: ${result.error.message}"
         }
-        val module = imported.value
+        val module = untrusted(imported.value)
         modules = modules.filter { it.id != module.id } + module
         documents.document?.let { detected = ChecksumModules.detect(it.image, modules) }
         choose(module)
@@ -144,14 +144,25 @@ class ChecksumHandler(
         working = false
     }
 
-    /** Fixes every wrong checksum, as one undo step */
-    fun fixAll(): FixReport? {
-        val checks = state?.checks ?: return null
+    /**
+     * Fixes every wrong checksum, as one undo step. With a module that isn't verified it does nothing unless
+     * [confirmedUnverified] (the person was asked); every way of fixing goes through here, so none can skip that.
+     * The checks are worked out again for the image as it is now, not taken from the last background run
+     * @return What fixing did, or null when there was nothing to fix with or it wasn't confirmed
+     */
+    fun fixAll(confirmedUnverified: Boolean = false): FixReport? {
+        if (needsConfirmation && !confirmedUnverified) return null
+        val document = documents.document ?: return null
+        val checks = work(active, own?.checkList.orEmpty(), document.image, documents.version).checks
+        if (checks.isEmpty()) return null
         val report = documents.edit { Checksums.fix(it, checks) } ?: return null
         AppLogger.i("$TAG:Fix", "Fixed ${report.fixed} checksums, ${report.results.count { !it.ok }} still wrong")
         refresh()
         return report
     }
+
+    /** Whether fixing has to be confirmed first: the module in use isn't verified */
+    val needsConfirmation: Boolean get() = active?.status == ModuleStatus.UNVERIFIED
 
     /** The chosen module, saved with the project when it isn't the one detected */
     val moduleAttachment = object : ProjectAttachment {
@@ -159,7 +170,11 @@ class ChecksumHandler(
         override fun saved(): String? = (chosen as? DefinedModule)?.let(TtSum::write)
         override fun restore(text: String?) {
             chosen = text?.let { (TtSum.read(it.encodeToByteArray(), fileName) as? TkResult.Success)?.data?.value }
-                ?.let { module -> modules.firstOrNull { it.id == module.id && it == module } ?: module.also { modules = modules.filter { m -> m.id != it.id } + it } }
+                ?.let { module ->
+                    // The same as a built in one: that one. Anything else is the project's own, and not trusted
+                    ChecksumModules.builtIn.firstOrNull { it == module }
+                        ?: untrusted(module).also { loaded -> modules = modules.filter { it.id != loaded.id } + loaded }
+                }
             refresh()
         }
     }
@@ -176,6 +191,19 @@ class ChecksumHandler(
 
     private companion object {
         const val TAG = "ChecksumHandler"
+
+        /**
+         * A module from a file or a project: whatever its file says, it isn't verified, and it can't take a built in
+         * module's place by using its id
+         */
+        fun untrusted(module: DefinedModule): DefinedModule {
+            val clash = ChecksumModules.builtIn.any { it.id == module.id }
+            return module.copy(
+                id = if (clash) "${module.id}-loaded" else module.id,
+                name = if (clash) "${module.name} (loaded)" else module.name,
+                status = if (module.status == ModuleStatus.USER) ModuleStatus.USER else ModuleStatus.UNVERIFIED
+            )
+        }
 
         fun work(module: ChecksumModule?, ownChecks: List<ChecksumCheck>, image: MemoryImage, version: Long): ChecksumState {
             val moduleChecks = when (val result = module?.checks(image)) {

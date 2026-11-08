@@ -101,7 +101,7 @@ fun ChecksumsScreen(
     val active = checksums.active
 
     fun fix() {
-        val report = checksums.fixAll() ?: return
+        val report = checksums.fixAll(confirmedUnverified = true) ?: return
         onMessage(if (report.allOk) "Fixed ${report.fixed} checksums" else "${report.results.count { !it.ok }} checksums couldn't be fixed")
     }
 
@@ -129,7 +129,7 @@ fun ChecksumsScreen(
                 TmButton(text = "Add a check", onClick = { adding = true }, variant = TmButtonVariant.SECONDARY, size = TmControlSize.SMALL, leadingIcon = Res.drawable.tt_plus)
                 TmButton(
                     text = "Fix all",
-                    onClick = { if (active?.status == ModuleStatus.UNVERIFIED) confirming = true else fix() },
+                    onClick = { if (checksums.needsConfirmation) confirming = true else fix() },
                     enabled = (state?.wrong ?: 0) > 0,
                     size = TmControlSize.SMALL
                 )

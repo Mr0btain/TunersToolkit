@@ -65,6 +65,7 @@ import org.mr0btain.tunerstoolkit.ui.kit.hex.byteCount
 import org.mr0btain.tunerstoolkit.ui.settings.SettingsHandler
 import org.mr0btain.uikit.buttons.TmButtonRow
 import org.mr0btain.uikit.buttons.TmIconButton
+import org.mr0btain.uikit.containers.TmConfirmDialog
 import org.mr0btain.uikit.containers.TmDialog
 import org.mr0btain.uikit.containers.TmPageHeader
 import org.mr0btain.uikit.feedback.TmEmptyState
@@ -137,6 +138,7 @@ fun EditorScreen(
     var exporting by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf<SaveKind?>(null) }
     var making by remember { mutableStateOf<MakeMap?>(null) }
+    var confirmingFix by remember { mutableStateOf(false) }
     var csvTarget by remember { mutableStateOf<CalibrationObject?>(null) }
     val csvPicker = rememberFilePickerLauncher(type = FileKitType.File()) { file ->
         val target = csvTarget ?: return@rememberFilePickerLauncher
@@ -338,6 +340,21 @@ fun EditorScreen(
         )
     }
 
+    if (confirmingFix) {
+        TmConfirmDialog(
+            title = "Fix with a module that isn't verified?",
+            message = "${checksums?.active?.name} hasn't been checked against real binaries. A wrong checksum can stop an ECU starting, so keep the original and check the result before flashing.",
+            confirmText = "Fix them",
+            destructive = true,
+            onConfirm = {
+                confirmingFix = false
+                val report = checksums?.fixAll(confirmedUnverified = true)
+                if (report != null) message(if (report.allOk) "Fixed ${report.fixed} checksums" else "${report.results.count { !it.ok }} checksums couldn't be fixed")
+            },
+            onDismissRequest = { confirmingFix = false }
+        )
+    }
+
     if (goingTo) GoToDialog(image, onGo = { editor.showHex(); state.reveal(it); goingTo = false }, onDismiss = { goingTo = false })
     if (finding) {
         FindDialog(
@@ -366,8 +383,12 @@ fun EditorScreen(
             document = document,
             wrongChecksums = checksums?.state?.takeIf { it.version == version }?.wrong ?: 0,
             onFixChecksums = {
-                val report = checksums?.fixAll()
-                if (report != null) message(if (report.allOk) "Fixed ${report.fixed} checksums" else "${report.results.count { !it.ok }} checksums couldn't be fixed")
+                if (checksums?.needsConfirmation == true) {
+                    confirmingFix = true
+                } else {
+                    val report = checksums?.fixAll()
+                    if (report != null) message(if (report.allOk) "Fixed ${report.fixed} checksums" else "${report.results.count { !it.ok }} checksums couldn't be fixed")
+                }
             },
             onExport = { format ->
                 exporting = false
