@@ -10,6 +10,8 @@ composeMultiplatform = "1.12.2"
 kotlin = "2.4.20"
 kotlinx-coroutines = "1.11.0"
 kotlinxSerializationJson = "1.11.0"
+# The one FileKit uses; project files on desktop, Android and iOS
+kotlinx-io = "0.9.1"
 koin = "4.2.2"
 compose-navigation = "2.9.2"
 material3 = "1.9.0"
@@ -46,6 +48,7 @@ kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotl
 kotlin-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlin-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
+kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 
 # Koin

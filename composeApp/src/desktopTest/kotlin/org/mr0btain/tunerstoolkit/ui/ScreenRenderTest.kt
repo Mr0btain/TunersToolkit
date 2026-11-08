@@ -12,7 +12,10 @@ import kotlinx.coroutines.Dispatchers
 import org.jetbrains.skia.EncodedImageFormat
 import org.mr0btain.tunerstoolkit.Destination
 import org.mr0btain.tunerstoolkit.screens.settings.classes.SettingsData
+import org.mr0btain.tunerstoolkit.core.project.MemoryProjectStore
+import org.mr0btain.tunerstoolkit.core.project.ProjectRepository
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
+import org.mr0btain.tunerstoolkit.ui.project.ProjectHandler
 import org.mr0btain.tunerstoolkit.ui.editor.EditorScreen
 import org.mr0btain.tunerstoolkit.ui.files.FilesScreen
 import org.mr0btain.tunerstoolkit.ui.gallery.GalleryScreen
@@ -35,8 +38,15 @@ class ScreenRenderTest {
     private val demo = File("../testdata/demo/tt-demo-1.hex").readBytes()
 
     private fun render(name: String, destination: Destination, width: Int = 1440, height: Int = 900, dark: Boolean = true) {
-        val documents = DocumentHandler(CoroutineScope(Dispatchers.Unconfined))
-        documents.open(demo, "tt-demo-1.hex", inBackground = false)
+        val scope = CoroutineScope(Dispatchers.Unconfined)
+        val documents = DocumentHandler(scope)
+        // A project with a version, saved in memory, so the files screen lists it and the editor shows it's open
+        val repository = ProjectRepository(MemoryProjectStore())
+        val projects = ProjectHandler(scope, documents, repository, readInBackground = false)
+        projects.openFile(demo, "tt-demo-1.hex")
+        documents.write(0x0010L, byteArrayOf(0x12, 0x34))
+        projects.saveAsProject("TT-DEMO-1 bench ECU", "Stage 1", "Richer part load")
+        documents.write(0x0020L, byteArrayOf(0x56))
         val settings = SettingsHandler(CoroutineScope(Dispatchers.Unconfined), SettingsData(darkMode = dark))
 
         val bytes = ImageComposeScene(width, height, Density(1f)) {
@@ -50,8 +60,8 @@ class ScreenRenderTest {
                     wide = width >= 840
                 ) {
                     when (destination) {
-                        Destination.FILES -> FilesScreen(documents, onOpenEditor = {})
-                        Destination.EDITOR -> EditorScreen(documents, settings, snackbar, onOpenFiles = {})
+                        Destination.FILES -> FilesScreen(documents, projects, onOpenEditor = {})
+                        Destination.EDITOR -> EditorScreen(documents, projects, settings, snackbar, onOpenFiles = {})
                         Destination.SETTINGS -> SettingsScreen(settings, onOpenGallery = {})
                         Destination.GALLERY -> GalleryScreen(settings)
                         else -> Unit

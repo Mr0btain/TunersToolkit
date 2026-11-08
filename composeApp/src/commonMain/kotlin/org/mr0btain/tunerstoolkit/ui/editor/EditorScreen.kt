@@ -30,6 +30,7 @@ import org.mr0btain.tunerstoolkit.core.image.toHexAddress
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
 import org.mr0btain.tunerstoolkit.ui.document.OpenDocument
 import org.mr0btain.tunerstoolkit.ui.files.rememberFileSaver
+import org.mr0btain.tunerstoolkit.ui.project.ProjectHandler
 import org.mr0btain.tunerstoolkit.ui.kit.hex.HexRadix
 import org.mr0btain.tunerstoolkit.ui.kit.hex.HexViewState
 import org.mr0btain.tunerstoolkit.ui.kit.hex.TmHexView
@@ -54,12 +55,15 @@ import tunerstoolkit.composeapp.generated.resources.tt_corner_up_right
 import tunerstoolkit.composeapp.generated.resources.tt_crosshair
 import tunerstoolkit.composeapp.generated.resources.tt_cpu
 import tunerstoolkit.composeapp.generated.resources.tt_download
+import tunerstoolkit.composeapp.generated.resources.tt_folder_plus
+import tunerstoolkit.composeapp.generated.resources.tt_save
 import tunerstoolkit.composeapp.generated.resources.tt_search
 
 /** The open image in the hex view, with its display options, undo, go to, find and export */
 @Composable
 fun EditorScreen(
     documents: DocumentHandler,
+    projects: ProjectHandler,
     settings: SettingsHandler,
     snackbar: SnackbarHostState,
     onOpenFiles: () -> Unit,
@@ -87,6 +91,7 @@ fun EditorScreen(
     var goingTo by remember { mutableStateOf(false) }
     var finding by remember { mutableStateOf(false) }
     var exporting by remember { mutableStateOf(false) }
+    var saving by remember { mutableStateOf<SaveKind?>(null) }
     val saver = rememberFileSaver { name ->
         scope.launch { snackbar.showSnackbar(if (name != null) "Saved $name" else "Not saved") }
     }
@@ -107,13 +112,41 @@ fun EditorScreen(
     val image = document.image
     val changedBytes = remember(document, version) { image.changedRanges().sumOf { it.size } }
 
+    val project = projects.current
+    val unsaved = projects.hasUnsavedChanges
+    fun save() {
+        when {
+            project == null -> saving = SaveKind.PROJECT
+            project.isOriginal -> saving = SaveKind.VERSION
+            else -> projects.save()
+        }
+    }
+
     Column(modifier.fillMaxSize().padding(spacing.lg), verticalArrangement = Arrangement.spacedBy(spacing.md)) {
         TmPageHeader(
-            title = document.name,
+            title = project?.manifest?.name ?: document.name,
             onBack = null,
-            subtitle = "${document.format.label}, ${byteCount(image.size)}" +
-                if (changedBytes > 0) ", ${byteCount(changedBytes)} changed" else "",
+            subtitle = listOfNotNull(
+                project?.versionName,
+                "${document.format.label}, ${byteCount(image.size)}",
+                if (changedBytes > 0) "${byteCount(changedBytes)} changed from the original" else null,
+                if (unsaved) "not saved" else null
+            ).joinToString(" · "),
             actions = {
+                TmIconButton(
+                    icon = Res.drawable.tt_save,
+                    contentDescription = if (project == null) "Save as a project" else "Save",
+                    onClick = ::save,
+                    enabled = !projects.busy && (project == null || unsaved || project.isOriginal)
+                )
+                if (project != null) {
+                    TmIconButton(
+                        icon = Res.drawable.tt_folder_plus,
+                        contentDescription = "Save as a new version",
+                        onClick = { saving = SaveKind.VERSION },
+                        enabled = !projects.busy
+                    )
+                }
                 TmIconButton(icon = Res.drawable.tt_corner_up_left, contentDescription = "Undo", onClick = documents::undo, enabled = image.canUndo)
                 TmIconButton(icon = Res.drawable.tt_corner_up_right, contentDescription = "Redo", onClick = documents::redo, enabled = image.canRedo)
                 TmIconButton(icon = Res.drawable.tt_crosshair, contentDescription = "Go to address", onClick = { goingTo = true })
@@ -135,7 +168,9 @@ fun EditorScreen(
                 onRedo = documents::redo,
                 onGoTo = { goingTo = true },
                 onFind = { finding = true },
-                onFindNext = { findNext() }
+                onFindNext = { findNext() },
+                onSave = ::save,
+                onMessage = { message -> scope.launch { snackbar.showSnackbar(message) } }
             )
         }
 
@@ -153,6 +188,17 @@ fun EditorScreen(
             onDismiss = { finding = false }
         )
     }
+    saving?.let { kind ->
+        SaveDialog(
+            kind = kind,
+            fileName = document.name,
+            versionNumber = (project?.manifest?.versions?.size ?: 0) + 1,
+            hasChanges = changedBytes > 0,
+            onSaveProject = { name, versionName, note -> projects.saveAsProject(name, versionName, note); saving = null },
+            onSaveVersion = { name, note -> projects.saveAsVersion(name, note); saving = null },
+            onDismiss = { saving = null }
+        )
+    }
     if (exporting) {
         ExportDialog(
             document = document,
@@ -165,6 +211,55 @@ fun EditorScreen(
             },
             onDismiss = { exporting = false }
         )
+    }
+}
+
+/** What the save dialog makes */
+private enum class SaveKind { PROJECT, VERSION }
+
+/**
+ * Saving a file as a new project (with its changes as the first version), or the open project as a new version
+ */
+@Composable
+private fun SaveDialog(
+    kind: SaveKind,
+    fileName: String,
+    versionNumber: Int,
+    hasChanges: Boolean,
+    onSaveProject: (name: String, versionName: String, note: String) -> Unit,
+    onSaveVersion: (name: String, note: String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var projectName by remember { mutableStateOf(fileName.substringBeforeLast('.')) }
+    var versionName by remember { mutableStateOf("Version $versionNumber") }
+    var note by remember { mutableStateOf("") }
+    val asProject = kind == SaveKind.PROJECT
+    val askVersion = !asProject || hasChanges
+
+    TmDialog(
+        title = if (asProject) "Save as a project" else "Save as a new version",
+        description = when {
+            !asProject -> "The open version stays as it was"
+            hasChanges -> "The original file is kept as it is, and your changes become its first version"
+            else -> "The original file is kept, and you can save versions of it as you change it"
+        },
+        onDismissRequest = onDismiss,
+        actions = {
+            TmButtonRow(
+                confirmText = "Save",
+                onConfirm = { if (asProject) onSaveProject(projectName, versionName, note) else onSaveVersion(versionName, note) },
+                onCancel = onDismiss,
+                confirmEnabled = (!asProject || projectName.isNotBlank()) && (!askVersion || versionName.isNotBlank())
+            )
+        }
+    ) {
+        if (asProject) {
+            TmTextField(value = projectName, onValueChange = { projectName = it }, label = "Project", placeholder = "Golf 2.0 TSI")
+        }
+        if (askVersion) {
+            TmTextField(value = versionName, onValueChange = { versionName = it }, label = "Version", placeholder = "Stage 1")
+            TmTextField(value = note, onValueChange = { note = it }, label = "Note", placeholder = "What changed, optional")
+        }
     }
 }
 

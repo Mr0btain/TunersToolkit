@@ -219,6 +219,17 @@ class MemoryImage internal constructor(
         return true
     }
 
+    /**
+     * Forgets every undo and redo step, keeping the bytes and the original as they are. For a saved version that's
+     * just been put back on its original: undo shouldn't walk past where it was opened
+     */
+    fun clearHistory() {
+        check(pending == null) { "Can't clear the history inside edit" }
+        undoSteps.clear()
+        redoSteps.clear()
+        version++
+    }
+
     // ------------------------------------------- Changes -------------------------------------------
 
     /** Whether the byte at [address] differs from when the image was loaded */

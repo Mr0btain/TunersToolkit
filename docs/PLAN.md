@@ -342,7 +342,7 @@ Each phase ends with green CI and a usable app.
 - [x] `AppLogger`, `TkResult`, the `Diagnostic` model (in `core`, with tests).
 - [x] CI workflow on both Gitea and GitHub.
 - [x] Update CLAUDE.md to the new layout.
-- [ ] Left for later phases: moving the existing `println`s and silent `safeCall` failures onto `AppLogger` and `Diagnostics` (Phase 1/3), replacing the JNA directory code with FileKit (Phase 2, once projects can be migrated), and saving web projects (Phase 2, OPFS).
+- [ ] Left for later phases: moving the existing `println`s and silent `safeCall` failures onto `AppLogger` and `Diagnostics` (Phase 1/3), and replacing the JNA directory code with FileKit (once the legacy screens and their `projects/` folders are gone, Phase 4). Saving web projects landed in Phase 2 (OPFS).
 
 **Phase 1: Core data and binary formats**
 - [x] `MemoryImage` with typed read/write, endianness, and patches/undo (`core/.../image/`).
@@ -356,8 +356,8 @@ Each phase ends with green CI and a usable app.
 - [x] Tuners Toolkit's screens on the kit: `TmTheme`, the kit's new `TmAppShell` (Tm-UI-Kit 0.2.0; TicketMan still has its own shell and can move to it), `KitRules` in `UiKitRulesTest`, and `ScreenRenderTest`. The old screens live on as the Legacy place until Phases 3 and 4 replace them.
 - [x] `TmHexView`: virtualized rows, Canvas drawing, address-based selection and editing, go-to address, find, data width modes, proportional scrollbar, and minimap.
 - [x] Open files (FileKit) on every platform, an import report, export as Intel HEX, S-record or BIN (save dialog, or a download on the web), and a Log screen.
-- [ ] Projects with versions, saved on every platform (files on desktop/Android, OPFS on web). Until then an opened image only lasts until it's closed.
-- [ ] Copy and paste in the hex view (hex text and raw bytes).
+- [x] Projects with versions, saved on every platform: `core/.../project/` (`ProjectRepository` over a `ProjectStore`: `FileSystemProjectStore` with kotlinx-io on desktop, Android and iOS, `OpfsProjectStore` on the web, falling back to memory with a warning). A project keeps the source file untouched plus each version as patches from the original. The Files screen lists projects and versions; the editor saves in place (Ctrl+S), as a new version, or a plain file as a new project. Not yet: the `.ttproj` export/import, project info fields in the UI, and an "unsaved changes" prompt when opening something else.
+- [x] Copy and paste in the hex view: Ctrl+C copies the selection as hex in the hex column and as text in the ASCII one (Ctrl+Shift+C the other way), Ctrl+V pastes over the bytes from the cursor in the same form, never past the end of the segment.
 
 **Phase 3: A2L, done properly**
 - [ ] Lexer, parser and A2ML. Full keyword checklist from Section 7.1, each item with a test.

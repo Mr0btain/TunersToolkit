@@ -13,6 +13,9 @@ import org.mr0btain.applogger.AppLogger
 import org.mr0btain.tunerstoolkit.core.diagnostics.Diagnostic
 import org.mr0btain.tunerstoolkit.core.error.TkResult
 import org.mr0btain.tunerstoolkit.core.formats.ExportError
+import org.mr0btain.tunerstoolkit.core.formats.ImportError
+import org.mr0btain.tunerstoolkit.core.formats.Imported
+import org.mr0btain.tunerstoolkit.core.error.map
 import org.mr0btain.tunerstoolkit.core.formats.binary.BinaryFormat
 import org.mr0btain.tunerstoolkit.core.formats.binary.BinaryImport
 import org.mr0btain.tunerstoolkit.core.formats.binary.IntelHex
@@ -21,18 +24,23 @@ import org.mr0btain.tunerstoolkit.core.formats.binary.SRecord
 import org.mr0btain.tunerstoolkit.core.image.AddressRange
 import org.mr0btain.tunerstoolkit.core.image.BytePattern
 import org.mr0btain.tunerstoolkit.core.image.MemoryImage
+import org.mr0btain.tunerstoolkit.core.image.Patch
 import org.mr0btain.tunerstoolkit.core.image.find
 import org.mr0btain.tunerstoolkit.core.image.toHexAddress
 
 /**
  * An ECU image that's open
  * @param diagnostics What reading it found wrong, for the import report
+ * @param source The file it was read from, unchanged, so it can be saved as a project
+ * @param rawBaseAddress Where it starts in memory when it's a raw binary
  */
 class OpenDocument(
     val name: String,
     val format: BinaryFormat,
     val image: MemoryImage,
-    val diagnostics: List<Diagnostic>
+    val diagnostics: List<Diagnostic>,
+    val source: ByteArray = ByteArray(0),
+    val rawBaseAddress: Long = 0
 )
 
 /**
@@ -60,34 +68,53 @@ class DocumentHandler(private val scope: CoroutineScope) {
     /**
      * Reads [bytes] as an ECU image, in whichever format they're in
      * @param rawBaseAddress Where a raw binary starts in memory
-     * @param onOpened Called once it's open
+     * @param patches Changes to make once it's read, as a saved version's; they can't be undone
+     * @param onOpened Called with the document once it's open
      * @param inBackground Reads on a background thread; false reads it now, for tests and previews
      */
-    fun open(bytes: ByteArray, name: String, rawBaseAddress: Long = 0, inBackground: Boolean = true, onOpened: () -> Unit = {}) {
+    fun open(
+        bytes: ByteArray,
+        name: String,
+        rawBaseAddress: Long = 0,
+        patches: List<Patch> = emptyList(),
+        inBackground: Boolean = true,
+        onOpened: (OpenDocument) -> Unit = {}
+    ) {
         loading = true
         openError = null
         val format = BinaryFormat.detect(bytes)
+        val read = { BinaryImport.read(bytes, name, rawBaseAddress, format).map { it.also { imported -> imported.value.restore(patches) } } }
         if (!inBackground) {
-            opened(BinaryImport.read(bytes, name, rawBaseAddress, format), name, format, onOpened)
+            opened(read(), name, format, bytes, rawBaseAddress, onOpened)
             return
         }
         scope.launch {
-            val result = withContext(Dispatchers.Default) { BinaryImport.read(bytes, name, rawBaseAddress, format) }
-            opened(result, name, format, onOpened)
+            val result = withContext(Dispatchers.Default) { read() }
+            opened(result, name, format, bytes, rawBaseAddress, onOpened)
         }
     }
 
+    /** Puts a saved version's changes back, as where undo starts */
+    private fun MemoryImage.restore(patches: List<Patch>) {
+        if (patches.isEmpty()) return
+        apply(patches.filter { contains(it.address, it.after.size) })
+        clearHistory()
+    }
+
     private fun opened(
-        result: TkResult<org.mr0btain.tunerstoolkit.core.formats.Imported<MemoryImage>, org.mr0btain.tunerstoolkit.core.formats.ImportError>,
+        result: TkResult<Imported<MemoryImage>, ImportError>,
         name: String,
         format: BinaryFormat,
-        onOpened: () -> Unit
+        source: ByteArray,
+        rawBaseAddress: Long,
+        onOpened: (OpenDocument) -> Unit
     ) {
         loading = false
         when (result) {
                 is TkResult.Success -> {
                     val image = result.data.value
-                    document = OpenDocument(name, format, image, result.data.diagnostics)
+                    val opened = OpenDocument(name, format, image, result.data.diagnostics, source, rawBaseAddress)
+                    document = opened
                     version = image.version
                     lastSearch = null
                     AppLogger.i(
@@ -95,7 +122,7 @@ class DocumentHandler(private val scope: CoroutineScope) {
                         "Opened $name as ${format.label}: ${image.ranges.size} segments, ${image.size} bytes, " +
                             "${result.data.errorCount} errors, ${result.data.warningCount} warnings"
                     )
-                    onOpened()
+                    onOpened(opened)
                 }
                 is TkResult.Failure -> {
                     openError = result.error.message

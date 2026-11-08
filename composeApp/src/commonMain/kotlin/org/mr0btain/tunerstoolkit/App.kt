@@ -12,12 +12,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
 import org.mr0btain.tunerstoolkit.ui.editor.EditorScreen
 import org.mr0btain.tunerstoolkit.ui.files.FilesScreen
 import org.mr0btain.tunerstoolkit.ui.gallery.GalleryScreen
 import org.mr0btain.tunerstoolkit.ui.log.LogScreen
+import org.mr0btain.tunerstoolkit.ui.project.ProjectHandler
 import org.mr0btain.tunerstoolkit.ui.settings.SettingsHandler
 import org.mr0btain.tunerstoolkit.ui.settings.SettingsScreen
 import org.mr0btain.uikit.navigation.TmAppShell
@@ -59,6 +61,7 @@ fun App() {
     val settings = remember { SettingsHandler(scope) }
     val documents = remember { DocumentHandler(scope) }
     val snackbar = remember { SnackbarHostState() }
+    val projects = remember { ProjectHandler(scope, documents, notify = { scope.launch { snackbar.showSnackbar(it) } }) }
     var destination by rememberSaveable { mutableStateOf(Destination.FILES) }
     val data = settings.data
 
@@ -80,8 +83,8 @@ fun App() {
                 wide = wide
             ) {
                 when (destination) {
-                    Destination.FILES -> FilesScreen(documents, onOpenEditor = { destination = Destination.EDITOR })
-                    Destination.EDITOR -> EditorScreen(documents, settings, snackbar, onOpenFiles = { destination = Destination.FILES })
+                    Destination.FILES -> FilesScreen(documents, projects, onOpenEditor = { destination = Destination.EDITOR })
+                    Destination.EDITOR -> EditorScreen(documents, projects, settings, snackbar, onOpenFiles = { destination = Destination.FILES })
                     Destination.LOG -> LogScreen()
                     Destination.SETTINGS -> SettingsScreen(settings, onOpenGallery = { destination = Destination.GALLERY })
                     Destination.LEGACY -> LegacyApp()

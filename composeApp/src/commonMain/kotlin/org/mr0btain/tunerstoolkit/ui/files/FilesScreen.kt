@@ -34,6 +34,13 @@ import org.mr0btain.tunerstoolkit.core.image.toHexAddress
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
 import org.mr0btain.tunerstoolkit.ui.document.OpenDocument
 import org.mr0btain.tunerstoolkit.ui.kit.hex.byteCount
+import org.mr0btain.tunerstoolkit.core.project.ProjectManifest
+import org.mr0btain.tunerstoolkit.core.project.ProjectVersion
+import org.mr0btain.tunerstoolkit.ui.project.ProjectHandler
+import org.mr0btain.tunerstoolkit.ui.project.timeAgo
+import org.mr0btain.uikit.buttons.TmIconButton
+import org.mr0btain.uikit.containers.TmConfirmDialog
+import org.mr0btain.uikit.containers.TmListRow
 import org.mr0btain.uikit.buttons.TmButton
 import org.mr0btain.uikit.buttons.TmButtonVariant
 import org.mr0btain.uikit.containers.TmPageHeader
@@ -50,6 +57,8 @@ import tunerstoolkit.composeapp.generated.resources.Res
 import tunerstoolkit.composeapp.generated.resources.tt_file
 import tunerstoolkit.composeapp.generated.resources.tt_folder
 import tunerstoolkit.composeapp.generated.resources.tt_grid
+import tunerstoolkit.composeapp.generated.resources.tt_layers
+import tunerstoolkit.composeapp.generated.resources.tt_x
 import tunerstoolkit.composeapp.generated.resources.tt_upload
 
 private const val TAG = "FilesScreen"
@@ -64,6 +73,7 @@ private const val SHOWN_DIAGNOSTICS = 100
 @Composable
 fun FilesScreen(
     documents: DocumentHandler,
+    projects: ProjectHandler,
     onOpenEditor: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -78,7 +88,7 @@ fun FilesScreen(
         if (file == null) return@rememberFilePickerLauncher
         scope.launch {
             try {
-                documents.open(file.readBytes(), file.name, base ?: 0)
+                projects.openFile(file.readBytes(), file.name, base ?: 0)
             } catch (e: Exception) {
                 AppLogger.e("$TAG:Read", "Couldn't read ${file.name}", e)
             }
@@ -97,9 +107,9 @@ fun FilesScreen(
 
         TmPanel(modifier = Modifier.fillMaxWidth(), title = "Open an image", icon = Res.drawable.tt_folder) {
             OpenButtons(
-                loading = documents.loading,
+                loading = documents.loading || projects.busy,
                 onOpen = { picker.launch() },
-                onOpenDemo = demo?.let { bytes -> { documents.open(bytes, "tt-demo-1.hex") } }
+                onOpenDemo = demo?.let { bytes -> { projects.openFile(bytes, "tt-demo-1.hex") } }
             )
             TmTextField(
                 modifier = Modifier.widthIn(max = 360.dp),
@@ -112,9 +122,119 @@ fun FilesScreen(
             documents.openError?.let { TmNotice(kind = TmNoticeKind.ERROR, title = "Couldn't open the file", text = it) }
         }
 
+        ProjectsPanel(projects, onOpenEditor)
+
         documents.document?.let { ImportReport(it, onOpenEditor) }
     }
 }
+
+/** Saved projects; one opens to show its versions, and a version opens in the editor */
+@Composable
+private fun ProjectsPanel(projects: ProjectHandler, onOpenEditor: () -> Unit) {
+    val spacing = TmTheme.spacing
+    var expanded by rememberSaveable { mutableStateOf<String?>(null) }
+    var deletingProject by remember { mutableStateOf<ProjectManifest?>(null) }
+    var deletingVersion by remember { mutableStateOf<Pair<ProjectManifest, ProjectVersion>?>(null) }
+    val current = projects.current
+
+    TmPanel(
+        modifier = Modifier.fillMaxWidth(),
+        title = "Projects",
+        subtitle = "An image saved with its versions. Save one from the editor",
+        icon = Res.drawable.tt_layers
+    ) {
+        if (!projects.persistent) {
+            TmNotice(
+                kind = TmNoticeKind.WARNING,
+                text = "This browser has nowhere to keep files, so projects only last until the page is closed. Export what you want to keep."
+            )
+        }
+        if (projects.projects.isEmpty()) {
+            Text("No projects yet.", style = TmTheme.typography.body, color = TmTheme.colors.textMuted)
+        }
+        projects.projects.forEach { project ->
+            val open = expanded == project.id
+            TmListRow(
+                title = project.name,
+                subtitle = listOfNotNull(
+                    project.source.fileName,
+                    versionCount(project.versions.size),
+                    "changed ${timeAgo(project.updatedAt)}"
+                ).joinToString(" · "),
+                icon = Res.drawable.tt_folder,
+                selected = open,
+                onClick = { expanded = if (open) null else project.id },
+                trailing = {
+                    TmIconButton(icon = Res.drawable.tt_x, contentDescription = "Delete ${project.name}", onClick = { deletingProject = project })
+                }
+            )
+            if (open) {
+                Column(Modifier.padding(start = spacing.xl), verticalArrangement = Arrangement.spacedBy(spacing.xxs)) {
+                    VersionRow(
+                        title = "Original",
+                        subtitle = "As it was read, ${byteCount(project.source.size)}",
+                        isOpen = current?.manifest?.id == project.id && current.isOriginal,
+                        onOpen = { projects.openProject(project, ProjectManifest.ORIGINAL, onOpenEditor) },
+                        onDelete = null
+                    )
+                    project.versions.asReversed().forEach { version ->
+                        VersionRow(
+                            title = version.name,
+                            subtitle = listOf(
+                                "${byteCount(version.changedBytes)} changed",
+                                "saved ${timeAgo(version.updatedAt)}",
+                                version.note
+                            ).filter { it.isNotBlank() }.joinToString(" · "),
+                            isOpen = current?.manifest?.id == project.id && current.versionId == version.id,
+                            onOpen = { projects.openProject(project, version.id, onOpenEditor) },
+                            onDelete = { deletingVersion = project to version }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    deletingProject?.let { project ->
+        TmConfirmDialog(
+            title = "Delete ${project.name}?",
+            message = "Its original file and all ${versionCount(project.versions.size)} are deleted. This can't be undone.",
+            confirmText = "Delete",
+            destructive = true,
+            onConfirm = { projects.deleteProject(project.id); deletingProject = null },
+            onDismissRequest = { deletingProject = null }
+        )
+    }
+    deletingVersion?.let { (project, version) ->
+        TmConfirmDialog(
+            title = "Delete ${version.name}?",
+            message = "Its changes are deleted from ${project.name}. The other versions stay.",
+            confirmText = "Delete",
+            destructive = true,
+            onConfirm = { projects.deleteVersion(project.id, version.id); deletingVersion = null },
+            onDismissRequest = { deletingVersion = null }
+        )
+    }
+}
+
+@Composable
+private fun VersionRow(title: String, subtitle: String, isOpen: Boolean, onOpen: () -> Unit, onDelete: (() -> Unit)?) {
+    TmListRow(
+        title = title,
+        subtitle = subtitle,
+        icon = Res.drawable.tt_file,
+        selected = isOpen,
+        onClick = onOpen,
+        trailing = {
+            Row(horizontalArrangement = Arrangement.spacedBy(TmTheme.spacing.xs), verticalAlignment = Alignment.CenterVertically) {
+                if (isOpen) TmBadge(text = "Open", tone = TmTheme.colors.accent)
+                if (onDelete != null) TmIconButton(icon = Res.drawable.tt_x, contentDescription = "Delete $title", onClick = onDelete)
+            }
+        }
+    )
+}
+
+private fun versionCount(count: Int) = if (count == 1) "1 version" else "$count versions"
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

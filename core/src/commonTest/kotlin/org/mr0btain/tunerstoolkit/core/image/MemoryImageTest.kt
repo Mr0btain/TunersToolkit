@@ -218,3 +218,18 @@ class MemoryImageTest {
         )
     }
 }
+
+class MemoryImageHistoryTest {
+    @Test
+    fun clearHistoryKeepsTheBytesAndTheOriginal() {
+        val image = MemoryImage.of(0x10L to ByteArray(4))
+        image.apply(listOf(Patch(0x11, byteArrayOf(0), byteArrayOf(5))))
+        val before = image.version
+        image.clearHistory()
+        assertFalse(image.canUndo)
+        assertFalse(image.undo())
+        assertTrue(image.version > before)
+        assertEquals(5, image.byteAt(0x11))
+        assertEquals(listOf(AddressRange(0x11, 0x12)), image.changedRanges())
+    }
+}

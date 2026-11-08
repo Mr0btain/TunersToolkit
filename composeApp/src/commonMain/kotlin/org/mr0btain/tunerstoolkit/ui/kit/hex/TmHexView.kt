@@ -39,6 +39,7 @@ import androidx.compose.ui.input.key.utf16CodePoint
 import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.isShiftPressed as isPointerShiftPressed
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -51,6 +52,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import org.mr0btain.applogger.AppLogger
 import org.mr0btain.tunerstoolkit.core.image.AddressRange
 import org.mr0btain.tunerstoolkit.core.image.MemoryImage
 import org.mr0btain.tunerstoolkit.core.image.toHexAddress
@@ -66,7 +68,9 @@ import kotlin.math.min
  * Click a byte to put the cursor there (shift-click or drag to select). Keys: arrows, Page Up/Down, Home/End
  * (with Ctrl for the start or end of everything), Tab between the hex and ASCII columns, hex digits or text to
  * overwrite, Esc to drop the selection, Ctrl+A for the segment, Ctrl+Z/Y to undo/redo, Ctrl+G go to, Ctrl+F find,
- * F3 find next. Ctrl is Cmd on a Mac.
+ * F3 find next, Ctrl+S save. Ctrl+C copies the selection (or the byte under the cursor) as hex in the hex column and
+ * as text in the ASCII one, Ctrl+Shift+C the other way round; Ctrl+V pastes over the bytes from the selection or
+ * cursor, the same way, never past the end of the segment. Ctrl is Cmd on a Mac.
  *
  * It never writes to [image] itself: edits go to [onWrite], so the screen's handler can record and redraw them.
  * @param version Changes whenever the image's bytes do (MemoryImage.version), so rows redraw
@@ -82,8 +86,11 @@ fun TmHexView(
     onRedo: () -> Unit = {},
     onGoTo: () -> Unit = {},
     onFind: () -> Unit = {},
-    onFindNext: () -> Unit = {}
+    onFindNext: () -> Unit = {},
+    onSave: () -> Unit = {},
+    onMessage: (String) -> Unit = {}
 ) {
+    val clipboard = LocalClipboard.current
     val colors = TmTheme.colors
     val style = TmTheme.typography.numeric.copy(fontSize = 13.sp, lineHeight = 18.sp, color = colors.text)
     val measurer = rememberTextMeasurer(cacheSize = 0)
@@ -166,6 +173,54 @@ fun TmHexView(
         return true
     }
 
+    fun copy(asAscii: Boolean) {
+        val cursor = state.cursor ?: return
+        val range = state.selection ?: AddressRange.ofSize(cursor, 1)
+        val text = HexClipboard.copy(image, range, asAscii)
+        if (text == null) {
+            onMessage(if (range.size > HexClipboard.MAX_COPY) "That's too much to copy at once" else "Nothing there to copy")
+            return
+        }
+        scope.launch {
+            try {
+                clipboard.writeText(text)
+                onMessage("Copied ${byteCount(range.size)}")
+            } catch (e: Exception) {
+                AppLogger.w("$TAG:Copy", "Couldn't copy", e)
+                onMessage("Couldn't copy to the clipboard")
+            }
+        }
+    }
+
+    fun paste() {
+        if (state.readOnly) return
+        val at = state.selection?.start ?: state.cursor ?: return
+        val asAscii = state.asciiFocus
+        scope.launch {
+            val text = try {
+                clipboard.readText()
+            } catch (e: Exception) {
+                AppLogger.w("$TAG:Paste", "Couldn't read the clipboard", e)
+                null
+            }
+            when (val paste = HexClipboard.paste(image, at, text.orEmpty(), asAscii)) {
+                is HexClipboard.Paste.Write -> {
+                    onWrite(paste.address, paste.bytes)
+                    val pasted = AddressRange.ofSize(paste.address, paste.bytes.size.toLong())
+                    state.select(pasted)
+                    scrollToShow(pasted.last)
+                    onMessage(
+                        if (paste.dropped > 0) "Pasted ${byteCount(pasted.size)}; ${byteCount(paste.dropped.toLong())} more would run past the segment"
+                        else "Pasted ${byteCount(pasted.size)}"
+                    )
+                }
+                HexClipboard.Paste.NotHex -> onMessage("The clipboard doesn't hold hex bytes. Paste into the text column for text")
+                HexClipboard.Paste.Empty -> onMessage("The clipboard is empty")
+                HexClipboard.Paste.Outside -> Unit
+            }
+        }
+    }
+
     fun handleKey(event: KeyEvent): Boolean {
         if (event.type != KeyEventType.KeyDown) return false
         val command = event.isCtrlPressed || event.isMetaPressed
@@ -185,6 +240,9 @@ fun TmHexView(
                 Key.Y -> onRedo()
                 Key.G -> onGoTo()
                 Key.F -> onFind()
+                Key.S -> onSave()
+                Key.C -> copy(asAscii = state.asciiFocus != shift)
+                Key.V -> paste()
                 Key.A -> image.rangeAt(cursor)?.let { state.select(it) }
                 Key.MoveHome -> move(image.ranges.first().start)
                 Key.MoveEnd -> move(image.ranges.last().last)
@@ -472,3 +530,5 @@ private fun oneDecimal(value: Double): String {
     val tenths = kotlin.math.round(value * 10).toLong()
     return if (tenths % 10 == 0L) "${tenths / 10}" else "${tenths / 10}.${tenths % 10}"
 }
+
+private const val TAG = "TmHexView"
