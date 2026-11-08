@@ -536,7 +536,11 @@ object Xdf {
             if (conversion.offset > 0) append("+").append(plainExact(conversion.offset))
             if (conversion.offset < 0) append("-").append(plainExact(-conversion.offset))
         }
-        is Conversion.Formula -> conversion.formula.text.takeIf { conversion.formula.inputCount <= 1 && it.none { c -> c in "^&|<>!~%" } }
+        // XDF's ^ is a power, so a formula with C's xor in it can't go
+        is Conversion.Formula -> conversion.formula.text.takeIf { text ->
+            conversion.formula.inputCount <= 1 && conversion.inverse == null &&
+                text.none { c -> c in "&|<>!~%" } && (conversion.formula.caretIsPower || '^' !in text)
+        }
             ?.replace(Regex("\\b[xX]1\\b"), "X")
         // The texts are lost, the numbers stay right
         is Conversion.Verbal -> "X"

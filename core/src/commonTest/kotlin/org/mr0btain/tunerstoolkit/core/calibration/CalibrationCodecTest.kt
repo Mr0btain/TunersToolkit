@@ -415,6 +415,7 @@ class CalibrationCodecTest {
         assertEquals(EncodeError.NOT_A_NUMBER, failure(CalibrationCodec.write(image, values, 0, Double.NaN)))
         assertEquals(EncodeError.NO_SUCH_VALUE, failure(CalibrationCodec.write(image, values, 3, 1.0)))
         assertEquals(1.5, ok(CalibrationCodec.writeRaw(image, values, 0, 66.0)))
+        assertEquals(1.5, ok(CalibrationCodec.writeRaw(image, values, 0, 66.0)), "writing what's already there is fine")
         val readOnly = decoded(image, obj(ObjectKind.VALUE, values(DataType.UBYTE), readOnly = true))
         assertEquals(EncodeError.READ_ONLY, failure(CalibrationCodec.write(image, readOnly, 0, 1.0)))
     }

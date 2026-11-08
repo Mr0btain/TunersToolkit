@@ -186,6 +186,26 @@ object CalibrationCodec {
         return writeRawAt(image, slots, axisValues.raw, index, raw, axisValues.conversion)
     }
 
+    /**
+     * Writes all of axis [axis]'s points at once (physical, in order), rounded to the type, as one undo step. Points
+     * past the axis's limits are refused, not clamped: moving an axis point changes what every value means
+     */
+    fun writeAxisAll(image: MemoryImage, values: CalibrationValues, axis: Int, physical: List<Double>): EmptyResult<EncodeError> {
+        val axisValues = values.axes.getOrNull(axis) ?: return TkResult.Failure(EncodeError.NO_SUCH_VALUE)
+        val slots = axisValues.slots ?: return TkResult.Failure(EncodeError.COMPUTED_AXIS)
+        if (values.obj.readOnly) return TkResult.Failure(EncodeError.READ_ONLY)
+        if (physical.size != axisValues.count) return TkResult.Failure(EncodeError.NO_SUCH_VALUE)
+        if (physical.any { it.isNaN() }) return TkResult.Failure(EncodeError.NOT_A_NUMBER)
+        if (physical.any { it < axisValues.axis.lowerLimit || it > axisValues.axis.upperLimit }) return TkResult.Failure(EncodeError.OUT_OF_LIMITS)
+        val raw = physical.map { axisValues.conversion.toRaw(it, slots.rangeOfValues()) }
+        if (raw.any { it.isNaN() || it.isInfinite() }) return TkResult.Failure(EncodeError.NO_RAW_VALUE)
+        val points = raw.map { slots.type.stored(it) }
+        val stored = if (slots.difference) points.mapIndexed { i, p -> if (i == 0) p else p - points[i - 1] } else points
+        if (stored.any { it !in slots.rangeOfValues() }) return TkResult.Failure(EncodeError.OUT_OF_RANGE)
+        val written = image.edit { stored.indices.all { writeSlot(this, slots, it, stored[it]) } }
+        return if (written) TkResult.Success(Unit) else TkResult.Failure(EncodeError.NOT_IN_IMAGE)
+    }
+
     /** Writes an ASCII object's text, padded with zeros to its length */
     fun writeAscii(image: MemoryImage, values: CalibrationValues, text: String): EmptyResult<EncodeError> {
         val obj = values.obj
@@ -194,8 +214,9 @@ object CalibrationCodec {
         val length = values.size * slots.type.size
         val bytes = TextCoding.encode(text, obj.encoding, slots.byteOrder)
         if (bytes.size > length) return TkResult.Failure(EncodeError.TOO_LONG)
-        val written = image.write(slots.addresses.first(), bytes.copyOf(length))
-        return if (written) TkResult.Success(Unit) else TkResult.Failure(EncodeError.NOT_IN_IMAGE)
+        if (!image.contains(slots.addresses.first(), length)) return TkResult.Failure(EncodeError.NOT_IN_IMAGE)
+        image.write(slots.addresses.first(), bytes.copyOf(length))
+        return TkResult.Success(Unit)
     }
 
     private fun withinLimits(value: Double, lower: Double, upper: Double, extended: ClosedFloatingPointRange<Double>?, check: Boolean): Boolean {
@@ -227,13 +248,22 @@ object CalibrationCodec {
         return TkResult.Success(conversion.toPhysical(stored))
     }
 
+    /**
+     * Writes one stored number; false when the image doesn't hold its bytes. (MemoryImage's own write says whether
+     * anything changed, which isn't the question here: writing a value that's already there is fine)
+     */
     private fun writeSlot(image: MemoryImage, slots: Slots, index: Int, raw: Double): Boolean {
         val address = slots.addresses[index]
-        val mask = slots.bitMask ?: return image.writeNumber(address, slots.type, slots.byteOrder, raw)
         if (!image.contains(address, slots.type.size)) return false
+        val mask = slots.bitMask
+        if (mask == null) {
+            image.writeNumber(address, slots.type, slots.byteOrder, raw)
+            return true
+        }
         val current = image.readUnsigned(address, slots.type.size, slots.byteOrder).toLong()
         val bits = (current and mask.inv()) or ((raw.toLong() shl mask.countTrailingZeroBits()) and mask)
-        return image.writeUnsigned(address, slots.type.size, bits.toULong(), slots.byteOrder)
+        image.writeUnsigned(address, slots.type.size, bits.toULong(), slots.byteOrder)
+        return true
     }
 }
 

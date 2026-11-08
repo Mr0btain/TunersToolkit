@@ -33,7 +33,7 @@ class FormulaError(override val message: String) : Error
  * and only the operators and functions listed here exist. Formulas are capped at [MAX_NODES] parts so a huge one
  * can't make evaluation (which recurses through the tree) overflow the stack
  */
-class Expression private constructor(val text: String, private val root: Node, val inputCount: Int) {
+class Expression private constructor(val text: String, private val root: Node, val inputCount: Int, val caretIsPower: Boolean) {
     /** The value for these inputs ([inputs] first is X1). Missing inputs are 0; a bad operation gives NaN or infinity */
     fun evaluate(vararg inputs: Double): Double = root.eval(inputs)
 
@@ -50,7 +50,7 @@ class Expression private constructor(val text: String, private val root: Node, v
         fun parse(text: String, constants: Map<String, String> = emptyMap(), caretIsPower: Boolean = false): TkResult<Expression, FormulaError> = try {
             val parser = ExpressionParser(text, constants, caretIsPower)
             val root = parser.parse()
-            TkResult.Success(Expression(text, root, parser.inputCount))
+            TkResult.Success(Expression(text, root, parser.inputCount, caretIsPower))
         } catch (e: ExpressionSyntaxError) {
             TkResult.Failure(FormulaError("Formula \"$text\": ${e.message}"))
         }

@@ -230,6 +230,17 @@ fun plainNumber(value: Double): String {
     return if ('.' in text) text.trimEnd('0').trimEnd('.') else text
 }
 
+/**
+ * A number as text that reads back as exactly the same double: plain decimals when they do, the shortest exact form
+ * (which may have an exponent) otherwise. For files that are read back, not for people
+ */
+fun exactNumber(value: Double): String {
+    if (value.isNaN() || value.isInfinite()) return value.toString()
+    val plain = plainNumber(value)
+    if (plain.toDoubleOrNull() == value) return plain
+    return value.toString()
+}
+
 /** Tab separated text, as spreadsheets copy and paste it */
 object Tsv {
     fun format(rows: List<List<String>>): String = rows.joinToString("\n") { it.joinToString("\t") }
