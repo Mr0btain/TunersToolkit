@@ -21,6 +21,9 @@ import org.mr0btain.tunerstoolkit.core.formats.xml.XmlWriter
  * in the same SW-INSTANCE structure
  */
 object Cdfx {
+    /** More values than any real object has, so a file's sizes can't ask for a huge array */
+    const val MAX_VALUES = 4_000_000
+
     fun looksLike(bytes: ByteArray): Boolean {
         val start = bytes.copyOf(minOf(bytes.size, 8192)).decodeToString()
         return "<MSRSW" in start || "SW-INSTANCE" in start
@@ -145,7 +148,7 @@ object Cdfx {
         val records = instances.mapNotNull { instance ->
             try {
                 record(instance, name, problems)
-            } catch (e: IllegalArgumentException) {
+            } catch (e: Exception) {
                 problems += Diagnostic(Severity.ERROR, e.message ?: "Can't be read", SourceLocation(name, instance.line), instance.childText("SHORT-NAME"))
                 null
             }
@@ -202,8 +205,13 @@ object Cdfx {
             axes.size >= axisCount -> axes.take(axisCount).map { it.values.size }
             else -> listOf(leaves.size)
         }
-        val expected = dims.fold(1) { a, b -> a * b }
-        require(leaves.size == expected) { "$name has ${leaves.size} values but its size is ${dims.joinToString(" × ")}" }
+        require(dims.all { it >= 1 }) { "$name has a size of ${dims.joinToString(" × ")}" }
+        var product = 1L
+        for (size in dims) {
+            product *= size
+            require(product <= MAX_VALUES) { "$name says it has more than $MAX_VALUES values" }
+        }
+        require(leaves.size.toLong() == product) { "$name has ${leaves.size} values but its size is ${dims.joinToString(" × ")}" }
         // Read as nested: outer axes first, x, then y innermost; stored here x first
         val order = if (dims.size >= 2) nestedToXFirst(dims) else IntArray(leaves.size) { it }
         val inOrder = arrayOfNulls<Pair<Boolean, String>>(leaves.size)

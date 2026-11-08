@@ -33,6 +33,28 @@ object TtDef {
     const val FORMAT = "ttdef"
     const val VERSION = 1
 
+    /** Deeper than folders within folders ever go */
+    const val MAX_NESTING = 64
+
+    /** How deeply [text]'s brackets and braces nest, outside strings */
+    internal fun nesting(text: String): Int {
+        var depth = 0
+        var deepest = 0
+        var inString = false
+        var i = 0
+        while (i < text.length) {
+            val c = text[i]
+            when {
+                inString && c == '\\' -> i++
+                c == '"' -> inString = !inString
+                !inString && (c == '{' || c == '[') -> deepest = maxOf(deepest, ++depth)
+                !inString && (c == '}' || c == ']') -> depth--
+            }
+            i++
+        }
+        return deepest
+    }
+
     private val json = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
@@ -50,8 +72,11 @@ object TtDef {
 
     fun read(bytes: ByteArray, name: String = ""): TkResult<Imported<TtDefinition>, ImportError> {
         if (bytes.isEmpty()) return TkResult.Failure(ImportError.EMPTY_FILE)
+        val text = bytes.decodeToString()
+        // Real files nest a dozen deep; refusing absurd nesting first keeps decoding (which recurses) off the stack's end
+        if (nesting(text) > MAX_NESTING) return TkResult.Failure(ImportError.UNKNOWN_FORMAT)
         val file = try {
-            json.decodeFromString(TtFile.serializer(), bytes.decodeToString())
+            json.decodeFromString(TtFile.serializer(), text)
         } catch (e: Exception) {
             return TkResult.Failure(ImportError.UNKNOWN_FORMAT)
         }

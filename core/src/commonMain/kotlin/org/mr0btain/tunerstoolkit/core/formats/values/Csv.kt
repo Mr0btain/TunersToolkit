@@ -104,7 +104,7 @@ object Csv {
         val lines = text.replace("\r\n", "\n").replace('\r', '\n').lines().filter { it.isNotBlank() }
         if (lines.isEmpty()) return emptyList()
         val separator = listOf('\t', ';', ',').maxByOrNull { c -> lines.first().count { it == c } } ?: ';'
-        return lines.map { split(it, separator) }
+        return lines.map { line -> split(line, separator).map { cell -> if (cell.length > 1 && cell[0] == '\'' && cell[1] in FORMULA_STARTS) cell.drop(1) else cell } }
     }
 
     private fun split(line: String, separator: Char): List<String> {
@@ -139,6 +139,14 @@ object Csv {
         return text.toDoubleOrNull() ?: text.takeIf { it.count { c -> c == ',' } == 1 }?.replace(',', '.')?.toDoubleOrNull()
     }
 
-    private fun quote(cell: String): String =
-        if (cell.any { it == ';' || it == '"' || it == '\n' || it == ',' }) "\"" + cell.replace("\"", "\"\"") + "\"" else cell
+    /**
+     * A cell as written. Text starting with = + - @ (or a tab or return) gets a ' in front, so a spreadsheet shows it
+     * instead of running it as a formula; numbers are left as they are, and [grid] takes the ' off again
+     */
+    private fun quote(cell: String): String {
+        val safe = if (number(cell) == null && cell.firstOrNull()?.let { it in FORMULA_STARTS } == true) "'$cell" else cell
+        return if (safe.any { it == ';' || it == '"' || it == '\n' || it == ',' }) "\"" + safe.replace("\"", "\"\"") + "\"" else safe
+    }
+
+    private const val FORMULA_STARTS = "=+-@\t\r"
 }
