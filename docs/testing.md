@@ -45,7 +45,9 @@ Exchange formats are in `core/src/commonTest/.../formats/`: `XdfTest` (every dem
 
 Checksums: `ChecksumTest` checks every CRC preset against its catalogue check value, the sums, XOR and Adler-32, the demo's checksums, fixing (as one undo step), forcing CRCs to any target, `.ttsum` round trips and broken or hostile modules. A module for a real family should come with a test against real binaries in `testdata/local/` that skips when they're missing (see `docs/checksums.md`).
 
-The app's handlers are tested on desktop with the demo files and an in memory project store: `ProjectHandlerTest`, `DefinitionHandlerTest` (opening, indexing, saving the A2L with a project) and `CompareHandlerTest` (comparing, copying a map back, branching and renaming versions) and `ExchangeHandlerTest` (the definition through XDF and .ttdef, values out and in, a map as CSV, maps made by hand saved with a project). `ScreenRenderTest` draws every screen, the map editor in each view, to `composeApp/build/screen-renders`.
+The map finder: `MapFinderTest` finds the demo's maps with their own axes exactly (and reads them as the A2L does once added), skips what a definition covers, finds a big endian map with bare axes among noise, and finds nothing in random bytes or erased flash. Changes to its scoring should keep all of those.
+
+The app's handlers are tested on desktop with the demo files and an in memory project store: `ProjectHandlerTest`, `DefinitionHandlerTest` (opening, indexing, saving the A2L with a project) and `CompareHandlerTest` (comparing, copying a map back, branching and renaming versions) `FinderHandlerTest` (finding and adding, with and without the A2L) and `ExchangeHandlerTest` (the definition through XDF and .ttdef, values out and in, a map as CSV, maps made by hand saved with a project). `ScreenRenderTest` draws every screen, the map editor in each view, to `composeApp/build/screen-renders`.
 
 ## The demo ECU
 

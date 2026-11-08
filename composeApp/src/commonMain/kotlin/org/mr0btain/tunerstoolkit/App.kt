@@ -19,6 +19,8 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.mr0btain.tunerstoolkit.ui.checksum.ChecksumHandler
 import org.mr0btain.tunerstoolkit.ui.checksum.ChecksumsScreen
 import org.mr0btain.tunerstoolkit.ui.compare.CompareHandler
+import org.mr0btain.tunerstoolkit.ui.finder.FinderHandler
+import org.mr0btain.tunerstoolkit.ui.finder.FinderScreen
 import org.mr0btain.tunerstoolkit.ui.compare.CompareScreen
 import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
 import org.mr0btain.tunerstoolkit.ui.versions.VersionsScreen
@@ -39,6 +41,7 @@ import tunerstoolkit.composeapp.generated.resources.Res
 import tunerstoolkit.composeapp.generated.resources.tt_compare
 import tunerstoolkit.composeapp.generated.resources.tt_cpu
 import tunerstoolkit.composeapp.generated.resources.tt_history
+import tunerstoolkit.composeapp.generated.resources.tt_scan
 import tunerstoolkit.composeapp.generated.resources.tt_shield
 import tunerstoolkit.composeapp.generated.resources.tt_folder
 import tunerstoolkit.composeapp.generated.resources.tt_sliders
@@ -51,6 +54,7 @@ enum class Destination(val label: String, val icon: DrawableResource) {
     VERSIONS("Versions", Res.drawable.tt_history),
     COMPARE("Compare", Res.drawable.tt_compare),
     CHECKSUMS("Checksums", Res.drawable.tt_shield),
+    FINDER("Find maps", Res.drawable.tt_scan),
     LOG("Log", Res.drawable.tt_terminal),
     SETTINGS("Settings", Res.drawable.tt_sliders),
     GALLERY("Gallery", Res.drawable.tt_sliders);
@@ -58,7 +62,7 @@ enum class Destination(val label: String, val icon: DrawableResource) {
     val navItem: TmNavItem get() = TmNavItem(key = name, label = label, icon = icon)
 
     companion object {
-        val inNav = listOf(FILES, EDITOR, VERSIONS, COMPARE, CHECKSUMS, LOG, SETTINGS)
+        val inNav = listOf(FILES, EDITOR, FINDER, VERSIONS, COMPARE, CHECKSUMS, LOG, SETTINGS)
     }
 }
 
@@ -79,6 +83,7 @@ fun App() {
     val editor = remember { EditorHandler() }
     val exchange = remember { ExchangeHandler(documents, definitions) }
     val checksums = remember { ChecksumHandler(scope, documents) }
+    val finder = remember { FinderHandler(scope, documents, definitions) }
     val projects = remember {
         ProjectHandler(
             scope, documents,
@@ -141,6 +146,20 @@ fun App() {
                         documents,
                         checksums,
                         onOpenFiles = { destination = Destination.FILES },
+                        onMessage = { scope.launch { snackbar.showSnackbar(it) } }
+                    )
+                    Destination.FINDER -> FinderScreen(
+                        documents,
+                        finder,
+                        onOpenFiles = { destination = Destination.FILES },
+                        onShowInHex = { address ->
+                            editor.showHex(address)
+                            destination = Destination.EDITOR
+                        },
+                        onAdded = { name ->
+                            editor.open(name)
+                            scope.launch { snackbar.showSnackbar("Added $name; it's saved with the project") }
+                        },
                         onMessage = { scope.launch { snackbar.showSnackbar(it) } }
                     )
                     Destination.LOG -> LogScreen()

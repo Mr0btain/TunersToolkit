@@ -264,7 +264,7 @@ object MapFinder {
     private fun curveAfter(segment: Segment, x: FoundAxis, after: Long, counted: Boolean, head: AddressRange, options: FinderOptions, out: MutableList<FoundMap>) {
         val n = x.points.size
         // Another counted axis straight after is two axes in a row (shared axes), not a curve's values
-        if (counted && startsCountedAxis(segment, after, x.type, x.byteOrder, options)) return
+        if (counted && options.axisTypes.any { startsCountedAxis(segment, after, it, x.byteOrder, options) }) return
         for (valueType in options.valueTypes) {
             val address = align(after, valueType.size)
             val values = segment.readMany(address, n, valueType, x.byteOrder) ?: continue

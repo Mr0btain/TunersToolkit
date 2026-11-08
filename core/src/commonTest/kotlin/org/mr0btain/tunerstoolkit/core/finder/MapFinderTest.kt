@@ -47,6 +47,8 @@ class MapFinderTest {
 
         // Shared axes back to back aren't taken for a curve
         assertTrue(found.none { it.record.start == demo.placed.getValue("RpmAxis16").address }, found.joinToString { it.label })
+        // Even when the next axis's count is another type (LoadAxis12's are words, PedalAxis10's bytes)
+        assertTrue(found.none { it.record.start == demo.placed.getValue("LoadAxis12").address }, found.joinToString { it.label })
     }
 
     @Test
