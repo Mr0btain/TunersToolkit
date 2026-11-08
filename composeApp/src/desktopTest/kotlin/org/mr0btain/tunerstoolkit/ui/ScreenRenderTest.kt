@@ -21,6 +21,7 @@ import org.mr0btain.tunerstoolkit.ui.checksum.ChecksumHandler
 import org.mr0btain.tunerstoolkit.ui.checksum.ChecksumsScreen
 import org.mr0btain.tunerstoolkit.ui.compare.CompareHandler
 import org.mr0btain.tunerstoolkit.ui.finder.FinderHandler
+import org.mr0btain.tunerstoolkit.ui.ident.IdentHandler
 import org.mr0btain.tunerstoolkit.ui.finder.FinderScreen
 import org.mr0btain.tunerstoolkit.ui.compare.CompareScreen
 import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
@@ -70,6 +71,7 @@ class ScreenRenderTest {
         documents.edit { CalibrationCodec.writeAll(it, values, mapOf(0 to 15.0, 1 to 16.0, 17 to 20.0)) }
         val exchange = ExchangeHandler(documents, definitions)
         val checksums = ChecksumHandler(scope, documents, inBackground = false).apply { refresh() }
+        val ident = IdentHandler(scope, documents, inBackground = false)
         val finder = FinderHandler(scope, documents, definitions, inBackground = false).apply {
             skipKnown = false
             run()
@@ -89,7 +91,7 @@ class ScreenRenderTest {
                     wide = width >= 840
                 ) {
                     when (destination) {
-                        Destination.FILES -> FilesScreen(documents, projects, definitions, exchange, onOpenEditor = {})
+                        Destination.FILES -> FilesScreen(documents, projects, definitions, exchange, onOpenEditor = {}, ident = ident)
                         Destination.EDITOR -> EditorScreen(documents, projects, definitions, exchange, settings, snackbar, onOpenFiles = {}, editor = editor, startAt = startAt)
                         Destination.SETTINGS -> SettingsScreen(settings, onOpenGallery = {})
                         Destination.FINDER -> FinderScreen(documents, finder, onOpenFiles = {}, onShowInHex = {}, onAdded = {}, onMessage = {})
@@ -139,7 +141,7 @@ class ScreenRenderTest {
     }
 
     @Test
-    fun files() = render("files", Destination.FILES, height = 2200)
+    fun files() = render("files", Destination.FILES, height = 2600)
 
     @Test
     fun versionsAndCompare() {

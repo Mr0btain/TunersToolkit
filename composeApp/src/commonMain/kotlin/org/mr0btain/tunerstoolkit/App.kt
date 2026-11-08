@@ -20,6 +20,7 @@ import org.mr0btain.tunerstoolkit.ui.checksum.ChecksumHandler
 import org.mr0btain.tunerstoolkit.ui.checksum.ChecksumsScreen
 import org.mr0btain.tunerstoolkit.ui.compare.CompareHandler
 import org.mr0btain.tunerstoolkit.ui.finder.FinderHandler
+import org.mr0btain.tunerstoolkit.ui.ident.IdentHandler
 import org.mr0btain.tunerstoolkit.ui.finder.FinderScreen
 import org.mr0btain.tunerstoolkit.ui.compare.CompareScreen
 import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
@@ -84,6 +85,7 @@ fun App() {
     val exchange = remember { ExchangeHandler(documents, definitions) }
     val checksums = remember { ChecksumHandler(scope, documents) }
     val finder = remember { FinderHandler(scope, documents, definitions) }
+    val ident = remember { IdentHandler(scope, documents) }
     val projects = remember {
         ProjectHandler(
             scope, documents,
@@ -119,8 +121,8 @@ fun App() {
                 wide = wide
             ) {
                 when (destination) {
-                    Destination.FILES -> FilesScreen(documents, projects, definitions, exchange, onOpenEditor = { destination = Destination.EDITOR }, onMessage = { scope.launch { snackbar.showSnackbar(it) } })
-                    Destination.EDITOR -> EditorScreen(documents, projects, definitions, exchange, settings, snackbar, onOpenFiles = { destination = Destination.FILES }, editor = editor, checksums = checksums)
+                    Destination.FILES -> FilesScreen(documents, projects, definitions, exchange, onOpenEditor = { destination = Destination.EDITOR }, onMessage = { scope.launch { snackbar.showSnackbar(it) } }, ident = ident)
+                    Destination.EDITOR -> EditorScreen(documents, projects, definitions, exchange, settings, snackbar, onOpenFiles = { destination = Destination.FILES }, editor = editor, checksums = checksums, ident = ident)
                     Destination.VERSIONS -> VersionsScreen(
                         projects,
                         definitions,
@@ -129,7 +131,8 @@ fun App() {
                         onCompare = { manifest, versionId ->
                             compare.compareWithVersion(manifest, versionId)
                             destination = Destination.COMPARE
-                        }
+                        },
+                        ident = ident
                     )
                     Destination.COMPARE -> CompareScreen(
                         documents,

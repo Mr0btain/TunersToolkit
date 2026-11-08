@@ -32,6 +32,8 @@ import org.mr0btain.tunerstoolkit.core.image.parseAddress
 import org.mr0btain.tunerstoolkit.core.image.toHexAddress
 import org.mr0btain.tunerstoolkit.core.error.TkResult
 import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
+import org.mr0btain.tunerstoolkit.ui.ident.IdentHandler
+import org.mr0btain.tunerstoolkit.ui.ident.IdentPanel
 import org.mr0btain.tunerstoolkit.ui.exchange.ExchangeError
 import org.mr0btain.tunerstoolkit.ui.exchange.ExchangeHandler
 import org.mr0btain.tunerstoolkit.ui.exchange.Exported
@@ -82,7 +84,8 @@ fun FilesScreen(
     exchange: ExchangeHandler,
     onOpenEditor: () -> Unit,
     modifier: Modifier = Modifier,
-    onMessage: (String) -> Unit = {}
+    onMessage: (String) -> Unit = {},
+    ident: IdentHandler? = null
 ) {
     val spacing = TmTheme.spacing
     val scope = rememberCoroutineScope()
@@ -178,6 +181,8 @@ fun FilesScreen(
         }
 
         documents.document?.let { ImportReport(it, onOpenEditor) }
+
+        if (ident != null && documents.document != null) IdentPanel(ident, projects)
     }
 }
 

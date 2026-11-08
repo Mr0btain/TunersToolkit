@@ -102,7 +102,8 @@ object DemoEcu {
         val flash = ByteArray(FLASH_SIZE) { 0xFF.toByte() }
         // Something code-like before the calibration area
         for (i in 0 until (CAL_START - FLASH_START).toInt()) flash[i] = random.nextInt(256).toByte()
-        EPK.encodeToByteArray().copyInto(flash, (EPK_ADDRESS - FLASH_START).toInt())
+        // Zero ended, as real ECUs pad their IDs
+        (EPK.encodeToByteArray() + 0).copyInto(flash, (EPK_ADDRESS - FLASH_START).toInt())
         val boot = ByteArray(BOOT_SIZE) { random.nextInt(256).toByte() }
 
         val image = MemoryImage.Builder().apply {

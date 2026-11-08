@@ -48,6 +48,8 @@ The version every package is built as is `tunerstoolkit.version` in `gradle.prop
 
   `checksum/`: generic checksum algorithms, checks and fixing (`Checksums`), and ECU family modules (`.ttsum` JSON via `TtSum`, or Kotlin `ChecksumModule`s), registered in `ChecksumModules`. `docs/checksums.md` says how to add a family.
 
+  `ident/EcuIdent`: identification found in an image's text (hardware and software numbers, part numbers, ECU family, calibration IDs, VINs), by the patterns in `PATTERNS`, and the project details they suggest.
+
   `finder/MapFinder`: suggests maps in an image without a definition (counted records and bare rising axes, scored by how smooth the values are); a `FoundMap` becomes a `ManualMap`.
 
   `calibration/` also has the map editing logic: `ObjectTree` (the map list's rows, with search; `a2l/A2lFolders` makes the FUNCTION and GROUP folders), `MapEdit` (set, add, multiply, add %, interpolate by axis values, smooth, and spreadsheet paste over a `CellSelection`), `writeAll` (many values as one undo step, clamped to the limits), `Tsv`, and `Compare` (two images' differences mapped to objects, and copying an object's bytes across).
@@ -67,6 +69,7 @@ No view model and no DI; each handler is a `@Stable` class with Compose state, m
 - `ui/editor/EditorHandler`: the editor's map tabs (`OpenMap`: its `MapTableState` and view), which is in front, the selected object, and the map list's mode, search and open folders. Kept while other screens are open.
 - `ui/exchange/ExchangeHandler`: values in (DCM, CDFX, PaCo) and out (DCM, CDFX), a map as CSV both ways, the map list as CSV, and the definition saved as .ttdef or XDF. The last import's report stays for the files screen.
 - `ui/checksum/ChecksumHandler`: the open image's checksum module (detected or picked), your own checks, the results (worked out again in the background after edits), and fixing. Its module and own checks are `ProjectAttachment`s: `ProjectHandler` saves anything that implements that with the project as a named file.
+- `ui/ident/IdentHandler`: what the open image says it is, read once when it opens; `suggest()` fills in `ProjectInfo` (saving a new project uses it). `IdentPanel` shows it on the Files screen.
 - `ui/finder/FinderHandler`: the map finder's options, a run in the background (progress, Stop), its suggestions and adding one as a map made by hand.
 - `ui/compare/CompareHandler`: what the open image is compared with (its original, a version or a file), the `ImageComparison` (redone after edits), and copying a map across.
 - `ui/settings/SettingsHandler`: `SettingsData`, saved on each change through `SettingsStorage` (expect/actual: the old `settings.sts` locations, localStorage on the web).

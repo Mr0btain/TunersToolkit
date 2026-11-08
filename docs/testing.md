@@ -47,6 +47,8 @@ Checksums: `ChecksumTest` checks every CRC preset against its catalogue check va
 
 The map finder: `MapFinderTest` finds the demo's maps with their own axes exactly (and reads them as the A2L does once added), skips what a definition covers, finds a big endian map with bare axes among noise, and finds nothing in random bytes or erased flash. Changes to its scoring should keep all of those.
 
+ECU identification: `EcuIdentTest` plants each maker's numbers in random bytes, checks near misses aren't taken, and reads the demo's EPK. A new pattern in `EcuIdent.PATTERNS` should come with an example that matches and one that mustn't.
+
 The app's handlers are tested on desktop with the demo files and an in memory project store: `ProjectHandlerTest`, `DefinitionHandlerTest` (opening, indexing, saving the A2L with a project) and `CompareHandlerTest` (comparing, copying a map back, branching and renaming versions) `FinderHandlerTest` (finding and adding, with and without the A2L) and `ExchangeHandlerTest` (the definition through XDF and .ttdef, values out and in, a map as CSV, maps made by hand saved with a project). `ScreenRenderTest` draws every screen, the map editor in each view, to `composeApp/build/screen-renders`.
 
 ## The demo ECU

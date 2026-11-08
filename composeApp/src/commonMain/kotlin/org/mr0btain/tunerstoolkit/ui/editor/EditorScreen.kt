@@ -53,6 +53,7 @@ import org.mr0btain.tunerstoolkit.core.image.MemoryImage
 import org.mr0btain.tunerstoolkit.core.image.parseAddress
 import org.mr0btain.tunerstoolkit.core.image.toHexAddress
 import org.mr0btain.tunerstoolkit.ui.checksum.ChecksumHandler
+import org.mr0btain.tunerstoolkit.ui.ident.IdentHandler
 import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
 import org.mr0btain.tunerstoolkit.ui.document.OpenDocument
@@ -103,7 +104,8 @@ fun EditorScreen(
     modifier: Modifier = Modifier,
     editor: EditorHandler = remember { EditorHandler() },
     startAt: Long? = null,
-    checksums: ChecksumHandler? = null
+    checksums: ChecksumHandler? = null,
+    ident: IdentHandler? = null
 ) {
     val document = documents.document
     if (document == null) {
@@ -373,7 +375,11 @@ fun EditorScreen(
             fileName = document.name,
             versionNumber = (project?.manifest?.versions?.size ?: 0) + 1,
             hasChanges = changedBytes > 0,
-            onSaveProject = { name, versionName, note -> projects.saveAsProject(name, versionName, note); saving = null },
+            onSaveProject = { name, versionName, note ->
+                // The image's own identification fills in what the project is for
+                projects.saveAsProject(name, versionName, note, ident?.suggest() ?: org.mr0btain.tunerstoolkit.core.project.ProjectInfo())
+                saving = null
+            },
             onSaveVersion = { name, note -> projects.saveAsVersion(name, note); saving = null },
             onDismiss = { saving = null }
         )

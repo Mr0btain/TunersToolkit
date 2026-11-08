@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import org.mr0btain.tunerstoolkit.core.project.ProjectManifest
 import org.mr0btain.tunerstoolkit.core.project.ProjectVersion
 import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
+import org.mr0btain.tunerstoolkit.ui.ident.IdentHandler
 import org.mr0btain.tunerstoolkit.ui.kit.hex.byteCount
 import org.mr0btain.tunerstoolkit.ui.project.OpenProject
 import org.mr0btain.tunerstoolkit.ui.project.ProjectHandler
@@ -61,7 +62,8 @@ fun VersionsScreen(
     onOpenFiles: () -> Unit,
     onOpenEditor: () -> Unit,
     onCompare: (ProjectManifest, String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    ident: IdentHandler? = null
 ) {
     val open = projects.current
     if (open == null) {
@@ -88,7 +90,7 @@ fun VersionsScreen(
             onBack = null,
             subtitle = listOfNotNull(manifest.source.fileName, manifest.definition?.fileName, "${manifest.versions.size + 1} versions").joinToString(" · ")
         )
-        ProjectInfoPanel(projects, definitions, open)
+        ProjectInfoPanel(projects, definitions, ident, open)
 
         TmPanel(modifier = Modifier.fillMaxWidth(), title = "Versions", subtitle = "Newest first. Each is its changes from the original", icon = Res.drawable.tt_history) {
             entries(manifest).forEach { entry ->
@@ -164,13 +166,21 @@ private fun entries(manifest: ProjectManifest): List<Entry> {
 /** What the project is for: vehicle, ECU, software number and notes, which the A2L can fill in */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ProjectInfoPanel(projects: ProjectHandler, definitions: DefinitionHandler, open: OpenProject) {
+private fun ProjectInfoPanel(projects: ProjectHandler, definitions: DefinitionHandler, ident: IdentHandler?, open: OpenProject) {
     val manifest = open.manifest
     var name by remember(manifest.id, manifest.name) { mutableStateOf(manifest.name) }
     var info by remember(manifest.id, manifest.info) { mutableStateOf(manifest.info) }
     val changed = name != manifest.name || info != manifest.info
     val modPar = definitions.definition?.a2l?.module?.modPar
     TmPanel(modifier = Modifier.fillMaxWidth(), title = "Project", icon = Res.drawable.tt_info, actions = {
+        if (ident != null && ident.findings.isNotEmpty()) {
+            TmButton(
+                text = "Fill in from the image",
+                onClick = { info = ident.suggest(info) },
+                variant = TmButtonVariant.GHOST,
+                size = org.mr0btain.uikit.foundation.TmControlSize.SMALL
+            )
+        }
         if (modPar != null) {
             TmButton(
                 text = "Fill in from the A2L",
