@@ -122,4 +122,28 @@ class ProjectRepositoryTest {
         assertEquals("TT-DEMO-1", renamed.info.ecu)
         assertEquals(1, renamed.versions.size)
     }
+
+    @Test
+    fun aVersionsNameAndNoteChange() = runTest {
+        val project = repository.create("Golf", source, sourceBytes).ok()
+        val (_, version) = repository.addVersion(project.id, "Stage 1", emptyList()).ok()
+        val updated = repository.updateVersionInfo(project.id, version.id, "Stage 1 (road)", "Tested").ok()
+        assertEquals("Stage 1 (road)", updated.version(version.id)?.name)
+        assertEquals("Tested", repository.manifest(project.id).ok().version(version.id)?.note)
+        assertEquals(TkResult.Failure(ProjectError.VERSION_NOT_FOUND), repository.updateVersionInfo(project.id, "nope", "x", ""))
+    }
+
+    @Test
+    fun aDefinitionIsKeptWithTheProject() = runTest {
+        val project = repository.create("Golf", source, sourceBytes).ok()
+        assertEquals(TkResult.Success(null), repository.definition(project.id))
+        val a2l = "ASAP2_VERSION 1 71".encodeToByteArray()
+        val updated = repository.setDefinition(project.id, "golf.a2l", a2l).ok()
+        assertEquals(ProjectDefinition("golf.a2l", a2l.size.toLong()), updated.definition)
+        assertContentEquals(a2l, repository.definition(project.id).ok())
+        // Renaming and versions keep it
+        repository.update(project.id) { it.copy(name = "Golf R") }.ok()
+        repository.addVersion(project.id, "Stage 1", emptyList()).ok()
+        assertEquals("golf.a2l", repository.manifest(project.id).ok().definition?.fileName)
+    }
 }

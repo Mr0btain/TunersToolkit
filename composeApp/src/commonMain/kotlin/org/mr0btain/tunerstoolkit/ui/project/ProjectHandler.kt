@@ -9,6 +9,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.mr0btain.applogger.AppLogger
 import org.mr0btain.tunerstoolkit.core.error.TkResult
+import org.mr0btain.tunerstoolkit.core.formats.binary.BinaryFormat
+import org.mr0btain.tunerstoolkit.core.formats.binary.BinaryImport
+import org.mr0btain.tunerstoolkit.core.image.MemoryImage
 import org.mr0btain.tunerstoolkit.core.project.ProjectError
 import org.mr0btain.tunerstoolkit.core.project.ProjectInfo
 import org.mr0btain.tunerstoolkit.core.project.ProjectManifest
@@ -192,6 +195,60 @@ class ProjectHandler(
             }
             is TkResult.Failure -> result.error
         }
+    }
+
+    /** Renames a version of the open project or changes its note */
+    fun updateVersionInfo(versionId: String, name: String, note: String) {
+        val open = current ?: return
+        launchSaving("UpdateVersionInfo", markSaved = false) {
+            when (val result = repository.updateVersionInfo(open.manifest.id, versionId, name, note)) {
+                is TkResult.Success -> {
+                    current = current?.copy(manifest = result.data)
+                    "Saved"
+                }
+                is TkResult.Failure -> result.error
+            }
+        }
+    }
+
+    /**
+     * Starts a new version of the open project from version [fromId] (or the original): a copy of its changes,
+     * opened for editing, with [fromId] as what it's based on
+     */
+    fun branch(fromId: String, name: String, note: String, onOpened: () -> Unit = {}) {
+        val manifest = current?.manifest ?: return
+        launchSaving("Branch", markSaved = false) {
+            val patches = when (val result = repository.patches(manifest.id, fromId)) {
+                is TkResult.Success -> result.data
+                is TkResult.Failure -> return@launchSaving result.error
+            }
+            when (val added = repository.addVersion(manifest.id, name, patches, note, basedOn = fromId)) {
+                is TkResult.Success -> {
+                    openProject(added.data.first, added.data.second.id, onOpened)
+                    "Started ${added.data.second.name}"
+                }
+                is TkResult.Failure -> added.error
+            }
+        }
+    }
+
+    /**
+     * Version [versionId] of [manifest] as an image of its own, for comparing; null (with a message) when it can't
+     * be read
+     */
+    suspend fun versionImage(manifest: ProjectManifest, versionId: String): MemoryImage? {
+        val source = repository.source(manifest.id)
+        val patches = repository.patches(manifest.id, versionId)
+        if (source !is TkResult.Success) return null.also { failed("VersionImage", (source as TkResult.Failure).error) }
+        if (patches !is TkResult.Success) return null.also { failed("VersionImage", (patches as TkResult.Failure).error) }
+        val format = BinaryFormat.entries.firstOrNull { it.name == manifest.source.format } ?: BinaryFormat.detect(source.data)
+        val image = when (val read = BinaryImport.read(source.data, manifest.source.fileName, manifest.source.rawBaseAddress, format)) {
+            is TkResult.Success -> read.data.value
+            is TkResult.Failure -> return null.also { notify(read.error.message) }
+        }
+        image.apply(patches.data.filter { image.contains(it.address, it.after.size) })
+        image.clearHistory()
+        return image
     }
 
     fun rename(id: String, name: String, info: ProjectInfo) {

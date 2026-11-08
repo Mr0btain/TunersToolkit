@@ -12,7 +12,6 @@ kotlinx-coroutines = "1.11.0"
 kotlinxSerializationJson = "1.11.0"
 # The one FileKit uses; project files on desktop, Android and iOS
 kotlinx-io = "0.9.1"
-koin = "4.2.2"
 compose-navigation = "2.9.2"
 material3 = "1.9.0"
 filekit = "0.16.0"
@@ -51,10 +50,6 @@ kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-s
 kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 
-# Koin
-koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
-koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
-koin-composeVM = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
 
 # Files
 filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekit" }
@@ -65,7 +60,6 @@ filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose
 jna = { module = "net.java.dev.jna:jna-platform", version.ref = "jna" }
 
 [bundles]
-koin = ["koin-core", "koin-compose", "koin-composeVM"]
 fileKit = ["filekit-core", "filekit-dialogs", "filekit-dialogs-compose"]
 
 [plugins]

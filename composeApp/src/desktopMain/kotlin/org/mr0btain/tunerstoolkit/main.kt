@@ -7,7 +7,7 @@ import kotlinx.io.files.Path
 import org.mr0btain.applogger.AppLogger
 import org.mr0btain.applogger.LogBook
 import org.mr0btain.applogger.LogFileStore
-import org.mr0btain.tunerstoolkit.components.datastorage.components.DirectoryResolverFactory
+import org.mr0btain.tunerstoolkit.platform.DirectoryResolverFactory
 
 private const val TAG = "Main"
 

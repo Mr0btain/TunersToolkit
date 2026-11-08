@@ -8,18 +8,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.mr0btain.applogger.AppLogger
-import org.mr0btain.tunerstoolkit.components.datastorage.components.getSettings
-import org.mr0btain.tunerstoolkit.components.datastorage.components.saveSettings
-import org.mr0btain.tunerstoolkit.screens.settings.classes.SettingsData
 import org.mr0btain.uikit.theme.TmFont
 import org.mr0btain.uikit.theme.TmFonts
 import org.mr0btain.uikit.theme.TmPalette
 import org.mr0btain.uikit.theme.TmPalettes
 
-/**
- * The saved settings, saved again on each change. The legacy screens keep their own copy of [SettingsData] and save
- * all of it, so a change there can put these back to how they were when the app started
- */
+/** The saved settings, saved again on each change */
 @Stable
 class SettingsHandler(private val scope: CoroutineScope, initial: SettingsData = loadSettings()) {
     var data by mutableStateOf(initial)
@@ -34,7 +28,7 @@ class SettingsHandler(private val scope: CoroutineScope, initial: SettingsData =
         data = updated
         scope.launch(Dispatchers.Default) {
             try {
-                saveSettings(updated)
+                saveSettingsData(updated)
             } catch (e: Exception) {
                 AppLogger.e("$TAG:Save", "Couldn't save the settings", e)
             }
@@ -51,7 +45,7 @@ class SettingsHandler(private val scope: CoroutineScope, initial: SettingsData =
         const val TAG = "SettingsHandler"
 
         fun loadSettings(): SettingsData = try {
-            getSettings()
+            loadSettingsData()
         } catch (e: Exception) {
             AppLogger.w("$TAG:Load", "Saved settings couldn't be read, using the defaults", e)
             SettingsData()

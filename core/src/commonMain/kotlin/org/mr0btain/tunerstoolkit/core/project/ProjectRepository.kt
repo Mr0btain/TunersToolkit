@@ -171,10 +171,20 @@ class ProjectRepository(
             TkResult.Success(updated)
         }
 
-    /** Renames a version or changes its note */
+    /** Renames a version or changes its note. ([update] keeps the versions as they were, so this writes its own) */
     suspend fun updateVersionInfo(id: String, versionId: String, name: String, note: String): TkResult<ProjectManifest, ProjectError> =
-        update(id) { manifest ->
-            manifest.copy(versions = manifest.versions.map { if (it.id == versionId) it.copy(name = name.trim().ifEmpty { it.name }, note = note) else it })
+        guard("UpdateVersionInfo", ProjectError.SAVE_FAILED) {
+            val manifest = when (val result = manifest(id)) {
+                is TkResult.Success -> result.data
+                is TkResult.Failure -> return@guard result
+            }
+            if (manifest.version(versionId) == null) return@guard TkResult.Failure(ProjectError.VERSION_NOT_FOUND)
+            val updated = manifest.copy(
+                updatedAt = now(),
+                versions = manifest.versions.map { if (it.id == versionId) it.copy(name = name.trim().ifEmpty { it.name }, note = note) else it }
+            )
+            writeManifest(updated)
+            TkResult.Success(updated)
         }
 
     suspend fun deleteVersion(id: String, versionId: String): TkResult<ProjectManifest, ProjectError> =

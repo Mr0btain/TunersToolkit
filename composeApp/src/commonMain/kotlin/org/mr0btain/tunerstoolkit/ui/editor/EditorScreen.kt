@@ -1,6 +1,25 @@
 package org.mr0btain.tunerstoolkit.ui.editor
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.unit.dp
+import org.mr0btain.tunerstoolkit.core.calibration.CalibrationCodec
+import org.mr0btain.tunerstoolkit.core.calibration.CalibrationValues
+import org.mr0btain.tunerstoolkit.core.calibration.writeAll
+import org.mr0btain.tunerstoolkit.core.error.getOrNull
+import org.mr0btain.tunerstoolkit.core.image.AddressRange
+import org.mr0btain.tunerstoolkit.ui.definition.DefinitionOnImage
+import org.mr0btain.tunerstoolkit.ui.kit.hex.HexMarks
+import org.mr0btain.uikit.buttons.TmButton
+import org.mr0btain.uikit.buttons.TmButtonVariant
+import org.mr0btain.uikit.containers.TmTabs
+import org.mr0btain.uikit.foundation.TmControlSize
+import tunerstoolkit.composeapp.generated.resources.tt_table
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -60,7 +79,10 @@ import tunerstoolkit.composeapp.generated.resources.tt_folder_plus
 import tunerstoolkit.composeapp.generated.resources.tt_save
 import tunerstoolkit.composeapp.generated.resources.tt_search
 
-/** The open image in the hex view, with its display options, undo, go to, find and export */
+/**
+ * The open image: the definition's map list beside tabs for the hex view and each open map, with saving, undo, go to,
+ * find and export
+ */
 @Composable
 fun EditorScreen(
     documents: DocumentHandler,
@@ -70,6 +92,7 @@ fun EditorScreen(
     snackbar: SnackbarHostState,
     onOpenFiles: () -> Unit,
     modifier: Modifier = Modifier,
+    editor: EditorHandler = remember { EditorHandler() },
     startAt: Long? = null
 ) {
     val document = documents.document
@@ -91,6 +114,14 @@ fun EditorScreen(
     val state = remember(document) { HexViewState(settings.data.hexBytesPerRow) }
     LaunchedEffect(settings.data.hexBytesPerRow) { state.bytesPerRow = settings.data.hexBytesPerRow }
     LaunchedEffect(document, startAt) { startAt?.let { state.moveTo(it); state.reveal(it) } }
+    LaunchedEffect(editor.revealRequest, editor.activeMap) {
+        val address = editor.revealRequest ?: return@LaunchedEffect
+        if (editor.activeMap == null) {
+            state.moveTo(address)
+            state.reveal(address)
+            editor.revealRequest = null
+        }
+    }
 
     var goingTo by remember { mutableStateOf(false) }
     var finding by remember { mutableStateOf(false) }
@@ -98,6 +129,9 @@ fun EditorScreen(
     var saving by remember { mutableStateOf<SaveKind?>(null) }
     val saver = rememberFileSaver { name ->
         scope.launch { snackbar.showSnackbar(if (name != null) "Saved $name" else "Not saved") }
+    }
+    fun message(text: String) {
+        scope.launch { snackbar.showSnackbar(text) }
     }
 
     fun findNext(backwards: Boolean = false) {
@@ -107,7 +141,7 @@ fun EditorScreen(
             state.highlight = match
             state.reveal(match.start)
         } else {
-            scope.launch { snackbar.showSnackbar("Not found") }
+            message("Not found")
         }
     }
 
@@ -118,19 +152,30 @@ fun EditorScreen(
 
     val project = projects.current
     val unsaved = projects.hasUnsavedChanges
-
-    // The definition's objects on this image, once it's indexed
-    val onImage = definitions.onImage?.takeIf { it.document === document }
-    var selectedObject by remember(document) { mutableStateOf<String?>(null) }
-    val marks = remember(onImage, selectedObject) { onImage?.let { objectMarks(it, selectedObject) } }
-    val coverage = remember(onImage) { onImage?.build?.index?.coverage.orEmpty() }
-    val objectAtCursor = state.cursor?.let { cursor -> onImage?.build?.index?.at(cursor)?.firstOrNull()?.obj }
-    LaunchedEffect(objectAtCursor) { objectAtCursor?.let { selectedObject = it.name } }
     fun save() {
         when {
             project == null -> saving = SaveKind.PROJECT
             project.isOriginal -> saving = SaveKind.VERSION
             else -> projects.save()
+        }
+    }
+
+    val definition = definitions.definition
+    LaunchedEffect(definition) { if (editor.openMaps.any { definition?.set?.get(it.name) == null }) editor.reset() }
+    val onImage = definitions.onImage?.takeIf { it.document === document }
+    val marks = remember(onImage, editor.selectedObject) { onImage?.let { objectMarks(it, editor.selectedObject) } }
+    val coverage = remember(onImage) { onImage?.build?.index?.coverage.orEmpty() }
+
+    fun openObject(name: String) {
+        editor.open(name)
+    }
+
+    fun write(values: CalibrationValues, changes: Map<Int, Double>) {
+        if (changes.isEmpty()) return
+        val summary = documents.edit { CalibrationCodec.writeAll(it, values, changes) } ?: return
+        when {
+            summary.failed.isNotEmpty() -> message("${summary.failed.size} values couldn't be written: ${summary.failed.values.first().message}")
+            summary.clamped > 0 -> message("${summary.clamped} values were past the limits and were set to them")
         }
     }
 
@@ -141,6 +186,7 @@ fun EditorScreen(
             subtitle = listOfNotNull(
                 project?.versionName,
                 "${document.format.label}, ${byteCount(image.size)}",
+                definition?.name,
                 if (changedBytes > 0) "${byteCount(changedBytes)} changed from the original" else null,
                 if (unsaved) "not saved" else null
             ).joinToString(" · "),
@@ -167,38 +213,95 @@ fun EditorScreen(
             }
         )
 
-        DisplayOptions(state, settings)
-
-        TmSurface(modifier = Modifier.weight(1f).fillMaxWidth(), level = TmSurfaceLevel.SUNKEN) {
-            TmHexView(
-                image = image,
-                version = version,
-                state = state,
-                onWrite = documents::write,
-                modifier = Modifier.fillMaxSize().padding(vertical = spacing.xs),
-                onUndo = documents::undo,
-                onRedo = documents::redo,
-                onGoTo = { goingTo = true },
-                onFind = { finding = true },
-                onFindNext = { findNext() },
-                onSave = ::save,
-                onMessage = { message -> scope.launch { snackbar.showSnackbar(message) } },
-                marks = marks,
-                coverage = coverage,
-                onOpenAt = { address -> onImage?.build?.index?.at(address)?.firstOrNull()?.let { selectedObject = it.obj.name } }
-            )
+        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+            val wide = maxWidth >= WIDE_EDITOR
+            var showingList by rememberSaveable { mutableStateOf(false) }
+            Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(spacing.md)) {
+                if (definition != null && wide) {
+                    TmSurface(modifier = Modifier.width(300.dp).fillMaxHeight()) {
+                        MapList(definition, editor, onOpen = ::openObject, modifier = Modifier.fillMaxSize().padding(spacing.sm))
+                    }
+                }
+                Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(spacing.sm)) {
+                    val listTab = definition != null && !wide
+                    val tabs = buildList {
+                        if (listTab) add("Maps")
+                        add("Hex")
+                        editor.openMaps.forEach { add(it.name) }
+                    }
+                    val selected = when {
+                        listTab && showingList -> 0
+                        editor.activeMap == null -> if (listTab) 1 else 0
+                        else -> tabs.indexOf(editor.activeMap).coerceAtLeast(0)
+                    }
+                    if (tabs.size > 1) {
+                        TmTabs(tabs = tabs, selectedIndex = selected, onSelect = { index ->
+                            showingList = listTab && index == 0
+                            if (!showingList) {
+                                val name = tabs[index]
+                                if (index == (if (listTab) 1 else 0)) editor.showHex() else editor.open(name)
+                            }
+                        })
+                    }
+                    val active = editor.active
+                    when {
+                        listTab && showingList -> MapList(definition!!, editor, onOpen = { showingList = false; openObject(it) }, modifier = Modifier.fillMaxSize())
+                        active != null && definition?.set?.get(active.name) != null -> {
+                            val obj = definition.set[active.name]!!
+                            val values = remember(obj, version, document) { definitions.decode(obj) }
+                            val original = remember(obj, document) { documents.original()?.let { definitions.decode(obj, it)?.getOrNull() } }
+                            MapPane(
+                                obj = obj,
+                                open = active,
+                                values = values,
+                                original = original,
+                                onChange = ::write,
+                                onWriteText = { values, text ->
+                                    val result = documents.edit { CalibrationCodec.writeAscii(it, values, text) }
+                                    if (result is TkResult.Failure) message(result.error.message)
+                                },
+                                onShowInHex = {
+                                    val address = onImage?.build?.index?.parts(obj.name)?.firstOrNull()?.range?.start ?: obj.address
+                                    editor.selectedObject = obj.name
+                                    editor.showHex(address)
+                                },
+                                onClose = { editor.close(obj.name) },
+                                onUndo = documents::undo,
+                                onRedo = documents::redo,
+                                onMessage = ::message,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        else -> HexContent(
+                            documents = documents,
+                            definitions = definitions,
+                            settings = settings,
+                            state = state,
+                            version = version,
+                            marks = marks,
+                            coverage = coverage,
+                            onImage = onImage,
+                            editor = editor,
+                            onSave = ::save,
+                            onGoTo = { goingTo = true },
+                            onFind = { finding = true },
+                            onFindNext = { findNext() },
+                            onMessage = ::message,
+                            onOpen = ::openObject
+                        )
+                    }
+                }
+            }
         }
-
-        objectAtCursor?.let { ObjectAtCursor(it, definitions, state.cursor!!, version) }
-        StatusBar(image, state, version)
     }
 
-    if (goingTo) GoToDialog(image, onGo = { state.reveal(it); goingTo = false }, onDismiss = { goingTo = false })
+    if (goingTo) GoToDialog(image, onGo = { editor.showHex(); state.reveal(it); goingTo = false }, onDismiss = { goingTo = false })
     if (finding) {
         FindDialog(
             initial = documents.lastSearch,
             onFind = { pattern, backwards ->
                 documents.lastSearch = pattern
+                editor.showHex()
                 findNext(backwards)
             },
             onDismiss = { finding = false }
@@ -222,12 +325,67 @@ fun EditorScreen(
                 exporting = false
                 when (val result = documents.export(format)) {
                     is TkResult.Success -> saver.save(result.data, document.name.substringBeforeLast('.'), extensionFor(format))
-                    is TkResult.Failure -> scope.launch { snackbar.showSnackbar(result.error.message) }
+                    is TkResult.Failure -> message(result.error.message)
                 }
             },
             onDismiss = { exporting = false }
         )
     }
+}
+
+/** From this width the map list sits beside the editor; below it, it's a tab */
+private val WIDE_EDITOR = 900.dp
+
+/** The hex view with its display options, the object under the cursor and the status line */
+@Composable
+private fun ColumnScope.HexContent(
+    documents: DocumentHandler,
+    definitions: DefinitionHandler,
+    settings: SettingsHandler,
+    state: HexViewState,
+    version: Long,
+    marks: HexMarks?,
+    coverage: List<AddressRange>,
+    onImage: DefinitionOnImage?,
+    editor: EditorHandler,
+    onSave: () -> Unit,
+    onGoTo: () -> Unit,
+    onFind: () -> Unit,
+    onFindNext: () -> Unit,
+    onMessage: (String) -> Unit,
+    onOpen: (String) -> Unit
+) {
+    val image = documents.document?.image ?: return
+    val objectAtCursor = state.cursor?.let { cursor -> onImage?.build?.index?.at(cursor)?.firstOrNull()?.obj }
+    LaunchedEffect(objectAtCursor) { objectAtCursor?.let { editor.selectedObject = it.name } }
+
+    DisplayOptions(state, settings)
+    TmSurface(modifier = Modifier.weight(1f).fillMaxWidth(), level = TmSurfaceLevel.SUNKEN) {
+        TmHexView(
+            image = image,
+            version = version,
+            state = state,
+            onWrite = documents::write,
+            modifier = Modifier.fillMaxSize().padding(vertical = TmTheme.spacing.xs),
+            onUndo = documents::undo,
+            onRedo = documents::redo,
+            onGoTo = onGoTo,
+            onFind = onFind,
+            onFindNext = onFindNext,
+            onSave = onSave,
+            onMessage = onMessage,
+            marks = marks,
+            coverage = coverage,
+            onOpenAt = { address -> onImage?.build?.index?.at(address)?.firstOrNull()?.let { onOpen(it.obj.name) } }
+        )
+    }
+    objectAtCursor?.let { obj ->
+        Row(horizontalArrangement = Arrangement.spacedBy(TmTheme.spacing.sm), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.weight(1f)) { ObjectAtCursor(obj, definitions, state.cursor!!, version) }
+            TmButton(text = "Open", onClick = { onOpen(obj.name) }, size = TmControlSize.SMALL, variant = TmButtonVariant.SECONDARY, leadingIcon = Res.drawable.tt_table)
+        }
+    }
+    StatusBar(image, state, version)
 }
 
 /** What the save dialog makes */

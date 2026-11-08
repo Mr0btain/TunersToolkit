@@ -14,8 +14,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
+import org.mr0btain.tunerstoolkit.ui.compare.CompareHandler
+import org.mr0btain.tunerstoolkit.ui.compare.CompareScreen
 import org.mr0btain.tunerstoolkit.ui.definition.DefinitionHandler
+import org.mr0btain.tunerstoolkit.ui.versions.VersionsScreen
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
+import org.mr0btain.tunerstoolkit.ui.editor.EditorHandler
 import org.mr0btain.tunerstoolkit.ui.editor.EditorScreen
 import org.mr0btain.tunerstoolkit.ui.files.FilesScreen
 import org.mr0btain.tunerstoolkit.ui.gallery.GalleryScreen
@@ -27,9 +31,10 @@ import org.mr0btain.uikit.navigation.TmAppShell
 import org.mr0btain.uikit.navigation.TmNavItem
 import org.mr0btain.uikit.theme.TmTheme
 import tunerstoolkit.composeapp.generated.resources.Res
+import tunerstoolkit.composeapp.generated.resources.tt_compare
 import tunerstoolkit.composeapp.generated.resources.tt_cpu
+import tunerstoolkit.composeapp.generated.resources.tt_history
 import tunerstoolkit.composeapp.generated.resources.tt_folder
-import tunerstoolkit.composeapp.generated.resources.tt_layers
 import tunerstoolkit.composeapp.generated.resources.tt_sliders
 import tunerstoolkit.composeapp.generated.resources.tt_terminal
 
@@ -37,15 +42,16 @@ import tunerstoolkit.composeapp.generated.resources.tt_terminal
 enum class Destination(val label: String, val icon: DrawableResource) {
     FILES("Files", Res.drawable.tt_folder),
     EDITOR("Editor", Res.drawable.tt_cpu),
+    VERSIONS("Versions", Res.drawable.tt_history),
+    COMPARE("Compare", Res.drawable.tt_compare),
     LOG("Log", Res.drawable.tt_terminal),
     SETTINGS("Settings", Res.drawable.tt_sliders),
-    LEGACY("Legacy", Res.drawable.tt_layers),
     GALLERY("Gallery", Res.drawable.tt_sliders);
 
     val navItem: TmNavItem get() = TmNavItem(key = name, label = label, icon = icon)
 
     companion object {
-        val inNav = listOf(FILES, EDITOR, LOG, SETTINGS, LEGACY)
+        val inNav = listOf(FILES, EDITOR, VERSIONS, COMPARE, LOG, SETTINGS)
     }
 }
 
@@ -63,7 +69,9 @@ fun App() {
     val documents = remember { DocumentHandler(scope) }
     val snackbar = remember { SnackbarHostState() }
     val definitions = remember { DefinitionHandler(scope, documents) }
+    val editor = remember { EditorHandler() }
     val projects = remember { ProjectHandler(scope, documents, definitions = definitions, notify = { scope.launch { snackbar.showSnackbar(it) } }) }
+    val compare = remember { CompareHandler(scope, documents, definitions, projects) }
     var destination by rememberSaveable { mutableStateOf(Destination.FILES) }
     val data = settings.data
 
@@ -86,10 +94,30 @@ fun App() {
             ) {
                 when (destination) {
                     Destination.FILES -> FilesScreen(documents, projects, definitions, onOpenEditor = { destination = Destination.EDITOR })
-                    Destination.EDITOR -> EditorScreen(documents, projects, definitions, settings, snackbar, onOpenFiles = { destination = Destination.FILES })
+                    Destination.EDITOR -> EditorScreen(documents, projects, definitions, settings, snackbar, onOpenFiles = { destination = Destination.FILES }, editor = editor)
+                    Destination.VERSIONS -> VersionsScreen(
+                        projects,
+                        definitions,
+                        onOpenFiles = { destination = Destination.FILES },
+                        onOpenEditor = { destination = Destination.EDITOR },
+                        onCompare = { manifest, versionId ->
+                            compare.compareWithVersion(manifest, versionId)
+                            destination = Destination.COMPARE
+                        }
+                    )
+                    Destination.COMPARE -> CompareScreen(
+                        documents,
+                        projects,
+                        definitions,
+                        compare,
+                        onOpenFiles = { destination = Destination.FILES },
+                        onOpenMap = { name ->
+                            editor.open(name)
+                            destination = Destination.EDITOR
+                        }
+                    )
                     Destination.LOG -> LogScreen()
                     Destination.SETTINGS -> SettingsScreen(settings, onOpenGallery = { destination = Destination.GALLERY })
-                    Destination.LEGACY -> LegacyApp()
                     Destination.GALLERY -> GalleryScreen(settings)
                 }
             }

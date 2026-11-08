@@ -38,7 +38,7 @@ fun GalleryScreen(settings: SettingsHandler, modifier: Modifier = Modifier) {
 }
 
 /** Tuners Toolkit's own components, for the gallery */
-fun appGallerySections(): List<@Composable () -> Unit> = listOf({ HexViewSection() })
+fun appGallerySections(): List<@Composable () -> Unit> = listOf({ HexViewSection() }, { MapTableSection() }, { MapChartSection() })
 
 /** Two segments with a gap, a changed byte, a selection and a search match */
 private fun sampleImage(): MemoryImage = MemoryImage.Builder().apply {

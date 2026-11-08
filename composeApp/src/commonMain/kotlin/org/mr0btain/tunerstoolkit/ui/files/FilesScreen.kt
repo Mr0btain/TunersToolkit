@@ -26,7 +26,6 @@ import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.readBytes
 import kotlinx.coroutines.launch
 import org.mr0btain.applogger.AppLogger
-import org.mr0btain.tunerstoolkit.components.testing.readTestDataFile
 import org.mr0btain.tunerstoolkit.core.diagnostics.Diagnostic
 import org.mr0btain.tunerstoolkit.core.diagnostics.Severity
 import org.mr0btain.tunerstoolkit.core.image.parseAddress

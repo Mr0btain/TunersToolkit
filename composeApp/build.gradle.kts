@@ -69,24 +69,18 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.core)
 
-            // The UI kit shared with TicketMan. Screens move onto it in Phase 2 (docs/PLAN.md)
+            // The UI kit shared with TicketMan
             implementation(libs.tm.ui.kit)
 
             implementation(libs.runtime)
             implementation(libs.foundation)
             implementation(libs.material3)
-            implementation(libs.material.icons.core)
             implementation(libs.ui)
             implementation(libs.components.resources)
             implementation(libs.ui.tooling.preview)
-            implementation(libs.androidx.lifecycle.viewmodel)
-            implementation(libs.androidx.lifecycle.runtimeCompose)
-            implementation(libs.compose.navigation)
 
             implementation(libs.kotlin.coroutines)
             implementation(libs.kotlinx.serialization.json)
-
-            api(libs.bundles.koin)
 
             // File open and save dialogs on every platform, including the browser
             implementation(libs.bundles.fileKit)
@@ -110,7 +104,7 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
 
-            // OS specific app data folders (components/datastorage/components/*DirectoryResolver)
+            // OS specific app data folders (platform/*DirectoryResolver)
             implementation(libs.jna)
         }
     }

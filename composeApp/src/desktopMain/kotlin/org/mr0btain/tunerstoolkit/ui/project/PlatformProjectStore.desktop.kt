@@ -1,6 +1,6 @@
 package org.mr0btain.tunerstoolkit.ui.project
 
-import org.mr0btain.tunerstoolkit.components.datastorage.components.DirectoryResolverFactory
+import org.mr0btain.tunerstoolkit.platform.DirectoryResolverFactory
 import org.mr0btain.tunerstoolkit.core.project.FileSystemProjectStore
 import org.mr0btain.tunerstoolkit.core.project.ProjectStore
 import java.io.File
