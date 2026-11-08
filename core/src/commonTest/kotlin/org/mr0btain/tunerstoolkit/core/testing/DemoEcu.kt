@@ -1,5 +1,7 @@
 package org.mr0btain.tunerstoolkit.core.testing
 
+import org.mr0btain.tunerstoolkit.core.checksum.ChecksumModules
+import org.mr0btain.tunerstoolkit.core.checksum.Checksums
 import org.mr0btain.tunerstoolkit.core.image.ByteOrder
 import org.mr0btain.tunerstoolkit.core.image.MemoryImage
 import org.mr0btain.tunerstoolkit.core.image.toHexAddress
@@ -111,6 +113,9 @@ object DemoEcu {
 
         val writer = Writer(image)
         val a2l = writer.a2l()
+        // Real checksums, so the checksum view has something right to show (ChecksumModules.DEMO says where)
+        val checksums = Checksums.fix(image, ChecksumModules.demo.checkList)
+        check(checksums.allOk) { "The demo's checksums couldn't be made right" }
         return Demo(image.snapshot(), a2l, writer.placed)
     }
 
