@@ -3,7 +3,7 @@
 ## Running tests
 
 ```bash
-./gradlew :core:jvmTest                                   # core: formats, logging, results (most tests live here)
+./gradlew :core:jvmTest                                   # core: formats, A2L, projects, results (most tests live here)
 ./gradlew :core:jvmTest --tests "*.DiagnosticsTest"       # one class
 ./gradlew :composeApp:desktopTest                         # app tests (commonTest + desktopTest)
 ```
@@ -26,6 +26,12 @@ layout with segments crossing 64K boundaries, and `counting(address, size)` give
 output. Format tests round-trip these, and `FuzzTest` feeds random and mutated files to every reader (none may
 throw). `LargeFilesTest` (JVM only) times a 4 MB image and reads every HEX or S-record file in `testdata/local`,
 skipping when there are none.
+
+A2L tests are in `core/src/commonTest/.../a2l/`, one class per family of the checklist in `docs/PLAN.md` Section 7.1
+(`A2lStructureTest`, `A2lObjectsTest`, `A2lLayoutAndConversionTest`), plus the lexer, the parser and encodings. They
+write small A2L snippets inline: `readModule(body)` wraps one in a PROJECT and MODULE, and `cleanModule(body)` also
+checks it read without warnings. `DemoA2lTest` reads TT-DEMO-1's A2L, and `LargeA2lTest` (JVM only) times an 8.7 MB
+generated A2L and reads every A2L in `testdata/local`.
 
 ## The demo ECU
 

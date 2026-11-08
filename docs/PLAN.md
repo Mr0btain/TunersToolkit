@@ -360,7 +360,8 @@ Each phase ends with green CI and a usable app.
 - [x] Copy and paste in the hex view: Ctrl+C copies the selection as hex in the hex column and as text in the ASCII one (Ctrl+Shift+C the other way), Ctrl+V pastes over the bytes from the cursor in the same form, never past the end of the segment.
 
 **Phase 3: A2L, done properly**
-- [ ] Lexer, parser and A2ML. Full keyword checklist from Section 7.1, each item with a test.
+- [x] Lexer, parser and A2ML. Full keyword checklist from Section 7.1, each item with a test (`core/.../a2l/`). The parser is driven by a keyword table (`A2lSpec`), since keywords and names can't be told apart otherwise; it keeps unknown keywords with a warning, recovers from missing or mismatched `/end`, follows `/include` through an `A2lFileResolver`, and detects UTF-8, UTF-16 and Latin-1. `A2lModelBuilder` turns the tree into the typed model (names not yet resolved). 8.7 MB parses in about 0.3 s on desktop. A2ML is parsed into a grammar, and IF_DATA is kept as its source text with its tag checked against the grammar; reading IF_DATA into typed values waits for a feature that needs it (XCP settings).
+- [ ] The app on the new parser: replace the legacy `ParseA2l` (and its COMPU_VTAB_RANGE bug) once decoding moves over (next item).
 - [ ] Resolution into `CalibrationObject` (layouts, axes, `ECU_CALIBRATION_OFFSET`, variant coding) and decode/encode for **all** characteristic types including CUBOID, CUBE_4 and CUBE_5.
 - [ ] Interval index plus hex highlighting (Section 6), import report, and EPK check.
 - [ ] A2L writer and round-trip tests.
