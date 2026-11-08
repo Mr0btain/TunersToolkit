@@ -45,9 +45,10 @@ class Expression private constructor(val text: String, private val root: Node, v
 
         /**
          * @param constants SYSTEM_CONSTANTs by name, for `sysc()`
+         * @param caretIsPower `^` raises to a power (as TunerPro's XDF equations use it) instead of being xor
          */
-        fun parse(text: String, constants: Map<String, String> = emptyMap()): TkResult<Expression, FormulaError> = try {
-            val parser = ExpressionParser(text, constants)
+        fun parse(text: String, constants: Map<String, String> = emptyMap(), caretIsPower: Boolean = false): TkResult<Expression, FormulaError> = try {
+            val parser = ExpressionParser(text, constants, caretIsPower)
             val root = parser.parse()
             TkResult.Success(Expression(text, root, parser.inputCount))
         } catch (e: ExpressionSyntaxError) {
@@ -103,6 +104,7 @@ private sealed interface Node {
                 "|" -> (a.toLong() or b.toLong()).toDouble()
                 "^" -> (a.toLong() xor b.toLong()).toDouble()
                 "<<" -> (a.toLong() shl b.toInt()).toDouble()
+                "**" -> a.pow(b)
                 else -> (a.toLong() shr b.toInt()).toDouble() // >>
             }
         }
@@ -142,7 +144,8 @@ private fun Boolean.toDouble() = if (this) 1.0 else 0.0
 private class ExpressionSyntaxError(message: String) : Exception(message)
 
 /** Precedence climbing over C's operator levels, lowest first */
-private class ExpressionParser(private val text: String, private val constants: Map<String, String>) {
+private class ExpressionParser(private val text: String, private val constants: Map<String, String>, private val caretIsPower: Boolean) {
+    private val levels = if (caretIsPower) LEVELS.map { level -> level - "^" }.filter { it.isNotEmpty() } else LEVELS
     private var position = 0
     private var depth = 0
     private var nodes = 0
@@ -157,10 +160,10 @@ private class ExpressionParser(private val text: String, private val constants: 
     }
 
     private fun binary(level: Int): Node {
-        if (level == LEVELS.size) return unary()
+        if (level == levels.size) return unary()
         var left = binary(level + 1)
         while (true) {
-            val op = LEVELS[level].firstOrNull { matchesOperator(it) } ?: return left
+            val op = levels[level].firstOrNull { matchesOperator(it) } ?: return left
             position += op.length
             count()
             left = Node.Binary(op, left, binary(level + 1))
@@ -183,7 +186,17 @@ private class ExpressionParser(private val text: String, private val constants: 
             count()
             return nested { Node.Unary(char.toString(), unary()) }
         }
-        return primary()
+        return power()
+    }
+
+    /** `a ^ b` as a power, binding tighter than anything but brackets and right to left, when [caretIsPower] */
+    private fun power(): Node {
+        val base = primary()
+        skipSpace()
+        if (!caretIsPower || text.getOrNull(position) != '^') return base
+        position++
+        count()
+        return nested { Node.Binary("**", base, unary()) }
     }
 
     private fun primary(): Node {
