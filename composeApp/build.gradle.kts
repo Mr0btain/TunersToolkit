@@ -68,7 +68,7 @@ kotlin {
         val desktopMain = getByName("desktopMain")
 
         commonMain.dependencies {
-            implementation(projects.core)
+            implementation(project(":core"))
 
             // The UI kit shared with TicketMan
             implementation(libs.tm.ui.kit)
