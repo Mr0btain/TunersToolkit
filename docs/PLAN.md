@@ -394,9 +394,10 @@ Each phase ends with green CI and a usable app.
 - [x] Setup deploy web to github pages automatically, and a release build for each OS as well. (`.github/workflows/pages.yml` on pushes to main; `release.yml` on v* tags drafts a GitHub release with the DMG, MSI, DEB, APK and a web zip)
 
 **Phase 8: Release**
-- [ ] Release workflows producing every artifact. First tagged release `v0.1.0`.
-- [ ] **Rewrite the README** (features, screenshots from the render tests, supported formats table, build and run commands, disclaimer) once the app is in a good state.
-- [ ] `docs/` pages: architecture, formats (with spec references), testing, releasing.
+- [x] Release workflows producing every artifact (`release.yml` on GitHub and Gitea, files named by the build, `SHA256SUMS`; see `docs/releasing.md`).
+- [ ] First tagged release `v0.1.0`.
+- [x] **Rewrite the README** (features, screenshots from the render tests, supported formats table, build and run commands, disclaimer) once the app is in a good state.
+- [x] `docs/` pages: architecture, formats (with spec references), testing, releasing.
 
 ---
 

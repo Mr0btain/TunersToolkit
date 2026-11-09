@@ -1,4 +1,5 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
@@ -101,7 +102,18 @@ kotlin {
         }
 
         desktopMain.dependencies {
-            implementation(compose.desktop.currentOs)
+            // -PallPlatforms takes every desktop system's Skia, so packageUberJarForCurrentOS makes one jar that runs
+            // on any of them (with Java 21 installed). Otherwise only this machine's, which the installers bundle
+            if (project.hasProperty("allPlatforms")) {
+                implementation(compose.desktop.linux_x64)
+                implementation(compose.desktop.linux_arm64)
+                implementation(compose.desktop.windows_x64)
+                implementation(compose.desktop.windows_arm64)
+                implementation(compose.desktop.macos_x64)
+                implementation(compose.desktop.macos_arm64)
+            } else {
+                implementation(compose.desktop.currentOs)
+            }
             implementation(libs.kotlinx.coroutinesSwing)
 
             // OS specific app data folders (platform/*DirectoryResolver)
@@ -113,6 +125,23 @@ kotlin {
 dependencies {
     androidRuntimeClasspath(libs.ui.tooling)
 }
+
+// Release file names say what they're for: TunersToolkit-<OS>-<version>-<arch>.<ext>, like
+// TunersToolkit-Windows-0.1.0-x64.msi, for the machine that builds them, since jpackage only packages for its own system
+val releaseVersion = providers.gradleProperty("tunerstoolkit.version").get()
+val hostOs = System.getProperty("os.name").let {
+    when {
+        it.startsWith("Windows") -> "Windows"
+        it.startsWith("Mac") -> "macOS"
+        else -> "Linux"
+    }
+}
+val hostArch = when (val arch = System.getProperty("os.arch")) {
+    "amd64", "x86_64" -> "x64"
+    "aarch64", "arm64" -> "arm64"
+    else -> arch
+}
+fun releaseName(extension: String) = "TunersToolkit-$hostOs-$releaseVersion-$hostArch.$extension"
 
 compose.desktop {
     application {
@@ -132,12 +161,14 @@ compose.desktop {
 
             linux {
                 iconFile.set(project.file("icons/icon.png"))
+                menuGroup = "Development"
             }
             macOS {
                 bundleID = "org.mr0btain.tunerstoolkit"
                 // The icons are made by tools/make_icons.py
                 iconFile.set(project.file("icons/icon.icns"))
-                // macOS refuses a version starting with 0, so 0.x builds say 1.0.0 inside the app bundle
+                // macOS refuses a version starting with 0, so 0.x builds say 1.0.0 inside the app bundle. The DMG's
+                // file name still carries the real version (renamed below)
                 packageVersion = if (appVersion.startsWith("0.")) "1.0.0" else appVersion
             }
             windows {
@@ -154,4 +185,48 @@ compose.desktop {
             systemProperty("tunerstoolkit.testdata", rootProject.file("testdata").path)
         }
     }
+}
+
+// jpackage names the installers after packageName and packageVersion (tunerstoolkit_0.1.0_amd64.deb), so they're
+// renamed once made. The macOS one gets the real version this way too, not the 1.0.0 inside its app bundle
+tasks.withType<AbstractJPackageTask>().configureEach {
+    val installerDir = destinationDir
+    doLast {
+        installerDir.get().asFile.listFiles { file -> file.extension in setOf("msi", "dmg", "deb", "pkg", "exe", "rpm") }
+            ?.filter { it.name != releaseName(it.extension) }
+            ?.forEach { file ->
+                val named = File(file.parentFile, releaseName(file.extension))
+                named.delete()
+                check(file.renameTo(named)) { "Couldn't rename ${file.name} to ${named.name}" }
+            }
+    }
+}
+
+// With -PallPlatforms the jar runs on any desktop system, so it carries no OS or architecture. Compose's uber jar
+// tasks are the plain org.gradle.jvm.tasks.Jar
+tasks.withType<org.gradle.jvm.tasks.Jar>().matching { it.name.endsWith("UberJarForCurrentOS") }.configureEach {
+    archiveFileName.set(
+        if (project.hasProperty("allPlatforms")) "TunersToolkit-Desktop-$releaseVersion.jar" else releaseName("jar")
+    )
+}
+
+// The app unpacked (bin/TunersToolkit starts it), for Linux systems without dpkg: compose/binaries/main/tar/
+tasks.register<Tar>("packageTarball") {
+    group = "compose desktop"
+    description = "Packs the app made by createDistributable into a .tar.gz"
+    from(tasks.named("createDistributable"))
+    // Gradle 9's reproducible archives make every file 644, which would leave bin/TunersToolkit unable to run
+    useFileSystemPermissions()
+    compression = Compression.GZIP
+    archiveFileName.set(releaseName("tar.gz"))
+    destinationDirectory.set(layout.buildDirectory.dir("compose/binaries/main/tar"))
+}
+
+// The web app as one zip to put on any static host: build/dist/web/TunersToolkit-Web-<version>.zip
+tasks.register<Zip>("packageWebZip") {
+    group = "kotlin browser"
+    description = "Zips the production web build"
+    from(tasks.named("wasmJsBrowserDistribution"))
+    archiveFileName.set("TunersToolkit-Web-$releaseVersion.zip")
+    destinationDirectory.set(layout.buildDirectory.dir("dist/web"))
 }
