@@ -35,6 +35,9 @@ import org.mr0btain.tunerstoolkit.core.checksum.StoreForm
 import org.mr0btain.tunerstoolkit.core.checksum.TtSum
 import org.mr0btain.tunerstoolkit.core.image.ByteOrder
 import org.mr0btain.tunerstoolkit.core.image.parseAddress
+import org.mr0btain.uikit.containers.TmSwitchRow
+import org.mr0btain.tunerstoolkit.core.image.MemoryImage
+import org.mr0btain.tunerstoolkit.core.checksum.Detector
 import org.mr0btain.tunerstoolkit.core.image.toHexAddress
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
 import org.mr0btain.tunerstoolkit.ui.files.rememberFileSaver
@@ -92,6 +95,7 @@ fun ChecksumsScreen(
     val scope = rememberCoroutineScope()
     var adding by remember { mutableStateOf(false) }
     var confirming by remember { mutableStateOf(false) }
+    var making by remember { mutableStateOf(false) }
     val picker = rememberFilePickerLauncher(type = FileKitType.File()) { file ->
         if (file == null) return@rememberFilePickerLauncher
         scope.launch { onMessage(checksums.load(file.readBytes(), file.name)) }
@@ -116,9 +120,13 @@ fun ChecksumsScreen(
                 else -> "${state.wrong} of ${state.checks.size} are wrong"
             }
         )
-        ModulePanel(checksums, active, onLoad = { picker.launch() }, onSave = { module ->
-            saver.save(TtSum.write(module).encodeToByteArray(), module.id, "ttsum")
-        })
+        ModulePanel(
+            checksums, active,
+            onLoad = { picker.launch() },
+            onSave = { module -> saver.save(TtSum.write(module).encodeToByteArray(), module.id, "ttsum") },
+            onMake = { making = true },
+            onForget = { module -> checksums.forget(module.id); onMessage("Forgot ${module.name}") }
+        )
 
         TmPanel(
             modifier = Modifier.fillMaxWidth(),
@@ -148,6 +156,17 @@ fun ChecksumsScreen(
     }
 
     if (adding) AddCheckDialog(onAdd = { checksums.addOwn(it); adding = false }, onDismiss = { adding = false })
+    if (making) {
+        MakeModuleDialog(
+            image = documents.document!!.image,
+            checkCount = checksums.own?.checkList?.size ?: 0,
+            onMake = { name, family, description, detectors ->
+                checksums.makeModule(name, family, description, detectors)?.let { onMessage("Kept ${it.name} for every image") }
+                making = false
+            },
+            onDismiss = { making = false }
+        )
+    }
     if (confirming) {
         TmConfirmDialog(
             title = "Fix with checks that aren't verified?",
@@ -162,7 +181,14 @@ fun ChecksumsScreen(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ModulePanel(checksums: ChecksumHandler, active: ChecksumModule?, onLoad: () -> Unit, onSave: (DefinedModule) -> Unit) {
+private fun ModulePanel(
+    checksums: ChecksumHandler,
+    active: ChecksumModule?,
+    onLoad: () -> Unit,
+    onSave: (DefinedModule) -> Unit,
+    onMake: () -> Unit,
+    onForget: (DefinedModule) -> Unit
+) {
     val detectedIds = checksums.detected.map { it.module.id }.toSet()
     TmPanel(
         modifier = Modifier.fillMaxWidth(),
@@ -176,6 +202,9 @@ private fun ModulePanel(checksums: ChecksumHandler, active: ChecksumModule?, onL
             })
         }
     ) {
+        if (active != null && active.id in checksums.kept) {
+            Text("One of your modules, kept for every image", style = TmTheme.typography.caption, color = TmTheme.colors.textMuted)
+        }
         if (active?.status == ModuleStatus.UNVERIFIED) {
             TmNotice(kind = TmNoticeKind.WARNING, text = "This module hasn't been checked against real binaries. Check what it fixes before flashing.")
         }
@@ -205,7 +234,11 @@ private fun ModulePanel(checksums: ChecksumHandler, active: ChecksumModule?, onL
             (active as? DefinedModule)?.let { module ->
                 TmButton(text = "Save as .ttsum", onClick = { onSave(module) }, variant = TmButtonVariant.GHOST, leadingIcon = Res.drawable.tt_download)
             }
+            (active as? DefinedModule)?.takeIf { it.id in checksums.kept }?.let { module ->
+                TmButton(text = "Forget it", onClick = { onForget(module) }, variant = TmButtonVariant.GHOST, leadingIcon = Res.drawable.tt_x)
+            }
             checksums.own?.let { own ->
+                TmButton(text = "Keep as a module", onClick = onMake, variant = TmButtonVariant.SECONDARY, leadingIcon = Res.drawable.tt_plus)
                 TmButton(text = "Save your checks", onClick = { onSave(own) }, variant = TmButtonVariant.GHOST, leadingIcon = Res.drawable.tt_download)
             }
         }
@@ -236,6 +269,62 @@ private fun CheckRow(result: CheckResult, own: Boolean, onRemove: () -> Unit) {
             }
         }
     )
+}
+
+/**
+ * Your checks as a module of your own, kept for every image. It's used by itself on images it recognises: ones the
+ * size of this one, and (when given) with this text at this address
+ */
+@Composable
+private fun MakeModuleDialog(
+    image: MemoryImage,
+    checkCount: Int,
+    onMake: (name: String, family: String, description: String, detectors: List<Detector>) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var family by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var bySize by remember { mutableStateOf(true) }
+    var text by remember { mutableStateOf("") }
+    var textAddress by remember { mutableStateOf("") }
+
+    val address = parseAddress(textAddress)
+    val textFound = text.isNotEmpty() && address != null && image.readOrNull(address, text.length)?.decodeToString() == text
+    val textError = when {
+        text.isEmpty() -> null
+        address == null -> "Give the address the text is at"
+        !textFound -> "This image doesn't have that text there"
+        else -> null
+    }
+    val detectors = buildList {
+        if (bySize) add(Detector.Size(image.size))
+        if (text.isNotEmpty() && address != null) add(Detector.Text(address, text))
+    }
+    val ready = name.isNotBlank() && textError == null
+
+    TmDialog(
+        title = "Keep as a module",
+        description = "Your $checkCount ${if (checkCount == 1) "check" else "checks"} as a module of your own, kept for every image, not just this project",
+        onDismissRequest = onDismiss,
+        actions = { TmButtonRow(confirmText = "Keep it", onConfirm = { onMake(name, family, description, detectors) }, onCancel = onDismiss, confirmEnabled = ready) }
+    ) {
+        TmTextField(value = name, onValueChange = { name = it }, label = "Name", placeholder = "My ECU, stage 1 checks")
+        TmTextField(value = family, onValueChange = { family = it }, label = "ECU family", placeholder = "Bosch ME7.5")
+        TmTextField(value = description, onValueChange = { description = it }, label = "Description")
+        TmSwitchRow(
+            title = "Recognise images of this size",
+            subtitle = "${image.size} bytes, like this one",
+            icon = Res.drawable.tt_shield,
+            checked = bySize,
+            onCheckedChange = { bySize = it }
+        )
+        TmTextField(value = text, onValueChange = { text = it }, label = "And with this text", placeholder = "A software number from the image")
+        TmTextField(value = textAddress, onValueChange = { textAddress = it }, label = "At", placeholder = "0x10000", error = textError)
+        if (detectors.isEmpty()) {
+            TmNotice(kind = TmNoticeKind.INFO, text = "With nothing to recognise images by, it's only used when you pick it.")
+        }
+    }
 }
 
 /** The algorithms offered when adding a check by hand */

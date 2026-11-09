@@ -16,7 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
+import org.mr0btain.tunerstoolkit.core.checksum.ModuleLibrary
 import org.mr0btain.tunerstoolkit.ui.checksum.ChecksumHandler
+import org.mr0btain.tunerstoolkit.ui.project.platformProjectStore
 import org.mr0btain.tunerstoolkit.ui.checksum.ChecksumsScreen
 import org.mr0btain.tunerstoolkit.ui.compare.CompareHandler
 import org.mr0btain.tunerstoolkit.ui.finder.FinderHandler
@@ -45,7 +47,8 @@ import tunerstoolkit.composeapp.generated.resources.tt_history
 import tunerstoolkit.composeapp.generated.resources.tt_scan
 import tunerstoolkit.composeapp.generated.resources.tt_shield
 import tunerstoolkit.composeapp.generated.resources.tt_folder
-import tunerstoolkit.composeapp.generated.resources.tt_sliders
+import tunerstoolkit.composeapp.generated.resources.tt_settings
+import tunerstoolkit.composeapp.generated.resources.tt_gallery
 import tunerstoolkit.composeapp.generated.resources.tt_terminal
 
 /** The places in the app. [GALLERY] isn't in the nav; Settings opens it */
@@ -57,8 +60,8 @@ enum class Destination(val label: String, val icon: DrawableResource) {
     CHECKSUMS("Checksums", Res.drawable.tt_shield),
     FINDER("Find maps", Res.drawable.tt_scan),
     LOG("Log", Res.drawable.tt_terminal),
-    SETTINGS("Settings", Res.drawable.tt_sliders),
-    GALLERY("Gallery", Res.drawable.tt_sliders);
+    SETTINGS("Settings", Res.drawable.tt_settings),
+    GALLERY("Gallery", Res.drawable.tt_gallery);
 
     val navItem: TmNavItem get() = TmNavItem(key = name, label = label, icon = icon)
 
@@ -83,7 +86,7 @@ fun App() {
     val definitions = remember { DefinitionHandler(scope, documents) }
     val editor = remember { EditorHandler() }
     val exchange = remember { ExchangeHandler(documents, definitions) }
-    val checksums = remember { ChecksumHandler(scope, documents) }
+    val checksums = remember { ChecksumHandler(scope, documents, library = ModuleLibrary(platformProjectStore())) }
     val finder = remember { FinderHandler(scope, documents, definitions) }
     val ident = remember { IdentHandler(scope, documents) }
     val projects = remember {

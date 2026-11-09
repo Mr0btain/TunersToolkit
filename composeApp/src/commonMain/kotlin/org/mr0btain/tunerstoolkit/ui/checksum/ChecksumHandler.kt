@@ -20,6 +20,8 @@ import org.mr0btain.tunerstoolkit.core.checksum.DetectedModule
 import org.mr0btain.tunerstoolkit.core.checksum.FixReport
 import org.mr0btain.tunerstoolkit.core.checksum.ModuleStatus
 import org.mr0btain.tunerstoolkit.core.checksum.TtSum
+import org.mr0btain.tunerstoolkit.core.checksum.Detector
+import org.mr0btain.tunerstoolkit.core.checksum.ModuleLibrary
 import org.mr0btain.tunerstoolkit.core.error.TkResult
 import org.mr0btain.tunerstoolkit.core.image.MemoryImage
 import org.mr0btain.tunerstoolkit.ui.document.DocumentHandler
@@ -40,10 +42,16 @@ class ChecksumState(val version: Long, val checks: List<ChecksumCheck>, val resu
 class ChecksumHandler(
     private val scope: CoroutineScope,
     private val documents: DocumentHandler,
-    private val inBackground: Boolean = true
+    private val inBackground: Boolean = true,
+    /** Where modules of your own are kept between runs; null keeps them only until the app closes */
+    private val library: ModuleLibrary? = null
 ) {
     /** Modules that come with the app and ones loaded from files */
     var modules by mutableStateOf(ChecksumModules.builtIn)
+        private set
+
+    /** Ids of the modules in [modules] that are your own, kept in the library so every image can use them */
+    var kept by mutableStateOf<Set<String>>(emptySet())
         private set
 
     /** Modules that recognise the open image, surest first */
@@ -73,6 +81,13 @@ class ChecksumHandler(
         documents.onDocumentChanged { detect() }
         // An image may already be open
         detect()
+        if (library != null) scope.launch {
+            val stored = library.loadAll().map(::untrusted).filter { stored -> ChecksumModules.builtIn.none { it.id == stored.id } }
+            modules = modules.filter { module -> stored.none { it.id == module.id } } + stored
+            kept = kept + stored.map { it.id }
+            AppLogger.i("$TAG:Init", "${stored.size} checksum modules of your own")
+            detect()
+        }
     }
 
     private fun detect() {
@@ -95,11 +110,45 @@ class ChecksumHandler(
             is TkResult.Failure -> return "$name isn't a checksum module: ${result.error.message}"
         }
         val module = untrusted(imported.value)
-        modules = modules.filter { it.id != module.id } + module
-        documents.document?.let { detected = ChecksumModules.detect(it.image, modules) }
+        keep(module)
         choose(module)
         AppLogger.i("$TAG:Load", "Loaded checksum module ${module.id} from $name, ${module.checkList.size} checks")
         return "Using ${module.name}" + if (imported.diagnostics.isNotEmpty()) ", ${imported.diagnostics.size} parts left out" else ""
+    }
+
+    /**
+     * Makes a module of your own from your checks, kept for every image: it's used by itself on images that match
+     * [detectors] (none means it's only used when picked). Your checks move into it, so they aren't counted twice
+     * @return The module, or null with no checks of your own
+     */
+    fun makeModule(name: String, family: String, description: String, detectors: List<Detector>): DefinedModule? {
+        val checks = own?.checkList?.takeIf { it.isNotEmpty() } ?: return null
+        val id = ModuleLibrary.idFor(name).let { if (ChecksumModules.builtIn.any { builtIn -> builtIn.id == it }) "$it-own" else it }
+        // Like any module from the library, it isn't taken as verified when it's read back, so it isn't now either
+        val module = untrusted(DefinedModule(id, name.trim(), family.trim(), description.trim(), ModuleStatus.USER, "Made in Tuners Toolkit", detectors, checks))
+        keep(module)
+        own = null
+        choose(module)
+        AppLogger.i("$TAG:Make", "Made checksum module $id, ${checks.size} checks, ${detectors.size} detectors")
+        return module
+    }
+
+    /** Takes a module of your own out of the library; one in use stops being used */
+    fun forget(id: String) {
+        if (id !in kept) return
+        modules = modules.filter { it.id != id }
+        kept = kept - id
+        if (chosen?.id == id) chosen = null
+        library?.let { scope.launch { it.delete(id) } }
+        detect()
+    }
+
+    /** Adds [module] to the modules and the library, in place of one with its id */
+    private fun keep(module: DefinedModule) {
+        modules = modules.filter { it.id != module.id } + module
+        kept = kept + module.id
+        library?.let { scope.launch { it.save(module) } }
+        documents.document?.let { detected = ChecksumModules.detect(it.image, modules) }
     }
 
     fun addOwn(check: ChecksumCheck) {

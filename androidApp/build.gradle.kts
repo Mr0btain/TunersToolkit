@@ -72,3 +72,18 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 }
+
+// AGP names the APK androidApp-release(-unsigned).apk, so a copy named like the other release files goes beside it:
+// TunersToolkit-Android-<version>.apk, or TunersToolkit-Android-<version>-unsigned.apk without a signing key
+tasks.matching { it.name == "assembleRelease" }.configureEach {
+    val apkDir = layout.buildDirectory.dir("outputs/apk/release")
+    doLast {
+        val dir = apkDir.get().asFile
+        dir.listFiles { file -> file.name.startsWith("TunersToolkit-") }?.forEach { it.delete() }
+        // The newest, in case an earlier build left a signed or unsigned one
+        val apk = dir.listFiles { file -> file.extension == "apk" }?.maxByOrNull { it.lastModified() }
+            ?: error("No APK in $dir")
+        val suffix = if (apk.name.contains("unsigned")) "-unsigned" else ""
+        apk.copyTo(File(dir, "TunersToolkit-Android-$appVersion$suffix.apk"))
+    }
+}

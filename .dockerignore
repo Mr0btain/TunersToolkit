@@ -1,0 +1,9 @@
+# Only what docker/deb.Dockerfile needs to build: no build output, caches, IDE files or real ECU files
+.git
+.gradle
+.kotlin
+.idea
+**/build
+local.properties
+testdata/local
+iosApp

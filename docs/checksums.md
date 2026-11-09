@@ -18,6 +18,12 @@ The app's **Checksums** screen shows the module in use and every check. You can 
 or add checks of your own. Your own checks and any module you picked are saved with the project. Exporting an image
 warns you when its checksums are wrong.
 
+**Keep as a module** turns your own checks into a module of your own, with a name, a family and what recognises its
+images (the image's size, and text at an address if you give one). It and any `.ttsum` you load are kept in the app's
+store (`checksums/<id>.ttsum`, through `ModuleLibrary`), so every image can use them, not just one project: one that
+recognises an image is used by itself, like a built in one. **Forget it** takes one out again. Modules from the
+library are never treated as verified, so fixing with them always asks first.
+
 ## Algorithms
 
 | Algorithm | Settings | Notes |
