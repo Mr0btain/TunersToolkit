@@ -1,5 +1,7 @@
 rootProject.name = "TunersToolkit"
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+// No TYPESAFE_PROJECT_ACCESSORS: it generates accessors for the included builds too, and Tm-UI-Kit's root project
+// (Tm-UI-Kit) and its :tm-ui-kit become classes whose names differ only in case, which a Mac's file system can't
+// hold. Projects are referenced as project(":core") instead
 
 pluginManagement {
     repositories {
